@@ -1,4 +1,6 @@
-// ===== DATACUBE API INTEGRATION =====
+// ===== DATACUBE API PROXY INTEGRATION =====
+
+const PROXY_BASE = "https://your-backend.onrender.com/api"; // <- replace with your deployed backend URL
 
 async function ensureDailyCollection() {
   const collectionName = todayCollectionName();
@@ -18,13 +20,13 @@ async function ensureDailyCollection() {
   };
 
   try {
-    await fetch(`${DATACUBE_BASE}/add_collection`, {
+    await fetch(`${PROXY_BASE}/add_collection`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
   } catch (err) {
-    console.warn("Collection may already exist", err);
+    console.warn("Collection may already exist or failed", err);
   }
 }
 
@@ -41,11 +43,15 @@ async function saveLocation(lat, lng) {
     ]
   };
 
-  await fetch(`${DATACUBE_BASE}/crud`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  try {
+    await fetch(`${PROXY_BASE}/crud`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Failed to save location", err);
+  }
 }
 
 async function fetchTodayLocations() {
@@ -54,8 +60,12 @@ async function fetchTodayLocations() {
     collection_name: todayCollectionName()
   });
 
-  const res = await fetch(`${DATACUBE_BASE}/crud?${params}`);
-  if (!res.ok) throw new Error("Fetch failed");
-
-  return res.json();
+  try {
+    const res = await fetch(`${PROXY_BASE}/crud?${params}`);
+    if (!res.ok) throw new Error("Fetch failed");
+    return res.json();
+  } catch (err) {
+    console.error("Failed to fetch locations", err);
+    return [];
+  }
 }
