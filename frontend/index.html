@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Uniforms – Location Capture</title>
+  <title>DoWell Smart Labelling</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -47,13 +47,19 @@
       font-size: 14px;
       color: #555;
     }
+
+    footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h2>Smart Uniforms</h2>
-    <p>Your location is being securely recorded.</p>
+    <h2>DoWell Smart Labelling</h2>
+    <p>Connecting you to your customers in real time</p>
 
     <button id="viewMapBtn" disabled>
       Click here to see your location
@@ -62,6 +68,10 @@
     <div class="status" id="status">
       Getting your location…
     </div>
+
+    <footer>
+      <div><a href="https://api.whatsapp.com/send?phone=%2B917736157273&text=Hi&type=phone_number&app_absent=0%20" target="_blank">WhatsApp us</a></div>
+    </footer>
   </div>
 
   <!-- Shared scripts -->
@@ -97,7 +107,7 @@
         (err) => {
           console.warn(err);
           statusEl.textContent = "Location permission denied.";
-          btn.disabled = false; // allow map view anyway
+          btn.disabled = false;
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -107,7 +117,6 @@
       window.location.href = "map.html";
     };
 
-    // 🔥 Run immediately
     captureLocationOnLoad();
   </script>
 </body>
