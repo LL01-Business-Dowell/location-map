@@ -147,6 +147,9 @@
         const sheet = document.getElementById("bottomSheet");
         const handle = document.getElementById("sheetHandle");
 
+        // 🔄 Auto-refresh every 30s
+        const AUTO_REFRESH_INTERVAL = 30 * 1000;
+
         handle.addEventListener("click", () => {
             sheet.classList.toggle("collapsed");
             setTimeout(() => map.invalidateSize(), 300);
@@ -229,9 +232,6 @@
 
 
         bootstrap();
-
-        // 🔄 Auto-refresh every 30s
-        const AUTO_REFRESH_INTERVAL = 30 * 1000;
 
         function startAutoRefresh() {
             setInterval(async () => {
