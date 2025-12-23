@@ -200,19 +200,33 @@
             }
         }
 
+        // async function bootstrap() {
+        //     initMap();
+        //     await ensureDailyCollection();
+
+        //     // 🔥 Capture user location on load and respect cooldown
+        //     await captureAndSaveCurrentLocation();
+
+        //     // Load all existing data
+        //     await loadDataAndRender();
+
+        //     // Auto-refresh every 30s
+        //     startAutoRefresh();
+        // }
         async function bootstrap() {
             initMap();
-            await ensureDailyCollection();
 
-            // 🔥 Capture user location on load and respect cooldown
-            await captureAndSaveCurrentLocation();
+            // 🔥 Load existing data immediately (no blocking)
+            loadDataAndRender();
 
-            // Load all existing data
-            await loadDataAndRender();
+            // Run these in background
+            ensureDailyCollection();
+            captureAndSaveCurrentLocation();
 
             // Auto-refresh every 30s
             startAutoRefresh();
         }
+
 
         bootstrap();
 
