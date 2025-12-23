@@ -63,7 +63,12 @@ async function fetchTodayLocations() {
   try {
     const res = await fetch(`${PROXY_BASE}/crud?${params}`);
     if (!res.ok) throw new Error("Fetch failed");
-    return res.json();
+    const json = await res.json();
+
+    // Ensure it's always an array
+    if (Array.isArray(json)) return json;
+    if (json.data && Array.isArray(json.data)) return json.data;
+    return [];
   } catch (err) {
     console.error("Failed to fetch locations", err);
     return [];

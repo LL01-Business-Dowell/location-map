@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
 
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
@@ -78,6 +77,25 @@
             font-size: 14px;
         }
 
+        /* Marker bounce animation */
+        .bounce-marker {
+            animation: bounce 0.6s ease forwards;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: translateY(-20px);
+            }
+
+            50% {
+                transform: translateY(5px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
         /* Desktop layout */
         @media (min-width: 768px) {
             #bottomSheet {
@@ -111,7 +129,6 @@
             <div id="sheetHandle"></div>
             <div id="sheetContent">
                 <h3>Saved Locations</h3>
-
                 <div id="listItems"></div>
             </div>
         </div>
@@ -150,29 +167,10 @@
                         const roundedLat = Number(lat.toFixed(5));
                         const roundedLng = Number(lng.toFixed(5));
 
-                        if (!canPerformScan()) {
-                            console.log("Scan skipped due to cooldown");
-                            return;
-                        }
+                        // Use trySaveLocation for cooldown and bouncing
+                        await trySaveLocation(roundedLat, roundedLng);
 
-                        await saveLocation(roundedLat, roundedLng);
-                        updateLastScanTime();
-
-
-                        // Save to DB
-                        //await saveLocation(roundedLat, roundedLng);
-
-                        // Optimistic UI update
-                        rawMapData.push({
-                            latitude: roundedLat,
-                            longitude: roundedLng,
-                            timestamp: new Date().toISOString()
-                        });
-
-                        normalizeData(rawMapData);
-                        renderMap();
-
-                        // Focus map
+                        // Focus map on user's location
                         map.setView([lat, lng], 16);
 
                         resolve();
@@ -186,7 +184,7 @@
             });
         }
 
-        async function loadDataAndRender() {
+        async function loadDataAndRender(markNew = false) {
             if (isFetching) return;
             isFetching = true;
 
@@ -194,7 +192,7 @@
                 const rows = await fetchTodayLocations();
                 rawMapData = rows;
                 normalizeData(rows);
-                applyDateFilter(DEFAULT_INITIAL_FILTER);
+                renderMap(markNew);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -206,15 +204,28 @@
             initMap();
             await ensureDailyCollection();
 
-            // 🔥 NEW: capture user location on load
+            // 🔥 Capture user location on load and respect cooldown
             await captureAndSaveCurrentLocation();
 
+            // Load all existing data
             await loadDataAndRender();
+
+            // Auto-refresh every 30s
+            startAutoRefresh();
         }
 
         bootstrap();
-    </script>
 
+        // 🔄 Auto-refresh every 30s
+        const AUTO_REFRESH_INTERVAL = 30 * 1000;
+
+        function startAutoRefresh() {
+            setInterval(async () => {
+                console.log("Refreshing map data...");
+                await loadDataAndRender(true);
+            }, AUTO_REFRESH_INTERVAL);
+        }
+    </script>
 </body>
 
 </html>
