@@ -1,6 +1,6 @@
 // ===== DATACUBE API PROXY INTEGRATION =====
 
-const PROXY_BASE = "https://your-backend.onrender.com/api"; // <- replace with your deployed backend URL
+const PROXY_BASE = "https://location-map-a89a.onrender.com/api";
 
 async function ensureDailyCollection() {
   const collectionName = todayCollectionName();
