@@ -12,7 +12,12 @@ const DATACUBE_BASE = "https://datacube.uxlivinglab.online/api";
 const DATACUBE_API_KEY = process.env.DATACUBE_API_KEY; // 🔐
 
 // ===== MIDDLEWARE =====
-app.use(cors());
+app.use(cors({
+  origin: "*",          // allow all origins (safe for now)
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
 // ===== HELPERS =====
