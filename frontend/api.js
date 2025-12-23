@@ -57,7 +57,10 @@ async function saveLocation(lat, lng) {
 async function fetchTodayLocations() {
   const params = new URLSearchParams({
     database_id: DATABASE_ID,
-    collection_name: todayCollectionName()
+    collection_name: todayCollectionName(),
+    filters: JSON.stringify({}),
+    page: 1,
+    page_size: 200
   });
 
   try {
