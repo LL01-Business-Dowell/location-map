@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Daily Location Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        html,
+        body,
+        #map {
+            height: 100%;
+            margin: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overscroll-behavior: none;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont;
+        }
+
+        #app {
+            height: 100%;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Bottom sheet */
+        #bottomSheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 60%;
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Collapsed state */
+        #bottomSheet.collapsed {
+            transform: translateY(80%);
+        }
+
+        /* Drag handle */
+        #sheetHandle {
+            width: 40px;
+            height: 4px;
+            background: #ccc;
+            border-radius: 2px;
+            margin: 8px auto;
+        }
+
+        /* Content */
+        #sheetContent {
+            padding: 12px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #listItems>div {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        /* Desktop layout */
+        @media (min-width: 768px) {
+            #bottomSheet {
+                position: static;
+                transform: none !important;
+                height: 100%;
+                width: 320px;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            #app {
+                display: flex;
+            }
+
+            #map {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- MAP -->
+        <div id="map"></div>
+
+        <!-- BOTTOM SHEET -->
+        <div id="bottomSheet" class="collapsed">
+            <div id="sheetHandle"></div>
+            <div id="sheetContent">
+                <h3>Saved Locations</h3>
+
+                <div id="listItems"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+    <script src="map.js"></script>
+
+    <script>
+        const sheet = document.getElementById("bottomSheet");
+        const handle = document.getElementById("sheetHandle");
+
+        handle.addEventListener("click", () => {
+            sheet.classList.toggle("collapsed");
+            setTimeout(() => map.invalidateSize(), 300);
+        });
+
+        async function captureAndSaveCurrentLocation() {
+            if (!navigator.geolocation) {
+                console.warn("Geolocation not supported");
+                return;
+            }
+
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+
+                        const roundedLat = Number(lat.toFixed(5));
+                        const roundedLng = Number(lng.toFixed(5));
+
+                        if (!canPerformScan()) {
+                            console.log("Scan skipped due to cooldown");
+                            return;
+                        }
+
+                        await saveLocation(roundedLat, roundedLng);
+                        updateLastScanTime();
+
+
+                        // Save to DB
+                        //await saveLocation(roundedLat, roundedLng);
+
+                        // Optimistic UI update
+                        rawMapData.push({
+                            latitude: roundedLat,
+                            longitude: roundedLng,
+                            timestamp: new Date().toISOString()
+                        });
+
+                        normalizeData(rawMapData);
+                        renderMap();
+
+                        // Focus map
+                        map.setView([lat, lng], 16);
+
+                        resolve();
+                    },
+                    (err) => {
+                        console.warn("Location denied", err);
+                        resolve();
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
+        async function loadDataAndRender() {
+            if (isFetching) return;
+            isFetching = true;
+
+            try {
+                const rows = await fetchTodayLocations();
+                rawMapData = rows;
+                normalizeData(rows);
+                applyDateFilter(DEFAULT_INITIAL_FILTER);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        async function bootstrap() {
+            initMap();
+            await ensureDailyCollection();
+
+            // 🔥 NEW: capture user location on load
+            await captureAndSaveCurrentLocation();
+
+            await loadDataAndRender();
+        }
+
+        bootstrap();
+    </script>
+
+</body>
+
+</html>
