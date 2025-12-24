@@ -286,16 +286,18 @@
             showSkeletons();
 
             try {
-                const rows = await fetchTodayLocations();
+                const rows = currentFilter === "week"
+                    ? await fetchWeekLocations()
+                    : await fetchTodayLocations();
+
                 allRowsCache = rows;
                 saveToCache(rows);
                 applyFilterAndRender(markNew);
-            } catch (e) {
-                console.error(e);
             } finally {
                 isFetching = false;
             }
         }
+
 
         function startAutoRefresh() {
             setInterval(() => loadDataAndRender(true), AUTO_REFRESH_INTERVAL);

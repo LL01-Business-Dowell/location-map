@@ -8,6 +8,26 @@ function todayCollectionName() {
   return `locations_${y}_${m}_${day}`;
 }
 
+function getLast7CollectionNames() {
+  const names = [];
+  const d = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
+  for (let i = 0; i < 7; i++) {
+    const temp = new Date(d);
+    temp.setDate(d.getDate() - i);
+
+    const y = temp.getFullYear();
+    const m = String(temp.getMonth() + 1).padStart(2, "0");
+    const day = String(temp.getDate()).padStart(2, "0");
+
+    names.push(`locations_${y}_${m}_${day}`);
+  }
+  return names;
+}
+
+
 function clearLayer(layer) {
   if (layer) layer.clearLayers();
 }

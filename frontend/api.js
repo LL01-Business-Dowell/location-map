@@ -83,3 +83,31 @@ async function fetchTodayLocations() {
     return [];
   }
 }
+
+async function fetchWeekLocations() {
+    const collections = getLast7CollectionNames();
+    const all = [];
+
+    for (const name of collections) {
+        try {
+            const params = new URLSearchParams({
+                database_id: DATABASE_ID,
+                collection_name: name,
+                page: 1,
+                page_size: 500
+            });
+
+            const res = await fetch(`${PROXY_BASE}/crud?${params}`);
+            if (!res.ok) continue;
+
+            const json = await res.json();
+            if (Array.isArray(json?.data)) {
+                all.push(...json.data);
+            }
+        } catch {
+            // collection may not exist yet — ignore
+        }
+    }
+    return all;
+}
+
