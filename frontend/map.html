@@ -258,6 +258,7 @@
 
         function render() {
             const filteredRows = filterRows(allRowsCache);
+            filteredRows.reverse();
 
             if (!filteredRows.length) {
                 showEmptyState();
