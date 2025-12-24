@@ -10,8 +10,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-        html,
-        body {
+        html, body {
             height: 100%;
             margin: 0;
             overscroll-behavior: none;
@@ -79,13 +78,12 @@
             opacity: 0;
         }
 
-        #listItems>div {
+        #listItems > div {
             padding: 12px;
             border-bottom: 1px solid #eee;
             font-size: 14px;
         }
 
-        /* Skeleton */
         .skeleton {
             height: 16px;
             width: 100%;
@@ -97,16 +95,10 @@
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: 100% 0;
-            }
-
-            100% {
-                background-position: -100% 0;
-            }
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
 
-        /* Empty state */
         .empty-state {
             padding: 24px 12px;
             text-align: center;
@@ -115,204 +107,182 @@
         }
 
         @media (min-width: 768px) {
-            #app {
-                flex-direction: row;
-            }
-
+            #app { flex-direction: row; }
             #bottomSheet {
                 height: 100%;
                 width: 320px;
                 border-radius: 0;
                 box-shadow: none;
             }
-
-            #bottomSheet.collapsed {
-                height: 100%;
-            }
         }
     </style>
 </head>
 
 <body>
-    <div id="app">
+<div id="app">
 
-        <div id="map"></div>
+    <div id="map"></div>
 
-        <div id="bottomSheet" class="collapsed">
-            <div id="sheetHandle"></div>
-            <div id="sheetContent">
-                <h3 id="listTitle">Scan Locations</h3>
+    <div id="bottomSheet" class="collapsed">
+        <div id="sheetHandle"></div>
+        <div id="sheetContent">
+            <h3 id="listTitle">Scan Locations</h3>
 
-                <div class="filter-bar">
-                    <select id="dateFilter">
-                        <option value="today">Today</option>
-                        <option value="week">Last 7 Days</option>
-                    </select>
-                </div>
-
-                <div id="listItems"></div>
+            <div class="filter-bar">
+                <select id="dateFilter">
+                    <option value="today">Today</option>
+                    <option value="week">Last 7 Days</option>
+                </select>
             </div>
-        </div>
 
+            <div id="listItems"></div>
+        </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</div>
 
-    <script src="config.js"></script>
-    <script src="state.js"></script>
-    <script src="utils.js"></script>
-    <script src="api.js"></script>
-    <script src="map.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <script>
-        const sheet = document.getElementById("bottomSheet");
-        const handle = document.getElementById("sheetHandle");
-        const filterSelect = document.getElementById("dateFilter");
-        const listItems = document.getElementById("listItems");
-        const listTitle = document.getElementById("listTitle");
+<script src="config.js"></script>
+<script src="state.js"></script>
+<script src="utils.js"></script>
+<script src="api.js"></script>
+<script src="map.js"></script>
 
-        const AUTO_REFRESH_INTERVAL = 30 * 1000;
-        const CACHE_KEY = "map_cache_today";
-        const FILTER_KEY = "map_filter";
-        const CACHE_TTL = 30 * 1000;
+<script>
+    const sheet = document.getElementById("bottomSheet");
+    const handle = document.getElementById("sheetHandle");
+    const filterSelect = document.getElementById("dateFilter");
+    const listItems = document.getElementById("listItems");
+    const listTitle = document.getElementById("listTitle");
 
-        let currentFilter = localStorage.getItem(FILTER_KEY) || "today";
-        let allRowsCache = [];
+    const AUTO_REFRESH_INTERVAL = 30 * 1000;
 
-        filterSelect.value = currentFilter;
+    const TODAY_CACHE_KEY = "map_cache_today";
+    const WEEK_CACHE_KEY = "map_cache_week";
+    const FILTER_KEY = "map_filter";
 
-        handle.addEventListener("click", () => {
-            sheet.classList.toggle("collapsed");
-            setTimeout(() => map.invalidateSize(), 300);
+    const TODAY_TTL = 30 * 1000;
+    const WEEK_TTL = 5 * 60 * 1000;
+
+    let currentFilter = localStorage.getItem(FILTER_KEY) || "today";
+    let allRowsCache = [];
+    let isFetching = false;
+
+    filterSelect.value = currentFilter;
+
+    handle.onclick = () => {
+        sheet.classList.toggle("collapsed");
+        setTimeout(() => map.invalidateSize(), 300);
+    };
+
+    filterSelect.onchange = async () => {
+        currentFilter = filterSelect.value;
+        localStorage.setItem(FILTER_KEY, currentFilter);
+        showSkeletons();
+        await loadDataAndRender();
+    };
+
+    function showSkeletons(count = 6) {
+        listItems.innerHTML = "";
+        for (let i = 0; i < count; i++) {
+            listItems.innerHTML += `<div class="skeleton"></div>`;
+        }
+        listTitle.textContent = "Scan Locations";
+    }
+
+    function showEmptyState() {
+        listItems.innerHTML = `<div class="empty-state">
+            ${currentFilter === "today" ? "No data for today" : "No data for last 7 days"}
+        </div>`;
+        listTitle.textContent = "Scan Locations (0)";
+        clearLayer(markerLayer);
+    }
+
+    function getCache(key, ttl) {
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.time > ttl) return null;
+        return parsed.data;
+    }
+
+    function setCache(key, data) {
+        localStorage.setItem(key, JSON.stringify({
+            time: Date.now(),
+            data
+        }));
+    }
+
+    function filterRows(rows) {
+        const now = new Date();
+
+        if (currentFilter === "today") {
+            return rows.filter(r =>
+                new Date(r.timestamp).toDateString() === now.toDateString()
+            );
+        }
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+
+        return rows.filter(r => {
+            const d = new Date(r.timestamp);
+            return d >= sevenDaysAgo && d <= now;
         });
+    }
 
-        filterSelect.addEventListener("change", () => {
-            currentFilter = filterSelect.value;
-            localStorage.setItem(FILTER_KEY, currentFilter);
-            showSkeletons();
-            animateFilterChange();
-        });
+    function render() {
+        const filtered = filterRows(allRowsCache);
+        if (!filtered.length) return showEmptyState();
 
-        function showSkeletons(count = 6) {
-            listItems.innerHTML = "";
-            for (let i = 0; i < count; i++) {
-                const sk = document.createElement("div");
-                sk.className = "skeleton";
-                listItems.appendChild(sk);
-            }
-            listTitle.textContent = "Scan Locations";
-        }
+        listTitle.textContent = `Scan Locations (${filtered.length})`;
+        renderMap();
+    }
 
-        function showEmptyState() {
-            const msg = currentFilter === "today"
-                ? "No data for today"
-                : "No data for last 7 days";
+    async function loadDataAndRender() {
+        if (isFetching) return;
+        isFetching = true;
 
-            listItems.innerHTML = `<div class="empty-state">${msg}</div>`;
-            listTitle.textContent = "Scan Locations (0)";
-        }
+        try {
+            const cacheKey = currentFilter === "today" ? TODAY_CACHE_KEY : WEEK_CACHE_KEY;
+            const ttl = currentFilter === "today" ? TODAY_TTL : WEEK_TTL;
 
-        function animateFilterChange() {
-            listItems.classList.add("fade");
-            setTimeout(() => {
-                applyFilterAndRender();
-                listItems.classList.remove("fade");
-            }, 200);
-        }
-
-        function filterRows(rows) {
-            const now = new Date();
-
-            if (currentFilter === "today") {
-                return rows.filter(r => {
-                    if (!r.timestamp) return false;
-                    const d = new Date(r.timestamp);
-                    return d.toDateString() === now.toDateString();
-                });
-            }
-
-            if (currentFilter === "week") {
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(now.getDate() - 7);
-
-                return rows.filter(r => {
-                    if (!r.timestamp) return false;
-                    const d = new Date(r.timestamp);
-                    return d >= sevenDaysAgo && d <= now;
-                });
-            }
-
-            return rows;
-        }
-
-
-        function applyFilterAndRender(markNew = false) {
-            const filtered = filterRows(allRowsCache);
-
-            if (filtered.length === 0) {
-                clearLayer(markerLayer);
-                showEmptyState();
+            const cached = getCache(cacheKey, ttl);
+            if (cached) {
+                allRowsCache = cached;
+                render();
                 return;
             }
 
-            listTitle.textContent = `Scan Locations (${filtered.length})`;
-            normalizeData(filtered);
-            renderMap(markNew);
+            const rows = currentFilter === "today"
+                ? await fetchTodayLocations()
+                : await fetchWeekLocations(); // MUST be parallel inside api.js
+
+            normalizeData(rows); // 🔥 normalize ONCE
+            allRowsCache = rows;
+            setCache(cacheKey, rows);
+            render();
+
+        } finally {
+            isFetching = false;
         }
+    }
 
-        function loadFromCache() {
-            const cached = localStorage.getItem(CACHE_KEY);
-            if (!cached) return false;
+    function startAutoRefresh() {
+        setInterval(() => {
+            if (currentFilter === "today") loadDataAndRender();
+        }, AUTO_REFRESH_INTERVAL);
+    }
 
-            const parsed = JSON.parse(cached);
-            if (Date.now() - parsed.time > CACHE_TTL) return false;
+    function bootstrap() {
+        initMap();
+        showSkeletons();
+        loadDataAndRender();
+        startAutoRefresh();
+    }
 
-            allRowsCache = parsed.data;
-            applyFilterAndRender();
-            return true;
-        }
-
-        function saveToCache(data) {
-            localStorage.setItem(CACHE_KEY, JSON.stringify({
-                time: Date.now(),
-                data
-            }));
-        }
-
-        async function loadDataAndRender(markNew = false) {
-            if (isFetching) return;
-            isFetching = true;
-
-            showSkeletons();
-
-            try {
-                const rows = currentFilter === "week"
-                    ? await fetchWeekLocations()
-                    : await fetchTodayLocations();
-
-                allRowsCache = rows;
-                saveToCache(rows);
-                applyFilterAndRender(markNew);
-            } finally {
-                isFetching = false;
-            }
-        }
-
-
-        function startAutoRefresh() {
-            setInterval(() => loadDataAndRender(true), AUTO_REFRESH_INTERVAL);
-        }
-
-        function bootstrap() {
-            initMap();
-            showSkeletons();
-            loadFromCache();
-            loadDataAndRender();
-            startAutoRefresh();
-        }
-
-        bootstrap();
-    </script>
+    bootstrap();
+</script>
 </body>
-
 </html>
