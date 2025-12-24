@@ -84,6 +84,7 @@
             padding: 12px;
             border-bottom: 1px solid #eee;
             font-size: 14px;
+            cursor: pointer;
         }
 
         .skeleton {
@@ -198,7 +199,9 @@
         }
 
         window.addEventListener("resize", () => {
-            setInitialSheetState();
+            if (window.innerWidth >= 768) {
+                sheet.classList.remove("collapsed");
+            }
             map.invalidateSize();
         });
 
@@ -283,6 +286,12 @@
             filteredRows.forEach(row => {
                 const item = document.createElement("div");
                 item.textContent = `${row.timestamp ? new Date(row.timestamp).toLocaleString() : "-"} | ${row.latitude}, ${row.longitude}`;
+                item.onclick = () => {
+                    // Zoom to the location on map
+                    if (typeof map !== 'undefined' && row.latitude && row.longitude) {
+                        map.setView([row.latitude, row.longitude], 15);
+                    }
+                };
                 listItems.appendChild(item);
             });
             listTitle.textContent = `Scan Locations (${filteredRows.length})`;
