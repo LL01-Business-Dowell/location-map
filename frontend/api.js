@@ -31,6 +31,12 @@ async function ensureDailyCollection() {
 }
 
 async function saveLocation(lat, lng) {
+  try {
+    await ensureDailyCollection();
+  } catch (e) {
+    console.error("Collection creation failed", e);
+    throw e;
+  }
   const payload = {
     database_id: DATABASE_ID,
     collection_name: todayCollectionName(),

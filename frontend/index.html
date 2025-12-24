@@ -95,6 +95,7 @@
           const lng = Number(pos.coords.longitude.toFixed(5));
 
           try {
+            //await ensureDailyCollection();
             await saveLocation(lat, lng);
             statusEl.textContent = "Location saved successfully ✅";
           } catch (e) {
