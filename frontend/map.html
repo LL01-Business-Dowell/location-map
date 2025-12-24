@@ -40,6 +40,7 @@
             transition: height 0.3s ease, width 0.3s ease;
         }
 
+        /* Remove collapsed height for desktop */
         #bottomSheet.collapsed {
             height: 48px;
         }
@@ -123,6 +124,15 @@
                 border-radius: 0;
                 box-shadow: none;
             }
+
+            /* Remove collapse feature for desktop completely */
+            #bottomSheet.collapsed {
+                height: 100%;
+            }
+
+            #sheetHandle {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -180,10 +190,10 @@
         filterSelect.value = currentFilter;
 
         function setInitialSheetState() {
-            if (window.innerWidth < 768) {
-                sheet.classList.add("collapsed");
+            if (window.innerWidth >= 768) {
+                sheet.classList.remove("collapsed"); // desktop always expanded
             } else {
-                sheet.classList.remove("collapsed");
+                sheet.classList.add("collapsed"); // mobile behavior
             }
         }
 
@@ -192,17 +202,22 @@
             map.invalidateSize();
         });
 
+        // Only allow toggle on mobile
         handle.onclick = () => {
-            sheet.classList.toggle("collapsed");
-            setTimeout(() => map.invalidateSize(), 300);
+            if (window.innerWidth < 768) {
+                sheet.classList.toggle("collapsed");
+                setTimeout(() => map.invalidateSize(), 300);
+            }
         };
 
         filterSelect.onchange = async () => {
             currentFilter = filterSelect.value;
             localStorage.setItem(FILTER_KEY, currentFilter);
+
             allRowsCache = [];
             localStorage.removeItem(TODAY_CACHE_KEY);
             localStorage.removeItem(WEEK_CACHE_KEY);
+
             showSkeletons();
             await loadDataAndRender();
         };
@@ -256,9 +271,6 @@
         }
 
         function render() {
-            listItems.innerHTML = "";
-            clearLayer(markerLayer);
-
             const filteredRows = filterRows(allRowsCache);
 
             if (!filteredRows.length) {
@@ -266,21 +278,22 @@
                 return;
             }
 
-            // Update side menu
+            // --- SIDE MENU ---
+            listItems.innerHTML = "";
             filteredRows.forEach(row => {
                 const item = document.createElement("div");
                 item.textContent = `${row.timestamp ? new Date(row.timestamp).toLocaleString() : "-"} | ${row.latitude}, ${row.longitude}`;
                 listItems.appendChild(item);
             });
-
             listTitle.textContent = `Scan Locations (${filteredRows.length})`;
 
-            // Update map
+            // --- MAP ---
+            clearLayer(markerLayer);
             renderMap(filteredRows);
         }
 
         async function loadDataAndRender() {
-            if (isFetching) return;
+            if (typeof isFetching !== "undefined" && isFetching) return;
             isFetching = true;
 
             try {
@@ -291,7 +304,6 @@
                 const cached = getCache(cacheKey, ttl);
                 if (cached) {
                     allRowsCache = cached;
-                    // listItems.innerHTML = ""; // Clear before render
                     render();
                     return;
                 }
@@ -300,12 +312,10 @@
                     ? await fetchWeekLocations()
                     : await fetchTodayLocations();
 
-                normalizeData(rows); // normalize once
+                normalizeData(rows);
                 allRowsCache = rows;
                 setCache(cacheKey, rows);
-                // listItems.innerHTML = ""; // Clear before render
                 render();
-
             } finally {
                 isFetching = false;
             }
