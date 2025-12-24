@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-        html, body {
+        html,
+        body {
             height: 100%;
             margin: 0;
             overscroll-behavior: none;
@@ -36,7 +37,7 @@
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
-            transition: height 0.3s ease;
+            transition: height 0.3s ease, width 0.3s ease;
         }
 
         #bottomSheet.collapsed {
@@ -78,7 +79,7 @@
             opacity: 0;
         }
 
-        #listItems > div {
+        #listItems>div {
             padding: 12px;
             border-bottom: 1px solid #eee;
             font-size: 14px;
@@ -95,8 +96,13 @@
         }
 
         @keyframes shimmer {
-            0% { background-position: 100% 0; }
-            100% { background-position: -100% 0; }
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
         }
 
         .empty-state {
@@ -107,7 +113,10 @@
         }
 
         @media (min-width: 768px) {
-            #app { flex-direction: row; }
+            #app {
+                flex-direction: row;
+            }
+
             #bottomSheet {
                 height: 100%;
                 width: 320px;
@@ -119,170 +128,208 @@
 </head>
 
 <body>
-<div id="app">
+    <div id="app">
 
-    <div id="map"></div>
+        <div id="map"></div>
 
-    <div id="bottomSheet" class="collapsed">
-        <div id="sheetHandle"></div>
-        <div id="sheetContent">
-            <h3 id="listTitle">Scan Locations</h3>
+        <div id="bottomSheet">
+            <div id="sheetHandle"></div>
+            <div id="sheetContent">
+                <h3 id="listTitle">Scan Locations</h3>
 
-            <div class="filter-bar">
-                <select id="dateFilter">
-                    <option value="today">Today</option>
-                    <option value="week">Last 7 Days</option>
-                </select>
+                <div class="filter-bar">
+                    <select id="dateFilter">
+                        <option value="today">Today</option>
+                        <option value="week">Last 7 Days</option>
+                    </select>
+                </div>
+
+                <div id="listItems"></div>
             </div>
-
-            <div id="listItems"></div>
         </div>
+
     </div>
 
-</div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+    <script src="map.js"></script>
 
-<script src="config.js"></script>
-<script src="state.js"></script>
-<script src="utils.js"></script>
-<script src="api.js"></script>
-<script src="map.js"></script>
+    <script>
+        const sheet = document.getElementById("bottomSheet");
+        const handle = document.getElementById("sheetHandle");
+        const filterSelect = document.getElementById("dateFilter");
+        const listItems = document.getElementById("listItems");
+        const listTitle = document.getElementById("listTitle");
 
-<script>
-    const sheet = document.getElementById("bottomSheet");
-    const handle = document.getElementById("sheetHandle");
-    const filterSelect = document.getElementById("dateFilter");
-    const listItems = document.getElementById("listItems");
-    const listTitle = document.getElementById("listTitle");
+        const AUTO_REFRESH_INTERVAL = 30 * 1000;
 
-    const AUTO_REFRESH_INTERVAL = 30 * 1000;
+        const TODAY_CACHE_KEY = "map_cache_today";
+        const WEEK_CACHE_KEY = "map_cache_week";
+        const FILTER_KEY = "map_filter";
 
-    const TODAY_CACHE_KEY = "map_cache_today";
-    const WEEK_CACHE_KEY = "map_cache_week";
-    const FILTER_KEY = "map_filter";
+        const TODAY_TTL = 30 * 1000;
+        const WEEK_TTL = 5 * 60 * 1000;
 
-    const TODAY_TTL = 30 * 1000;
-    const WEEK_TTL = 5 * 60 * 1000;
+        let currentFilter = localStorage.getItem(FILTER_KEY) || "today";
+        let allRowsCache = [];
 
-    let currentFilter = localStorage.getItem(FILTER_KEY) || "today";
-    let allRowsCache = [];
-    // let isFetching = false;
+        filterSelect.value = currentFilter;
 
-    filterSelect.value = currentFilter;
-
-    handle.onclick = () => {
-        sheet.classList.toggle("collapsed");
-        setTimeout(() => map.invalidateSize(), 300);
-    };
-
-    filterSelect.onchange = async () => {
-        currentFilter = filterSelect.value;
-        localStorage.setItem(FILTER_KEY, currentFilter);
-        showSkeletons();
-        await loadDataAndRender();
-    };
-
-    function showSkeletons(count = 6) {
-        listItems.innerHTML = "";
-        for (let i = 0; i < count; i++) {
-            listItems.innerHTML += `<div class="skeleton"></div>`;
-        }
-        listTitle.textContent = "Scan Locations";
-    }
-
-    function showEmptyState() {
-        listItems.innerHTML = `<div class="empty-state">
-            ${currentFilter === "today" ? "No data for today" : "No data for last 7 days"}
-        </div>`;
-        listTitle.textContent = "Scan Locations (0)";
-        clearLayer(markerLayer);
-    }
-
-    function getCache(key, ttl) {
-        const cached = localStorage.getItem(key);
-        if (!cached) return null;
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.time > ttl) return null;
-        return parsed.data;
-    }
-
-    function setCache(key, data) {
-        localStorage.setItem(key, JSON.stringify({
-            time: Date.now(),
-            data
-        }));
-    }
-
-    function filterRows(rows) {
-        const now = new Date();
-
-        if (currentFilter === "today") {
-            return rows.filter(r =>
-                new Date(r.timestamp).toDateString() === now.toDateString()
-            );
+        function setInitialSheetState() {
+            if (window.innerWidth < 768) {
+                sheet.classList.add("collapsed");
+            } else {
+                sheet.classList.remove("collapsed");
+            }
         }
 
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(now.getDate() - 7);
-
-        return rows.filter(r => {
-            const d = new Date(r.timestamp);
-            return d >= sevenDaysAgo && d <= now;
+        window.addEventListener("resize", () => {
+            setInitialSheetState();
+            map.invalidateSize();
         });
-    }
 
-    function render() {
-        const filtered = filterRows(allRowsCache);
-        if (!filtered.length) return showEmptyState();
+        handle.onclick = () => {
+            sheet.classList.toggle("collapsed");
+            setTimeout(() => map.invalidateSize(), 300);
+        };
 
-        listTitle.textContent = `Scan Locations (${filtered.length})`;
-        renderMap();
-    }
+        filterSelect.onchange = async () => {
+            currentFilter = filterSelect.value;
+            localStorage.setItem(FILTER_KEY, currentFilter);
+            allRowsCache = [];
+            localStorage.removeItem(TODAY_CACHE_KEY);
+            localStorage.removeItem(WEEK_CACHE_KEY);
+            showSkeletons();
+            await loadDataAndRender();
+        };
 
-    async function loadDataAndRender() {
-        if (isFetching) return;
-        isFetching = true;
+        function showSkeletons(count = 6) {
+            listItems.innerHTML = "";
+            for (let i = 0; i < count; i++) {
+                listItems.innerHTML += `<div class="skeleton"></div>`;
+            }
+            listTitle.textContent = "Scan Locations";
+        }
 
-        try {
-            const cacheKey = currentFilter === "today" ? TODAY_CACHE_KEY : WEEK_CACHE_KEY;
-            const ttl = currentFilter === "today" ? TODAY_TTL : WEEK_TTL;
+        function showEmptyState() {
+            listItems.innerHTML = `
+            <div class="empty-state">
+                ${currentFilter === "today" ? "No data for today" : "No data for last 7 days"}
+            </div>`;
+            listTitle.textContent = "Scan Locations (0)";
+            clearLayer(markerLayer);
+        }
 
-            const cached = getCache(cacheKey, ttl);
-            if (cached) {
-                allRowsCache = cached;
-                render();
+        function getCache(key, ttl) {
+            const cached = localStorage.getItem(key);
+            if (!cached) return null;
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.time > ttl) return null;
+            return parsed.data;
+        }
+
+        function setCache(key, data) {
+            localStorage.setItem(key, JSON.stringify({
+                time: Date.now(),
+                data
+            }));
+        }
+
+        function filterRows(rows) {
+            const now = new Date();
+
+            if (currentFilter === "today") {
+                return rows.filter(r => new Date(r.timestamp).toDateString() === now.toDateString());
+            }
+
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(now.getDate() - 7);
+
+            return rows.filter(r => {
+                const d = new Date(r.timestamp);
+                return d >= sevenDaysAgo && d <= now;
+            });
+        }
+
+        function render() {
+            listItems.innerHTML = "";
+            clearLayer(markerLayer);
+
+            const filteredRows = filterRows(allRowsCache);
+
+            if (!filteredRows.length) {
+                showEmptyState();
                 return;
             }
 
-            const rows = currentFilter === "today"
-                ? await fetchTodayLocations()
-                : await fetchWeekLocations(); // MUST be parallel inside api.js
+            // Update side menu
+            filteredRows.forEach(row => {
+                const item = document.createElement("div");
+                item.textContent = `${row.timestamp ? new Date(row.timestamp).toLocaleString() : "-"} | ${row.latitude}, ${row.longitude}`;
+                listItems.appendChild(item);
+            });
 
-            normalizeData(rows); // 🔥 normalize ONCE
-            allRowsCache = rows;
-            setCache(cacheKey, rows);
-            render();
+            listTitle.textContent = `Scan Locations (${filteredRows.length})`;
 
-        } finally {
-            isFetching = false;
+            // Update map
+            renderMap(filteredRows);
         }
-    }
 
-    function startAutoRefresh() {
-        setInterval(() => {
-            if (currentFilter === "today") loadDataAndRender();
-        }, AUTO_REFRESH_INTERVAL);
-    }
+        async function loadDataAndRender() {
+            if (isFetching) return;
+            isFetching = true;
 
-    function bootstrap() {
-        initMap();
-        showSkeletons();
-        loadDataAndRender();
-        startAutoRefresh();
-    }
+            try {
+                const isWeek = currentFilter === "week";
+                const cacheKey = isWeek ? WEEK_CACHE_KEY : TODAY_CACHE_KEY;
+                const ttl = isWeek ? WEEK_TTL : TODAY_TTL;
 
-    bootstrap();
-</script>
+                const cached = getCache(cacheKey, ttl);
+                if (cached) {
+                    allRowsCache = cached;
+                    // listItems.innerHTML = ""; // Clear before render
+                    render();
+                    return;
+                }
+
+                const rows = isWeek
+                    ? await fetchWeekLocations()
+                    : await fetchTodayLocations();
+
+                normalizeData(rows); // normalize once
+                allRowsCache = rows;
+                setCache(cacheKey, rows);
+                // listItems.innerHTML = ""; // Clear before render
+                render();
+
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (currentFilter === "today") {
+                    loadDataAndRender();
+                }
+            }, AUTO_REFRESH_INTERVAL);
+        }
+
+        function bootstrap() {
+            initMap();
+            setInitialSheetState();
+            showSkeletons();
+            loadDataAndRender();
+            startAutoRefresh();
+        }
+
+        bootstrap();
+    </script>
+
 </body>
+
 </html>
