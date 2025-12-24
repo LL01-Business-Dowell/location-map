@@ -25,7 +25,7 @@
         }
 
         #map {
-            flex: 1;
+            flex: 1 1 auto;
             width: 100%;
         }
 
@@ -37,12 +37,15 @@
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
-            transition: height 0.3s ease, width 0.3s ease;
+
+            /* 🔒 CRITICAL: prevent mobile resize / shrink */
+            flex-shrink: 0;
+            transition: none !important;
         }
 
-        /* Remove collapsed height for desktop */
+        /* Mobile collapsed class exists but is disabled */
         #bottomSheet.collapsed {
-            height: 48px;
+            height: 280px;
         }
 
         #sheetHandle {
@@ -98,13 +101,8 @@
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: 100% 0;
-            }
-
-            100% {
-                background-position: -100% 0;
-            }
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
 
         .empty-state {
@@ -114,6 +112,7 @@
             font-size: 14px;
         }
 
+        /* ================= DESKTOP (UNCHANGED) ================= */
         @media (min-width: 768px) {
             #app {
                 flex-direction: row;
@@ -124,11 +123,7 @@
                 width: 320px;
                 border-radius: 0;
                 box-shadow: none;
-            }
-
-            /* Remove collapse feature for desktop completely */
-            #bottomSheet.collapsed {
-                height: 100%;
+                flex-shrink: 0;
             }
 
             #sheetHandle {
@@ -191,26 +186,17 @@
         filterSelect.value = currentFilter;
 
         function setInitialSheetState() {
-            if (window.innerWidth >= 768) {
-                sheet.classList.remove("collapsed"); // desktop always expanded
-            } else {
-                sheet.classList.remove("collapsed"); // mobile starts expanded to show menu
-            }
+            sheet.classList.remove("collapsed"); // 🔒 always fixed on mobile
         }
 
         window.addEventListener("resize", () => {
-            if (window.innerWidth >= 768) {
-                sheet.classList.remove("collapsed");
-            }
+            setInitialSheetState();
             map.invalidateSize();
         });
 
-        // Only allow toggle on mobile
+        // ❌ Disable collapse on mobile completely
         handle.onclick = () => {
-            if (window.innerWidth < 768) {
-                sheet.classList.toggle("collapsed");
-                setTimeout(() => map.invalidateSize(), 300);
-            }
+            /* intentionally disabled */
         };
 
         filterSelect.onchange = async () => {
@@ -235,9 +221,9 @@
 
         function showEmptyState() {
             listItems.innerHTML = `
-            <div class="empty-state">
-                ${currentFilter === "today" ? "No data for today" : "No data for last 7 days"}
-            </div>`;
+                <div class="empty-state">
+                    ${currentFilter === "today" ? "No data for today" : "No data for last 7 days"}
+                </div>`;
             listTitle.textContent = "Scan Locations (0)";
             clearLayer(markerLayer);
         }
@@ -251,10 +237,7 @@
         }
 
         function setCache(key, data) {
-            localStorage.setItem(key, JSON.stringify({
-                time: Date.now(),
-                data
-            }));
+            localStorage.setItem(key, JSON.stringify({ time: Date.now(), data }));
         }
 
         function filterRows(rows) {
@@ -281,22 +264,20 @@
                 return;
             }
 
-            // --- SIDE MENU ---
             listItems.innerHTML = "";
             filteredRows.forEach(row => {
                 const item = document.createElement("div");
                 item.textContent = `${row.timestamp ? new Date(row.timestamp).toLocaleString() : "-"} | ${row.latitude}, ${row.longitude}`;
                 item.onclick = () => {
-                    // Zoom to the location on map
                     if (typeof map !== 'undefined' && row.latitude && row.longitude) {
                         map.setView([row.latitude, row.longitude], 15);
                     }
                 };
                 listItems.appendChild(item);
             });
+
             listTitle.textContent = `Scan Locations (${filteredRows.length})`;
 
-            // --- MAP ---
             clearLayer(markerLayer);
             renderMap(filteredRows);
         }
