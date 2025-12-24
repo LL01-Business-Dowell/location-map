@@ -112,21 +112,28 @@ async function fetchTodayLocations() {
 // }
 
 async function fetchWeekLocations() {
-  const days = getLast7CollectionNames();
+    const collections = getLast7CollectionNames();
 
-  const requests = days.map(day =>
-    fetch(`${PROXY_BASE}/crud/read`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        database_id: DATABASE_ID,
-        collection_name: day
-      })
-    }).then(r => r.json()).catch(() => [])
-  );
+    const requests = collections.map(name => {
+        const params = new URLSearchParams({
+            database_id: DATABASE_ID,
+            collection_name: name,
+            page: 1,
+            page_size: 500
+        });
 
-  const results = await Promise.all(requests);
-  return results.flat();
+        return fetch(`${PROXY_BASE}/crud?${params}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(json => Array.isArray(json?.data) ? json.data : [])
+            .catch(() => []); // collection may not exist
+    });
+
+    const results = await Promise.allSettled(requests);
+
+    return results
+        .filter(r => r.status === "fulfilled")
+        .flatMap(r => r.value);
 }
+
 
 
