@@ -29,6 +29,7 @@
             width: 100%;
         }
 
+        /* ================= MOBILE ================= */
         #bottomSheet {
             position: relative;
             height: 280px;
@@ -37,30 +38,18 @@
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
-
-            /* 🔒 CRITICAL: prevent mobile resize / shrink */
             flex-shrink: 0;
-            transition: none !important;
-        }
-
-        /* Mobile collapsed class exists but is disabled */
-        #bottomSheet.collapsed {
-            height: 280px;
         }
 
         #sheetHandle {
-            width: 40px;
-            height: 4px;
-            background: #ccc;
-            border-radius: 2px;
-            margin: 8px auto;
-            cursor: pointer;
+            display: none; /* hide handle completely */
         }
 
         #sheetContent {
             padding: 12px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            flex: 1; /* fill remaining space */
         }
 
         .filter-bar {
@@ -101,8 +90,13 @@
         }
 
         @keyframes shimmer {
-            0% { background-position: 100% 0; }
-            100% { background-position: -100% 0; }
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
         }
 
         .empty-state {
@@ -112,7 +106,7 @@
             font-size: 14px;
         }
 
-        /* ================= DESKTOP (UNCHANGED) ================= */
+        /* ================= DESKTOP ================= */
         @media (min-width: 768px) {
             #app {
                 flex-direction: row;
@@ -124,10 +118,12 @@
                 border-radius: 0;
                 box-shadow: none;
                 flex-shrink: 0;
+                overflow: hidden;
             }
 
-            #sheetHandle {
-                display: none;
+            #sheetContent {
+                overflow-y: auto;
+                height: 100%;
             }
         }
     </style>
@@ -135,7 +131,6 @@
 
 <body>
     <div id="app">
-
         <div id="map"></div>
 
         <div id="bottomSheet">
@@ -153,11 +148,9 @@
                 <div id="listItems"></div>
             </div>
         </div>
-
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script src="config.js"></script>
     <script src="state.js"></script>
     <script src="utils.js"></script>
@@ -166,7 +159,6 @@
 
     <script>
         const sheet = document.getElementById("bottomSheet");
-        const handle = document.getElementById("sheetHandle");
         const filterSelect = document.getElementById("dateFilter");
         const listItems = document.getElementById("listItems");
         const listTitle = document.getElementById("listTitle");
@@ -184,32 +176,6 @@
         let allRowsCache = [];
 
         filterSelect.value = currentFilter;
-
-        function setInitialSheetState() {
-            sheet.classList.remove("collapsed"); // 🔒 always fixed on mobile
-        }
-
-        window.addEventListener("resize", () => {
-            setInitialSheetState();
-            map.invalidateSize();
-        });
-
-        // ❌ Disable collapse on mobile completely
-        handle.onclick = () => {
-            /* intentionally disabled */
-        };
-
-        filterSelect.onchange = async () => {
-            currentFilter = filterSelect.value;
-            localStorage.setItem(FILTER_KEY, currentFilter);
-
-            allRowsCache = [];
-            localStorage.removeItem(TODAY_CACHE_KEY);
-            localStorage.removeItem(WEEK_CACHE_KEY);
-
-            showSkeletons();
-            await loadDataAndRender();
-        };
 
         function showSkeletons(count = 6) {
             listItems.innerHTML = "";
@@ -242,45 +208,89 @@
 
         function filterRows(rows) {
             const now = new Date();
-
             if (currentFilter === "today") {
                 return rows.filter(r => new Date(r.timestamp).toDateString() === now.toDateString());
             }
-
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(now.getDate() - 7);
-
             return rows.filter(r => {
                 const d = new Date(r.timestamp);
                 return d >= sevenDaysAgo && d <= now;
             });
         }
 
-        function render() {
-            const filteredRows = filterRows(allRowsCache);
-            filteredRows.reverse();
+        function groupByLocation(rows) {
+            const map = new Map();
+            rows.forEach(row => {
+                if (!row.latitude || !row.longitude || !row.timestamp) return;
+                const lat = Number(row.latitude.toFixed(4));
+                const lng = Number(row.longitude.toFixed(4));
+                const key = `${lat},${lng}`;
+                if (!map.has(key)) {
+                    map.set(key, {
+                        latitude: lat,
+                        longitude: lng,
+                        scanCount: 0,
+                        lastScanAt: new Date(row.timestamp)
+                    });
+                }
+                const loc = map.get(key);
+                loc.scanCount++;
+                const ts = new Date(row.timestamp);
+                if (ts > loc.lastScanAt) loc.lastScanAt = ts;
+            });
+            return Array.from(map.values());
+        }
 
+        function render() {
+            let filteredRows = filterRows(allRowsCache);
             if (!filteredRows.length) {
                 showEmptyState();
                 return;
             }
 
+            filteredRows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            const locations = groupByLocation(filteredRows);
+            locations.sort((a, b) => new Date(b.lastScanAt) - new Date(a.lastScanAt));
+
             listItems.innerHTML = "";
-            filteredRows.forEach(row => {
+
+            locations.forEach(loc => {
                 const item = document.createElement("div");
-                item.textContent = `${row.timestamp ? new Date(row.timestamp).toLocaleString() : "-"} | ${row.latitude}, ${row.longitude}`;
+                const lastScanDate = new Date(loc.lastScanAt);
+                const now = new Date();
+                const diffMs = now - lastScanDate;
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                let lastScanText = "";
+                if (diffMins < 60) {
+                    lastScanText = `${diffMins} min${diffMins !== 1 ? "s" : ""} ago`;
+                } else if (diffMins < 24 * 60) {
+                    const hours = Math.floor(diffMins / 60);
+                    lastScanText = `${hours} hr${hours !== 1 ? "s" : ""} ago`;
+                } else {
+                    const days = Math.floor(diffMins / (60 * 24));
+                    lastScanText = `${days} day${days !== 1 ? "s" : ""} ago`;
+                }
+
+                item.innerHTML = `
+                    <div>📍 ${loc.latitude}, ${loc.longitude}</div>
+                    <div>Scans: ${loc.scanCount}</div>
+                    <div>Last scan: ${lastScanText}</div>
+                `;
+
                 item.onclick = () => {
-                    if (typeof map !== 'undefined' && row.latitude && row.longitude) {
-                        map.setView([row.latitude, row.longitude], 15);
+                    if (typeof map !== "undefined") {
+                        map.setView([loc.latitude, loc.longitude], 15);
                     }
                 };
+
                 listItems.appendChild(item);
             });
 
-            listTitle.textContent = `Scan Locations (${filteredRows.length})`;
-
+            listTitle.textContent = `Scan Locations (${locations.length})`;
             clearLayer(markerLayer);
-            renderMap(filteredRows);
+            renderMap(locations);
+            map.invalidateSize(); // always ensure map size is correct
         }
 
         async function loadDataAndRender() {
@@ -312,25 +322,36 @@
             }
         }
 
+        filterSelect.onchange = async () => {
+            currentFilter = filterSelect.value;
+            localStorage.setItem(FILTER_KEY, currentFilter);
+            allRowsCache = [];
+            localStorage.removeItem(TODAY_CACHE_KEY);
+            localStorage.removeItem(WEEK_CACHE_KEY);
+
+            showSkeletons();
+            await loadDataAndRender();
+        };
+
         function startAutoRefresh() {
             setInterval(() => {
-                if (currentFilter === "today") {
-                    loadDataAndRender();
-                }
+                if (currentFilter === "today") loadDataAndRender();
             }, AUTO_REFRESH_INTERVAL);
         }
 
         function bootstrap() {
             initMap();
-            setInitialSheetState();
             showSkeletons();
             loadDataAndRender();
             startAutoRefresh();
         }
 
+        window.addEventListener("resize", () => {
+            map.invalidateSize();
+        });
+
         bootstrap();
     </script>
-
 </body>
 
 </html>
