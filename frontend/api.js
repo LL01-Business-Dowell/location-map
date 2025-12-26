@@ -40,7 +40,7 @@ async function saveLocation(lat, lng) {
   const payload = {
     database_id: DATABASE_ID,
     collection_name: todayCollectionName(),
-    data: [
+    documents: [
       {
         latitude: lat,
         longitude: lng,
