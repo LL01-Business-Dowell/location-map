@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Day-wise Location Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- API -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+
+    <style>
+        #map {
+            height: 100%;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg,
+                    #e5e7eb 25%,
+                    #f3f4f6 37%,
+                    #e5e7eb 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: 0 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 h-screen flex flex-col">
+
+    <header class="bg-white shadow p-4 flex items-center justify-between">
+        <h1 class="text-lg font-semibold">📍 Day-wise Location Report</h1>
+        <input id="datePicker" type="date" class="border rounded px-3 py-1" />
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-full md:w-96 bg-white overflow-y-auto border-r">
+            <ul id="locationList" class="p-4 space-y-3"></ul>
+        </aside>
+        <main class="flex-1">
+            <div id="map"></div>
+        </main>
+    </div>
+
+    <script>
+        /* ================= MAP ================= */
+
+        let map, markers;
+
+        function initMap() {
+            map = L.map("map").setView([20.5937, 78.9629], 5);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 18
+            }).addTo(map);
+            markers = L.layerGroup().addTo(map);
+        }
+
+        function clearMap() {
+            markers.clearLayers();
+        }
+
+        /* ================= UI ================= */
+
+        function showSkeletons() {
+            const list = document.getElementById("locationList");
+            list.innerHTML = "";
+            for (let i = 0; i < 6; i++) {
+                const li = document.createElement("li");
+                li.className = "h-20 rounded skeleton";
+                list.appendChild(li);
+            }
+        }
+
+        function render(locations) {
+            const list = document.getElementById("locationList");
+            list.innerHTML = "";
+            clearMap();
+
+            if (!locations.length) {
+                list.innerHTML =
+                    `<p class="text-center text-gray-500 mt-6">No scans for this day</p>`;
+                return;
+            }
+
+            locations.sort((a, b) =>
+                new Date(b.timestamp || b.created_at) -
+                new Date(a.timestamp || a.created_at)
+            );
+
+            locations.forEach(loc => {
+                if (!loc.latitude || !loc.longitude) return;
+
+                const marker = L.marker([loc.latitude, loc.longitude])
+                    .addTo(markers)
+                    .bindPopup(`
+                        <b>Lat:</b> ${Number(loc.latitude).toFixed(5)}<br>
+                        <b>Lng:</b> ${Number(loc.longitude).toFixed(5)}<br>
+                        <small>
+                            ${new Date(loc.timestamp || loc.created_at).toLocaleString()}
+                        </small>
+                    `);
+
+
+                const li = document.createElement("li");
+                li.className = "bg-white p-4 rounded shadow cursor-pointer";
+                li.innerHTML = `
+                    <div class="font-medium text-sm">
+                        📍 ${Number(loc.latitude).toFixed(5)}, ${Number(loc.longitude).toFixed(5)}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        ${new Date(loc.timestamp || loc.created_at).toLocaleString()}
+                    </div>
+                `;
+
+                li.onclick = () => {
+                    map.setView([loc.latitude, loc.longitude], 16);
+                    marker.openPopup();
+                };
+                list.appendChild(li);
+            });
+
+            map.setView(
+                [locations[0].latitude, locations[0].longitude],
+                12
+            );
+        }
+
+        /* ================= MAIN ================= */
+
+        async function loadDay(dateStr) {
+            showSkeletons();
+            const data = await fetchLocationsByDate(dateStr);
+            render(data);
+        }
+
+        window.onload = () => {
+            initMap();
+
+            const picker = document.getElementById("datePicker");
+            const today = new Date().toISOString().split("T")[0];
+            picker.value = today;
+
+            loadDay(today);
+            picker.onchange = () => loadDay(picker.value);
+        };
+    </script>
+
+</body>
+
+</html>
