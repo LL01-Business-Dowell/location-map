@@ -332,6 +332,16 @@
         const reportbtn = document.getElementById("viewReportBtn");
 
         async function captureLocationOnLoad() {
+
+            // Check if location was already captured this session
+            if (sessionStorage.getItem("locationCaptured")) {
+                //statusEl.textContent = "Location already captured ✅";
+                statusEl.classList.remove('loading');
+                btn.disabled = false;
+                reportbtn.disabled = false;
+                return;
+            }
+
             if (!navigator.geolocation) {
                 statusEl.textContent = "Geolocation not supported.";
                 statusEl.classList.remove('loading');
@@ -353,6 +363,9 @@
                         // statusEl.textContent = "Location already recorded.";
                         statusEl.classList.remove('loading');
                     }
+
+                    // mark as captured for this session
+                    sessionStorage.setItem("locationCaptured", "true");
 
                     btn.disabled = false;
                     reportbtn.disabled = false;
