@@ -113,6 +113,16 @@
             transform: translateY(-1px);
         }
 
+        #listItems>div.selected {
+            background: #eef2ff;
+            border-left: 4px solid #4f46e5;
+        }
+
+        #listItems>div.selected div:first-child {
+            font-weight: 600;
+        }
+
+
 
         @keyframes shimmer {
             0% {
@@ -311,6 +321,12 @@
                 `;
 
                 item.onclick = () => {
+                    document
+                        .querySelectorAll("#listItems > div.selected")
+                        .forEach(el => el.classList.remove("selected"));
+
+                    item.classList.add("selected");
+
                     if (typeof map !== "undefined") {
                         map.setView([loc.latitude, loc.longitude], 15);
                     }

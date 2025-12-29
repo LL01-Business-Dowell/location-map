@@ -67,3 +67,35 @@ function collectionNameFromDate(dateStr) {
   const day = String(d.getDate()).padStart(2, "0");
   return `locations_${y}_${m}_${day}`;
 }
+
+function getSessionLocation() {
+  const lat = sessionStorage.getItem("latitude");
+  const lng = sessionStorage.getItem("longitude");
+
+  console.log(lat, lng);
+
+  if (!lat || !lng) return null;
+
+  return {
+    lat: parseFloat(lat),
+    lng: parseFloat(lng)
+  };
+}
+
+function highlightSelectedListItem() {
+  document
+    .querySelectorAll("#listItems > div")
+    .forEach(el => el.classList.remove("selected"));
+
+  if (!selectedLocationKey) return;
+
+  document
+    .querySelectorAll("#listItems > div")
+    .forEach(el => {
+      if (el.dataset?.key === selectedLocationKey) {
+        el.classList.add("selected");
+      }
+    });
+}
+
+

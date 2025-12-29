@@ -366,6 +366,8 @@
 
                     // mark as captured for this session
                     sessionStorage.setItem("locationCaptured", "true");
+                    sessionStorage.setItem("latitude", lat);
+                    sessionStorage.setItem("longitude", lng)
 
                     btn.disabled = false;
                     reportbtn.disabled = false;

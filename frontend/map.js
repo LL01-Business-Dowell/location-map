@@ -1,13 +1,24 @@
 let lastScanTime = 0;
 const SCAN_COOLDOWN_MS = 60 * 1000; // 1 min cooldown
+let selectedLocationKey = null;
+
 
 function initMap() {
+
+  const sessionLoc = getSessionLocation();
+
+  const centerLatLng = sessionLoc
+    ? [sessionLoc.lat, sessionLoc.lng]
+    : [20.5937, 78.9629];
+
+  const zoomLevel = sessionLoc ? 16 : 5;
+
   map = L.map("map", {
     zoomControl: false,
     tap: false,
     inertia: true,
     worldCopyJump: true
-  }).setView([20.5937, 78.9629], 5);
+  }).setView(centerLatLng, zoomLevel);
 
   // OpenStreetMap tiles
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -58,6 +69,8 @@ function renderMap(highlightNew = false) {
 
   normalizedData.forEach(p => {
     const marker = L.marker([p.lat, p.lng]);
+    const key = `${p.lat}_${p.lng}`;
+
 
     const lastScan = p.scans[p.scans.length - 1].timestamp;
     marker.bindPopup(`
@@ -70,11 +83,16 @@ function renderMap(highlightNew = false) {
     if (highlightNew && p.scans[p.scans.length - 1].timestamp === rawMapData[rawMapData.length - 1]?.timestamp) {
       const el = marker.getElement ? marker.getElement() : null;
       if (el) el.classList.add("bounce-marker");
-      else marker.on("add", function() {
+      else marker.on("add", function () {
         const mEl = marker.getElement();
         if (mEl) mEl.classList.add("bounce-marker");
       });
     }
+
+    marker.on("click", () => {
+      selectedLocationKey = key;
+      highlightSelectedListItem();
+    });
 
     markerLayer.addLayer(marker);
   });
@@ -88,16 +106,26 @@ function renderLocationList() {
   container.innerHTML = "";
 
   normalizedData.forEach(p => {
+    const key = `${p.lat}_${p.lng}`;
     const lastScan = p.scans[p.scans.length - 1].timestamp;
 
     const div = document.createElement("div");
+    div.dataset.key = key;
+
     div.innerHTML = `
       <strong>📍 ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</strong><br/>
       <span><strong>Scans:</strong> ${p.scans.length}</span><br/>
       <small>Last scan: ${timeAgo(lastScan)}</small>
     `;
 
+    if (key === selectedLocationKey) {
+      div.classList.add("selected");
+    }
+
     div.onclick = () => {
+      selectedLocationKey = key;
+
+      highlightSelectedListItem();
       map.setView([p.lat, p.lng], 16);
       sheet.classList.add("collapsed"); // auto-hide on mobile
     };
