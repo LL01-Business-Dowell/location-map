@@ -60,6 +60,23 @@ app.post("/api/crud", async (req, res) => {
   }
 });
 
+// ---------- CRUD (PUT) ----------
+app.put("/api/crud", async (req, res) => {
+    try {
+    const r = await fetch(`${DATACUBE_BASE}/crud`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify(req.body)
+    });
+
+    const data = await r.json(); // parse as JSON
+    res.status(r.status).json(data);
+  } catch (err) {
+    console.error("crud POST error:", err);
+    res.status(500).json({ error: "Proxy error" });
+  }
+});
+
 // ---------- CRUD (GET) ----------
 app.get("/api/crud", async (req, res) => {
   try {
@@ -72,6 +89,39 @@ app.get("/api/crud", async (req, res) => {
     res.status(r.status).json(data);
   } catch (err) {
     console.error("crud GET error:", err);
+    res.status(500).json({ error: "Proxy error" });
+  }
+});
+
+// ---------- LIST COLLECTIONS ----------
+app.get("/api/list_collections", async (req, res) => {
+    try {
+        const qs = new URLSearchParams(req.query).toString();
+        const r = await fetch(`${DATACUBE_BASE}/api/list_collections?${qs}`, {
+            headers: authHeaders()
+        });
+
+        const data = await r.json();
+        res.status(r.status).json(data);
+    }catch (err) {
+        console.error("list_collection error:", err);
+        res.status(500).json({ error: "Proxy error" });
+    }
+});
+
+// ---------- CREATE DATABASE ----------
+app.post("/api/create_database", async (req, res) => {
+    try {
+    const r = await fetch(`${DATACUBE_BASE}/api/create_database`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(req.body)
+    });
+
+    const data = await r.json(); // parse as JSON
+    res.status(r.status).json(data);
+  } catch (err) {
+    console.error("crud POST error:", err);
     res.status(500).json({ error: "Proxy error" });
   }
 });

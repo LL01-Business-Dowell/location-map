@@ -254,6 +254,28 @@
             width: 100%;
         }
 
+        .feedback-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #c7d2fe;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: black;
+        }
+
+        .feedback-btn:hover {
+            background: #eef2ff;
+        }
+
+        .feedback-btn.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+
         @media (max-width: 640px) {
             .card {
                 padding: 32px 2px;
@@ -311,6 +333,19 @@
             Report
         </button>
 
+        <div id="feedbackBox" style="margin: 16px 0; animation: fadeInUp 0.6s ease-out 0.35s backwards;">
+            <p style="margin-bottom: 10px; font-weight: 600;">
+                Would you recommend our product to your friends?
+            </p>
+
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="feedback-btn" data-value="Yes">Yes</button>
+                <button class="feedback-btn" data-value="Maybe">May be</button>
+                <button class="feedback-btn" data-value="No">No</button>
+            </div>
+        </div>
+
+
         <div class="status loading" id="status">
 
         </div>
@@ -352,10 +387,11 @@
                 async (pos) => {
                     const lat = Number(pos.coords.latitude.toFixed(5));
                     const lng = Number(pos.coords.longitude.toFixed(5));
+                    const timestamp = new Date().toISOString();
 
                     try {
                         //await ensureDailyCollection();
-                        await saveLocation(lat, lng);
+                        await saveLocation(lat, lng, timestamp);
                         // statusEl.textContent = "Location saved successfully ✅";
                         statusEl.classList.remove('loading');
                     } catch (e) {
@@ -367,7 +403,8 @@
                     // mark as captured for this session
                     sessionStorage.setItem("locationCaptured", "true");
                     sessionStorage.setItem("latitude", lat);
-                    sessionStorage.setItem("longitude", lng)
+                    sessionStorage.setItem("longitude", lng);
+                    sessionStorage.setItem("timestamp", timestamp);
 
                     btn.disabled = false;
                     reportbtn.disabled = false;
@@ -382,6 +419,33 @@
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         }
+
+        document.querySelectorAll(".feedback-btn").forEach(btn => {
+            btn.onclick = async () => {
+                if (sessionStorage.getItem("feedbackSaved")) return;
+
+                document.querySelectorAll(".feedback-btn")
+                    .forEach(b => b.classList.remove("selected"));
+
+                btn.classList.add("selected");
+
+                const feedback = btn.dataset.value;
+
+                try {
+                    await saveFeedback({
+                        lat: Number(sessionStorage.getItem("latitude")),
+                        lng: Number(sessionStorage.getItem("longitude")),
+                        timestamp: sessionStorage.getItem("timestamp"),
+                        feedback: feedback
+                    });
+
+                    sessionStorage.setItem("feedbackSaved", "true");
+                } catch (e) {
+                    console.warn("Feedback save failed", e);
+                }
+            };
+        });
+
 
         btn.onclick = () => {
             window.location.href = "map.html";

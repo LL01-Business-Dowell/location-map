@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>QR Code Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .card {
+            max-width: 720px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: 1px solid #c7d2fe;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .link {
+            margin-top: 10px;
+            text-align: center;
+            color: #4f46e5;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .qr-list {
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 14px;
+        }
+
+        .qr-item {
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8fafc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        /* Popup */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .popup {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            width: 320px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            color: #6b7280;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #111827;
+        }
+
+        .qr-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #c7d2fe;
+            background: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .qr-btn:hover {
+            background: #eef2ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>QR Code Manager</h2>
+
+        <!-- Client selector -->
+        <select id="clientSelect">
+            <option value="">Select client</option>
+        </select>
+
+        <div class="link" id="newClientBtn">+ Add new client</div>
+
+        <!-- QR List -->
+        <div class="qr-list" id="qrList"></div>
+
+        <!-- Create QR -->
+        <div id="qrForm" style="display:none;">
+            <input id="qrId" placeholder="QR Code ID" />
+            <input id="qrName" placeholder="QR Code Name" />
+            <button id="createQrBtn">Create QR Code</button>
+        </div>
+    </div>
+
+    <!-- New Client Popup -->
+    <div class="overlay" id="clientPopup">
+        <div class="popup">
+            <button class="close-btn" id="closeClientPopup">✕</button>
+            <h3 style="margin-bottom:10px;">New Client</h3>
+            <input id="clientNameInput" placeholder="Client name" />
+            <button id="createClientBtn">Create</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="state.js"></script>
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+
+
+    <script>
+        const clientSelect = document.getElementById("clientSelect");
+        const qrList = document.getElementById("qrList");
+        const qrForm = document.getElementById("qrForm");
+
+        /* -----------------------
+           Load clients
+        ------------------------*/
+        async function loadClients() {
+            const clients = await fetchClients(); // API
+            clientSelect.innerHTML = `<option value="">Select client</option>`;
+            clients.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c.client_id;
+                opt.textContent = c.client_name;
+                clientSelect.appendChild(opt);
+            });
+        }
+
+        /* -----------------------
+           Client selection
+        ------------------------*/
+        clientSelect.onchange = async () => {
+            const clientId = clientSelect.value;
+            qrList.innerHTML = "";
+            qrForm.style.display = clientId ? "block" : "none";
+
+            if (!clientId) return;
+            
+            const qrs = await fetchQrCodes(clientId); // API
+            const activeQrs = qrs.slice(1).filter(q => q.qr_status === 1); // skip metadata, only active
+
+            if (activeQrs.length === 0) {
+                qrList.innerHTML = `<div style="text-align:center; color:#6b7280; margin-top:10px;">No QR Codes created for this client</div>`;
+                return;
+            }
+
+            activeQrs.forEach(q => {
+                const div = document.createElement("div");
+                div.className = "qr-item";
+
+                const qrContainerId = `qr-${q.qr_id}`;
+
+                div.innerHTML = `
+                    <strong>${q.qr_name}</strong><br>
+                    <small>ID: ${q.qr_id}</small>
+
+                    <div id="${qrContainerId}" style="margin-top:10px;"></div>
+
+                    <div style="display:flex; gap:8px; justify-content:center;">
+                        <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
+                        <button class="qr-btn" data-download="${qrContainerId}">Download PNG</button>
+                        <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
+                    </div>
+                `;
+
+                qrList.appendChild(div);
+
+                new QRCode(document.getElementById(qrContainerId), {
+                    text: q.qr_url,
+                    width: 120,
+                    height: 120
+                });
+            });
+
+        };
+
+        //copy url logic
+        document.addEventListener("click", async (e) => {
+            if (e.target.dataset.url) {
+                await navigator.clipboard.writeText(e.target.dataset.url);
+                e.target.textContent = "Copied!";
+                setTimeout(() => (e.target.textContent = "Copy URL"), 1200);
+            }
+        });
+
+        //download qr code logic
+        document.addEventListener("click", async (e) => {
+            if (e.target.dataset.download) {
+                const qrEl = document.getElementById(e.target.dataset.download);
+                if (!qrEl) return alert("QR not found");
+
+                const canvas = await html2canvas(qrEl);
+                const link = document.createElement("a");
+
+                link.download = `${e.target.dataset.download}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            }
+        });
+
+        //disable qr code logic
+        document.addEventListener("click", async (e) => {
+            if (e.target.dataset.disable) {
+                const qrId = Number(e.target.dataset.disable);
+                const clientId = clientSelect.value;
+
+                if (!confirm("Disable this QR code?")) return;
+
+                try {
+                    await disableQrCode(clientId, qrId); // API
+                    alert("QR code disabled");
+                    clientSelect.onchange(); // refresh list
+                } catch (err) {
+                    alert("Failed to disable QR");
+                    console.error(err);
+                }
+            }
+        });
+
+
+
+
+        /* -----------------------
+           Create QR
+        ------------------------*/
+        document.getElementById("createQrBtn").onclick = async () => {
+            const clientId = clientSelect.value;
+            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+            const qrId = document.getElementById("qrId").value.trim();
+            const qrName = document.getElementById("qrName").value.trim();
+
+            const timestamp = new Date().toISOString();
+
+            const [date, timeWithMs] = timestamp.split("T");
+            const time = timeWithMs.replace("Z", "").split(".")[0];
+
+            if (!qrId || !qrName) return alert("Enter ID and Name");
+            const dbId = await fetchDbId(clientName);
+
+            await createQrCode(clientId, qrId, qrName, clientName, date, time, dbId); // API
+            alert("QR Code created");
+            clientSelect.onchange();
+        };
+
+        /* -----------------------
+           New client popup
+        ------------------------*/
+        document.getElementById("newClientBtn").onclick = () => {
+            document.getElementById("clientPopup").classList.add("active");
+        };
+
+        document.getElementById("closeClientPopup").onclick = () => {
+            document.getElementById("clientPopup").classList.remove("active");
+        };
+
+        document.getElementById("clientPopup").onclick = (e) => {
+            if (e.target.id === "clientPopup") {
+                e.currentTarget.classList.remove("active");
+            }
+        };
+
+        document.getElementById("createClientBtn").onclick = async () => {
+            const name = document.getElementById("clientNameInput").value.trim();
+            if (!name) return alert("Enter client name");
+
+            const timestamp = new Date().toISOString();
+
+            const [date, timeWithMs] = timestamp.split("T");
+            const time = timeWithMs.replace("Z", "").split(".")[0];
+
+            const res = await createClient(name); // API
+            const dbId = res.database.id;
+
+            await registerClient(dbId, name);
+            await addDbId(dbId, name, date, time);
+
+            document.getElementById("clientPopup").classList.remove("active");
+            document.getElementById("clientNameInput").value = "";
+            loadClients();
+        };
+
+        /* Init */
+        loadClients();
+    </script>
+</body>
+
+</html>
