@@ -270,11 +270,11 @@ async function createClient(name) {
 
     return await res.json();
   } catch (err) {
-    console.error("Failed to save location", err);
+    console.error("Failed to create client", err);
   }
 }
 
-async function registerClient(dbId, name, date, time) {
+async function registerClient(dbId, name) {
   const payload = {
     database_id: DATABASE_ID,
     collections: [
@@ -315,13 +315,13 @@ async function registerClient(dbId, name, date, time) {
   };
 
   try {
-    await fetch(`${PROXY_BASE}/crud`, {
+    await fetch(`${PROXY_BASE}/add_collection`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
   } catch (err) {
-    console.error("Failed to save location", err);
+    console.error("Failed to register client", err);
   }
 }
 
