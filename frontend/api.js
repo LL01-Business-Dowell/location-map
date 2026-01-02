@@ -159,7 +159,7 @@ async function fetchClients() {
   });
 
   try {
-    const res = await fetch(`${PROXY_BASE}/api/list_collections?${params}`);
+    const res = await fetch(`${PROXY_BASE}/list_collections?${params}`);
     if (!res.ok) throw new Error("Fetch failed");
     const json = await res.json();
 
@@ -261,7 +261,7 @@ async function createClient(name) {
   };
 
   try {
-    const res = await fetch(`${PROXY_BASE}/api/create_database`, {
+    const res = await fetch(`${PROXY_BASE}/create_database`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
