@@ -97,7 +97,7 @@ app.get("/api/crud", async (req, res) => {
 app.get("/api/list_collections", async (req, res) => {
     try {
         const qs = new URLSearchParams(req.query).toString();
-        const r = await fetch(`${DATACUBE_BASE}/api/list_collections?${qs}`, {
+        const r = await fetch(`${DATACUBE_BASE}/list_collections?${qs}`, {
             headers: authHeaders()
         });
 
@@ -112,7 +112,7 @@ app.get("/api/list_collections", async (req, res) => {
 // ---------- CREATE DATABASE ----------
 app.post("/api/create_database", async (req, res) => {
     try {
-    const r = await fetch(`${DATACUBE_BASE}/api/create_database`, {
+    const r = await fetch(`${DATACUBE_BASE}/create_database`, {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify(req.body)
