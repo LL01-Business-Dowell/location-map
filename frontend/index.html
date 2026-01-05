@@ -338,6 +338,11 @@
                 Would you recommend our product to your friends?
             </p>
 
+            <div id="invalidLinkMsg" style="display:none; color:#ef4444; font-weight:600; margin:20px 0;">
+                This link is invalid
+            </div>
+
+
             <div style="display: flex; gap: 12px; justify-content: center;">
                 <button class="feedback-btn" data-value="Yes">Yes</button>
                 <button class="feedback-btn" data-value="Maybe">May be</button>
@@ -365,6 +370,26 @@
         const statusEl = document.getElementById("status");
         const btn = document.getElementById("viewMapBtn");
         const reportbtn = document.getElementById("viewReportBtn");
+        const invalidMsg = document.getElementById("invalidLinkMsg");
+
+        // --- QR PARAM VALIDATION ---
+        const params = new URLSearchParams(window.location.search);
+        const dbId = params.get("dbId");
+        const qrId = params.get("qrId");
+
+        if (!dbId || !qrId) {
+            // Show invalid message
+            invalidMsg.style.display = "block";
+            statusEl.textContent = "";
+            statusEl.classList.remove("loading");
+
+            // Ensure nothing else runs
+            btn.disabled = true;
+            reportbtn.disabled = true;
+
+            console.warn("Invalid QR link — missing parameters");
+            return; // STOP EXECUTION
+        }
 
         async function captureLocationOnLoad() {
 
@@ -388,10 +413,12 @@
                     const lat = Number(pos.coords.latitude.toFixed(5));
                     const lng = Number(pos.coords.longitude.toFixed(5));
                     const timestamp = new Date().toISOString();
+                    const [date, t] = timestamp.split("T");
+                    const time = t.replace("Z", "").split(".")[0];
 
                     try {
                         //await ensureDailyCollection();
-                        await saveLocation(lat, lng, timestamp);
+                        await saveLocation(dbId, lat, lng, date, time, qrId, timestamp);
                         // statusEl.textContent = "Location saved successfully ✅";
                         statusEl.classList.remove('loading');
                     } catch (e) {
@@ -433,9 +460,10 @@
 
                 try {
                     await saveFeedback({
+                        db_id: dbId,
                         lat: Number(sessionStorage.getItem("latitude")),
                         lng: Number(sessionStorage.getItem("longitude")),
-                        timestamp: sessionStorage.getItem("timestamp"),
+                        uid: sessionStorage.getItem("timestamp"),
                         feedback: feedback
                     });
 
@@ -448,12 +476,21 @@
 
 
         btn.onclick = () => {
-            window.location.href = "map.html";
+            const params = new URLSearchParams({
+                dbId: dbId,
+                qrId: qrId
+            });
+            window.location.href = `map.html?${params.toString()}`;
         };
 
         reportbtn.onclick = () => {
-            window.location.href = "scan-report.html";
-        }
+            const params = new URLSearchParams({
+                dbId: dbId,
+                qrId: qrId
+            });
+            window.location.href = `scan-report.html?${params.toString()}`;
+        };
+
 
         captureLocationOnLoad();
     </script>

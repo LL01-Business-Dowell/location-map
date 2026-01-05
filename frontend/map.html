@@ -200,6 +200,18 @@
         const listItems = document.getElementById("listItems");
         const listTitle = document.getElementById("listTitle");
 
+        // --- QR PARAM VALIDATION ---
+        const params = new URLSearchParams(window.location.search);
+        const dbId = params.get("dbId");
+        const qrId = params.get("qrId");
+
+        if (!dbId || !qrId) {
+            alert("Invalid QR link");
+
+            console.warn("Invalid QR link — missing parameters");
+            return; // STOP EXECUTION
+        }
+
         const AUTO_REFRESH_INTERVAL = 30 * 1000;
 
         const TODAY_CACHE_KEY = "map_cache_today";
@@ -223,7 +235,16 @@
         }
 
         document.getElementById("backButton").onclick = () => {
-            window.location.href = "index.html";
+            if (!dbId || !qrId) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            const params = new URLSearchParams({
+                dbId: dbId,
+                qrId: qrId
+            });
+            window.location.href = `index.html?${params.toString()}`;
         };
 
 
@@ -358,8 +379,8 @@
                 }
 
                 const rows = isWeek
-                    ? await fetchWeekLocations()
-                    : await fetchTodayLocations();
+                    ? await fetchWeekLocations(dbId, qrId)
+                    : await fetchTodayLocations(dbId, qrId);
 
                 normalizeData(rows);
                 allRowsCache = rows;

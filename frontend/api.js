@@ -2,18 +2,22 @@
 
 const PROXY_BASE = "https://location-map-a89a.onrender.com/api";
 
-async function ensureDailyCollection() {
+async function ensureDailyCollection(dbId) {
   const collectionName = todayCollectionName();
 
   const payload = {
-    database_id: DATABASE_ID,
+    database_id: dbId,
     collections: [
       {
         name: collectionName,
         fields: [
           { name: "latitude", type: "number" },
           { name: "longitude", type: "number" },
-          { name: "timestamp", type: "string" }
+          { name: "date", type: "string" },
+          { name: "time", type: "string" },
+          { name: "qr_id", type: "number" },
+          { name: "feedback", type: "string" },
+          { name: "uid", type: "string" }
         ]
       }
     ]
@@ -30,21 +34,25 @@ async function ensureDailyCollection() {
   }
 }
 
-async function saveLocation(lat, lng, timestamp) {
+async function saveLocation(dbId, lat, lng, date, time, qrId, timestamp) {
   try {
-    await ensureDailyCollection();
+    await ensureDailyCollection(dbId);
   } catch (e) {
     console.error("Collection creation failed", e);
     throw e;
   }
   const payload = {
-    database_id: DATABASE_ID,
+    database_id: dbId,
     collection_name: todayCollectionName(),
     documents: [
       {
         latitude: lat,
         longitude: lng,
-        timestamp: timestamp
+        date: date,
+        time: time,
+        qr_id: qrId,
+        feedback: "",
+        uid: timestamp
       }
     ]
   };
@@ -60,11 +68,11 @@ async function saveLocation(lat, lng, timestamp) {
   }
 }
 
-async function fetchTodayLocations() {
+async function fetchTodayLocations(dbId, qrId) {
   const params = new URLSearchParams({
-    database_id: DATABASE_ID,
+    database_id: dbId,
     collection_name: todayCollectionName(),
-    filters: JSON.stringify({}),
+    filters: JSON.stringify({"qr_id": qrId}),
     page: 1,
     page_size: 200
   });
@@ -84,13 +92,14 @@ async function fetchTodayLocations() {
   }
 }
 
-async function fetchWeekLocations() {
+async function fetchWeekLocations(dbId, qrId) {
   const collections = getLast7CollectionNames();
 
   const requests = collections.map(name => {
     const params = new URLSearchParams({
-      database_id: DATABASE_ID,
+      database_id: dbId,
       collection_name: name,
+      filters: JSON.stringify({"qr_id": qrId}),
       page: 1,
       page_size: 500
     });
@@ -109,40 +118,40 @@ async function fetchWeekLocations() {
 }
 
 
-async function fetchLocationsByDate(dateStr) {
-  const params = new URLSearchParams({
-    database_id: DATABASE_ID,
-    collection_name: collectionNameFromDate(dateStr),
-    filters: JSON.stringify({}),
-    page: 1,
-    page_size: 200
-  });
+// async function fetchLocationsByDate(dateStr) {
+//   const params = new URLSearchParams({
+//     database_id: DATABASE_ID,
+//     collection_name: collectionNameFromDate(dateStr),
+//     filters: JSON.stringify({}),
+//     page: 1,
+//     page_size: 200
+//   });
 
-  try {
-    const res = await fetch(`${PROXY_BASE}/crud?${params}`);
-    if (!res.ok) throw new Error("Fetch failed");
+//   try {
+//     const res = await fetch(`${PROXY_BASE}/crud?${params}`);
+//     if (!res.ok) throw new Error("Fetch failed");
 
-    const json = await res.json();
-    if (Array.isArray(json)) return json;
-    if (json.data && Array.isArray(json.data)) return json.data;
-    return [];
-  } catch (err) {
-    console.error("Failed to fetch locations", err);
-    return [];
-  }
-}
+//     const json = await res.json();
+//     if (Array.isArray(json)) return json;
+//     if (json.data && Array.isArray(json.data)) return json.data;
+//     return [];
+//   } catch (err) {
+//     console.error("Failed to fetch locations", err);
+//     return [];
+//   }
+// }
 
-async function saveFeedback({ lat, lng, timestamp, feedback }) {
+async function saveFeedback({ db_id, lat, lng, uid, feedback }) {
   const payload = {
-    database_id: DATABASE_ID,
+    database_id: db_id,
     collection_name: todayCollectionName(),
     filters: {
       latitude: lat,
       longitude: lng,
-      timestamp: timestamp
+      uid: uid
     },
     update_data: {
-      recommendation_feedback: feedback
+      feedback: feedback
     }
   };
 
@@ -254,6 +263,10 @@ async function createClient(name) {
           {
             name: "feedback",
             type: "string"
+          },
+          {
+            name: "uid",
+            type: "string"
           }
         ]
       }
@@ -355,7 +368,8 @@ async function addDbId(dbId, name, date, time) {
 
 async function createQrCode(clientId, qrId, qrName, clientName, date, time, dbId) {
 
-  const url = `https://location-map-1.onrender.com/${dbId}/${qrId}`;
+  const url = `https://location-map-1.onrender.com/?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
+
   const payload = {
     database_id: DATABASE_ID,
     collection_name: clientName,

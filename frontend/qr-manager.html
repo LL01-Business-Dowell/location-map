@@ -1,391 +1,412 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<title>QR Code Manager</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <title>QR Code Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-/* ===== Base styles (UNCHANGED) ===== */
-body {
-    font-family: Inter, sans-serif;
-    background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-    padding: 20px;
-    min-height: 100vh;
-}
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            padding: 20px;
+            min-height: 100vh;
+        }
 
-input, select, button {
-    box-sizing: border-box;
-}
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
 
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-.card {
-    max-width: 720px;
-    margin: auto;
-    background: rgba(255,255,255,0.95);
-    border-radius: 24px;
-    padding: 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.3);
-}
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    font-weight: 700;
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-select, input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 12px;
-    border-radius: 10px;
-    border: 1px solid #c7d2fe;
-    font-size: 14px;
-}
-button {
-    margin-top: 14px;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-}
-button:disabled {
-    opacity: .6;
-    cursor: not-allowed;
-}
-.link {
-    margin-top: 10px;
-    text-align: center;
-    color: #4f46e5;
-    cursor: pointer;
-    font-weight: 600;
-}
-.qr-list {
-    margin-top: 20px;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 14px;
-}
-.qr-item {
-    padding: 10px;
-    border-radius: 10px;
-    background: #f8fafc;
-    margin-bottom: 8px;
-    font-size: 14px;
-    position: relative;
-}
-.qr-btn {
-    padding: 6px 12px;
-    border-radius: 8px;
-    color: black;
-    border: 1px solid #c7d2fe;
-    background: white;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.qr-btn:hover { background: #eef2ff; }
+            50% {
+                background-position: 100% 50%;
+            }
 
-/* ===== Popup (UNCHANGED) ===== */
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.4);
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-.overlay.active { display: flex; }
-.popup {
-    position: relative;
-    background: white;
-    border-radius: 20px;
-    padding: 24px;
-    width: 320px;
-}
-.popup input {
-    margin-bottom: 12px;
-}
-.close-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: transparent;
-    border: none;
-    font-size: 18px;
-    font-weight: 700;
-    color: #6b7280;
-    cursor: pointer;
-}
+            100% {
+                background-position: 0% 50%;
+            }
+        }
 
-/* ===== Loaders & UX ADDITIONS ===== */
-.global-loader {
-    position: fixed;
-    inset: 0;
-    background: rgba(255,255,255,.6);
-    backdrop-filter: blur(3px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-.global-loader.active { display: flex; }
+        .card {
+            max-width: 720px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+        }
 
-.spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid #e5e7eb;
-    border-top-color: #6366f1;
-    border-radius: 50%;
-    animation: spin .8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-.inline-loader {
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-}
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: 1px solid #c7d2fe;
+            font-size: 14px;
+        }
 
-.skeleton {
-    height: 80px;
-    border-radius: 10px;
-    background: linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 37%,#e5e7eb 63%);
-    background-size: 400% 100%;
-    animation: skeleton 1.4s ease infinite;
-    margin-bottom: 8px;
-}
-@keyframes skeleton {
-    0% { background-position: 100% 0; }
-    100% { background-position: 0 0; }
-}
+        button {
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
-/* Toast */
-.toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #111827;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 10px;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all .3s ease;
-    z-index: 10000;
-}
-.toast.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-</style>
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .link {
+            margin-top: 10px;
+            text-align: center;
+            color: #4f46e5;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .qr-list {
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 14px;
+        }
+
+        .qr-item {
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8fafc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        /* Popup */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .popup {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            width: 320px;
+        }
+
+        .popup input {
+            box-sizing: border-box;
+        }
+
+
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            color: #6b7280;
+            cursor: pointer;
+        }
+
+        .qr-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: black;
+            border: 1px solid #c7d2fe;
+            background: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ---------- Global Loader ---------- */
+        #globalLoader {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        #globalLoader.active {
+            display: flex;
+        }
+
+        .loader {
+            width: 42px;
+            height: 42px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ---------- Skeleton ---------- */
+        .skeleton {
+            height: 60px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
+        }
+
+        /* ---------- Toast ---------- */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #111827;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="card">
-<h2>QR Code Manager</h2>
+    <div id="globalLoader">
+        <div class="loader"></div>
+    </div>
+    <div id="toast"></div>
 
-<select id="clientSelect">
-<option value="">Select client</option>
-</select>
+    <div class="card">
+        <h2>QR Code Manager</h2>
 
-<div class="link" id="newClientBtn">+ Add new client</div>
+        <select id="clientSelect">
+            <option value="">Select client</option>
+        </select>
 
-<div id="qrForm" style="display:none;">
-<input id="qrId" placeholder="QR Code ID" />
-<input id="qrName" placeholder="QR Code Name" />
-<button id="createQrBtn">Create QR Code</button>
-</div>
+        <div class="link" id="newClientBtn">+ Add new client</div>
 
-<div class="qr-list" id="qrList"></div>
-</div>
+        <div id="qrForm" style="display:none;">
+            <input id="qrId" placeholder="QR Code ID" />
+            <input id="qrName" placeholder="QR Code Name" />
+            <button id="createQrBtn">Create QR Code</button>
+        </div>
 
-<!-- Popup (UNCHANGED) -->
-<div class="overlay" id="clientPopup">
-<div class="popup">
-<button class="close-btn" id="closeClientPopup">✕</button>
-<h3 style="margin-bottom:10px;">New Client</h3>
-<input id="clientNameInput" placeholder="Client name" />
-<button id="createClientBtn">Create</button>
-</div>
-</div>
+        <div class="qr-list" id="qrList"></div>
+    </div>
 
-<!-- Loaders -->
-<div class="global-loader" id="globalLoader">
-<div class="spinner"></div>
-</div>
+    <div class="overlay" id="clientPopup">
+        <div class="popup">
+            <button class="close-btn" id="closeClientPopup">✕</button>
+            <h3 style="margin-bottom:10px;">New Client</h3>
+            <input id="clientNameInput" placeholder="Client name" />
+            <button id="createClientBtn">Create</button>
+        </div>
+    </div>
 
-<div class="toast" id="toast"></div>
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-<!-- Scripts -->
-<script src="config.js"></script>
-<script src="state.js"></script>
-<script src="utils.js"></script>
-<script src="api.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+        const clientSelect = document.getElementById("clientSelect");
+        const qrList = document.getElementById("qrList");
+        const qrForm = document.getElementById("qrForm");
 
-<script>
-const clientSelect = document.getElementById("clientSelect");
-const qrList = document.getElementById("qrList");
-const qrForm = document.getElementById("qrForm");
-const loader = document.getElementById("globalLoader");
-const toast = document.getElementById("toast");
+        const showLoader = () => document.getElementById("globalLoader").classList.add("active");
+        const hideLoader = () => document.getElementById("globalLoader").classList.remove("active");
+        const showToast = (msg) => {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 2000);
+        };
 
-const showLoader = () => loader.classList.add("active");
-const hideLoader = () => loader.classList.remove("active");
-const showToast = msg => {
-    toast.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2200);
-};
+        async function loadClients() {
+            showLoader();
+            const clients = await fetchClients();
+            clientSelect.innerHTML = `<option value="">Select client</option>`;
+            clients.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c.client_id;
+                opt.textContent = c.client_name;
+                clientSelect.appendChild(opt);
+            });
+            hideLoader();
+        }
 
-/* Load clients */
-async function loadClients() {
-    showLoader();
-    const clients = await fetchClients();
-    clientSelect.innerHTML = `<option value="">Select client</option>`;
-    clients.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.client_id;
-        opt.textContent = c.client_name;
-        clientSelect.appendChild(opt);
-    });
-    hideLoader();
-}
+        clientSelect.onchange = async () => {
+            const clientId = clientSelect.value;
+            qrForm.style.display = clientId ? "block" : "none";
+            qrList.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+            if (!clientId) return;
 
-/* Client selection */
-clientSelect.onchange = async () => {
-    const clientId = clientSelect.value;
-    qrList.innerHTML = "";
-    qrForm.style.display = clientId ? "block" : "none";
-    if (!clientId) return;
+            const qrs = await fetchQrCodes(clientId);
+            qrList.innerHTML = "";
 
-    qrList.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div>`;
-    const qrs = await fetchQrCodes(clientId);
-    const activeQrs = qrs.slice(1).filter(q => q.qr_status === 1);
-    qrList.innerHTML = "";
+            const activeQrs = qrs.slice(1).filter(q => q.qr_status === 1);
+            if (!activeQrs.length) {
+                qrList.innerHTML = `<div style="text-align:center;color:#6b7280;">No QR Codes created for this client</div>`;
+                return;
+            }
 
-    if (!activeQrs.length) {
-        qrList.innerHTML = `<div style="text-align:center;color:#6b7280;">No QR Codes created for this client</div>`;
-        return;
-    }
+            activeQrs.forEach(q => {
+                const div = document.createElement("div");
+                div.className = "qr-item";
+                const qrContainerId = `qr-${q.qr_id}`;
+                div.innerHTML = `
+                <strong>${q.qr_name}</strong><br>
+                <small>ID: ${q.qr_id}</small>
+                <div id="${qrContainerId}" style="margin-top:10px;"></div>
+                <div style="display:flex;gap:8px;justify-content:center;">
+                    <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
+                    <button class="qr-btn" data-download="${qrContainerId}">Download PNG</button>
+                    <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
+                </div>
+            `;
+                qrList.appendChild(div);
+                new QRCode(document.getElementById(qrContainerId), { text: q.qr_url, width: 120, height: 120 });
+            });
+        };
 
-    activeQrs.forEach(q => {
-        const div = document.createElement("div");
-        div.className = "qr-item";
-        const qrContainerId = `qr-${q.qr_id}`;
-        div.innerHTML = `
-        <strong>${q.qr_name}</strong><br>
-        <small>ID: ${q.qr_id}</small>
-        <div id="${qrContainerId}" style="margin-top:10px;"></div>
-        <div style="display:flex;gap:8px;justify-content:center;">
-            <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
-            <button class="qr-btn" data-download="${qrContainerId}">Download PNG</button>
-            <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
-        </div>`;
-        qrList.appendChild(div);
-        new QRCode(document.getElementById(qrContainerId), { text:q.qr_url, width:120, height:120 });
-    });
-};
+        document.addEventListener("click", async e => {
+            if (e.target.dataset.url) {
+                await navigator.clipboard.writeText(e.target.dataset.url);
+                showToast("URL copied");
+            }
 
-/* Copy / Download / Disable */
-document.addEventListener("click", async e => {
-    if (e.target.dataset.url) {
-        await navigator.clipboard.writeText(e.target.dataset.url);
-        showToast("URL copied");
-    }
+            if (e.target.dataset.download) {
+                const el = document.getElementById(e.target.dataset.download);
+                const canvas = await html2canvas(el);
+                const a = document.createElement("a");
+                a.download = `${e.target.dataset.download}.png`;
+                a.href = canvas.toDataURL();
+                a.click();
+            }
 
-    if (e.target.dataset.download) {
-        const qrEl = document.getElementById(e.target.dataset.download);
-        const canvas = await html2canvas(qrEl);
-        const a = document.createElement("a");
-        a.download = "qr.png";
-        a.href = canvas.toDataURL();
-        a.click();
-    }
+            if (e.target.dataset.disable) {
+                if (!confirm("Disable this QR code?")) return;
+                const btn = e.target;
+                btn.disabled = true;
+                btn.textContent = "Disabling…";
+                await disableQrCode(clientSelect.value, Number(btn.dataset.disable));
+                showToast("QR code disabled");
+                clientSelect.onchange();
+            }
+        });
 
-    if (e.target.dataset.disable) {
-        if (!confirm("Disable this QR code?")) return;
-        const card = e.target.closest(".qr-item");
-        card.insertAdjacentHTML("beforeend", `<div class="inline-loader"><div class="spinner"></div></div>`);
-        await disableQrCode(clientSelect.value, Number(e.target.dataset.disable));
-        showToast("QR code disabled");
-        clientSelect.onchange();
-    }
-});
+        document.getElementById("createQrBtn").onclick = async () => {
+            const btn = document.getElementById("createQrBtn");
+            const qrId = document.getElementById("qrId").value.trim();
+            const qrName = document.getElementById("qrName").value.trim();
+            if (!qrId || !qrName) return showToast("Enter ID and Name");
 
-/* Create QR */
-document.getElementById("createQrBtn").onclick = async () => {
-    const btn = document.getElementById("createQrBtn");
-    btn.disabled = true;
-    showLoader();
+            btn.disabled = true;
+            showLoader();
 
-    const clientId = clientSelect.value;
-    const clientName = clientSelect.options[clientSelect.selectedIndex].text;
-    const qrId = document.getElementById("qrId").value.trim();
-    const qrName = document.getElementById("qrName").value.trim();
+            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+            const timestamp = new Date().toISOString();
+            const [date, t] = timestamp.split("T");
+            const time = t.replace("Z", "").split(".")[0];
+            const dbId = await fetchDbId(clientName);
 
-    if (!qrId || !qrName) {
-        hideLoader();
-        btn.disabled = false;
-        return showToast("Enter ID and Name");
-    }
+            await createQrCode(clientSelect.value, qrId, qrName, clientName, date, time, dbId);
 
-    const dbId = await fetchDbId(clientName);
-    await createQrCode(clientId, qrId, qrName, clientName, "", "", dbId);
+            hideLoader();
+            btn.disabled = false;
+            showToast("QR Code created");
+            clientSelect.onchange();
+        };
 
-    hideLoader();
-    btn.disabled = false;
-    showToast("QR Code created");
-    clientSelect.onchange();
-};
+        document.getElementById("newClientBtn").onclick = () =>
+            document.getElementById("clientPopup").classList.add("active");
 
-/* Popup logic (UNCHANGED) */
-document.getElementById("newClientBtn").onclick = () => {
-    document.getElementById("clientPopup").classList.add("active");
-};
-document.getElementById("closeClientPopup").onclick = () => {
-    document.getElementById("clientPopup").classList.remove("active");
-};
-document.getElementById("clientPopup").onclick = e => {
-    if (e.target.id === "clientPopup") e.currentTarget.classList.remove("active");
-};
-document.getElementById("createClientBtn").onclick = async () => {
-    showLoader();
-    const name = document.getElementById("clientNameInput").value.trim();
-    if (!name) {
-        hideLoader();
-        return showToast("Enter client name");
-    }
-    const res = await createClient(name);
-    const dbId = res.database.id;
-    await registerClient(dbId, name);
-    await addDbId(dbId, name);
-    document.getElementById("clientPopup").classList.remove("active");
-    document.getElementById("clientNameInput").value = "";
-    hideLoader();
-    showToast("Client created");
-    loadClients();
-};
+        document.getElementById("closeClientPopup").onclick = () =>
+            document.getElementById("clientPopup").classList.remove("active");
 
-loadClients();
-</script>
+        document.getElementById("createClientBtn").onclick = async () => {
+            const btn = document.getElementById("createClientBtn");
+            const name = document.getElementById("clientNameInput").value.trim();
+            if (!name) return showToast("Enter client name");
+
+            btn.disabled = true;
+            showLoader();
+
+            const timestamp = new Date().toISOString();
+            const [date, t] = timestamp.split("T");
+            const time = t.replace("Z", "").split(".")[0];
+
+            const res = await createClient(name);
+            const dbId = res.database.id;
+
+            await registerClient(dbId, name);
+            await addDbId(dbId, name, date, time);
+
+            btn.disabled = false;
+            hideLoader();
+            showToast("Client created");
+            document.getElementById("clientPopup").classList.remove("active");
+            document.getElementById("clientNameInput").value = "";
+            loadClients();
+        };
+
+        loadClients();
+    </script>
 </body>
+
 </html>
