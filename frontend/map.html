@@ -377,8 +377,20 @@
                     ? await fetchWeekLocations(dbId, qrId)
                     : await fetchTodayLocations(dbId, qrId);
 
-                normalizeData(rows);
+                rows.forEach(r => {
+                    if (!r.timestamp) {
+                        if (r.uid) {
+                            r.timestamp = r.uid; // preferred
+                        } else if (r.date && r.time) {
+                            r.timestamp = `${r.date}T${r.time}`;
+                        }
+                    }
+                });
+
                 allRowsCache = rows;
+                rawMapData = rows;      
+                normalizeData(rawMapData);
+
                 setCache(cacheKey, rows);
                 render();
             } finally {
