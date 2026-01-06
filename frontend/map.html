@@ -205,12 +205,7 @@
         const dbId = params.get("dbId");
         const qrId = params.get("qrId");
 
-        if (!dbId || !qrId) {
-            alert("Invalid QR link");
-
-            console.warn("Invalid QR link — missing parameters");
-            return; // STOP EXECUTION
-        }
+        const isValidQr = !!(dbId && qrId);
 
         const AUTO_REFRESH_INTERVAL = 30 * 1000;
 
@@ -408,6 +403,16 @@
             }, AUTO_REFRESH_INTERVAL);
         }
 
+        if (!isValidQr) {
+            listItems.innerHTML = `
+                <div class="empty-state">
+                    Invalid QR link
+                </div>  
+            `;
+            listTitle.textContent = "Scan Locations";
+        }
+
+
         function bootstrap() {
             initMap();
             showSkeletons();
@@ -419,7 +424,11 @@
             map.invalidateSize();
         });
 
-        bootstrap();
+        //bootstrap();
+        if (isValidQr) {
+            bootstrap();
+        }
+
     </script>
 </body>
 

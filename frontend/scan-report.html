@@ -146,6 +146,12 @@
                     To
                     <input type="date" id="toDate">
                 </label>
+                <label>
+                    QR Code
+                    <select id="qrSelect"
+                        style="padding:8px 10px;border-radius:10px;border:1px solid #ddd;font-size:13px;">
+                    </select>
+                </label>
             </div>
         </div>
 
@@ -166,15 +172,51 @@
         const skeleton = document.getElementById("skeleton");
         const ctx = document.getElementById("scanChart").getContext("2d");
 
+        // --- QR PARAM VALIDATION ---
+        const params = new URLSearchParams(window.location.search);
+        const dbId = params.get("dbId");
+        const qrId = params.get("qrId");
+
+        const isValidQr = !!(dbId && qrId);
+
         let chart;
+
+        let scanCache = {};        // dateStr -> full rows
+        let availableQrIds = [];  // unique qr_ids
+        let selectedQrId = null;
+
+        const qrSelect = document.getElementById("qrSelect");
+
 
         function formatDateISO(d) {
             return d.toISOString().slice(0, 10);
         }
 
         document.getElementById("backButton").onclick = () => {
-            window.location.href = "index.html";
+            const params = new URLSearchParams({ dbId, qrId });
+            window.location.href = `index.html?${params.toString()}`;
         };
+
+
+        qrSelect.onchange = () => {
+            if (!chart) return;
+
+            selectedQrId = qrSelect.value;
+
+            const days = getDateRange(
+                new Date(fromInput.value),
+                new Date(toInput.value)
+            );
+
+            const results = days.map(d => {
+                const rows = scanCache[formatDateISO(d)] || [];
+                return rows.filter(r => r.qr_id === selectedQrId).length;
+            });
+
+            chart.data.datasets[0].data = results;
+            chart.update();
+        };
+
 
 
         function getDateRange(start, end) {
@@ -199,13 +241,54 @@
 
             const days = getDateRange(from, to);
 
-            const results = await Promise.all(
-                days.map(d =>
-                    fetchLocationsByDate(formatDateISO(d))
-                        .then(rows => rows.length)
-                        .catch(() => 0)
-                )
+            // RESET CACHE
+            scanCache = {};
+            availableQrIds = [];
+            const qrSet = new Set();
+            selectedQrId = null;
+
+
+            // FETCH ALL DATA ONCE
+            await Promise.all(
+                days.map(async d => {
+                    const dateStr = formatDateISO(d);
+                    const rows = await fetchLocationsByDate(dateStr, dbId).catch(() => []);
+
+                    scanCache[dateStr] = rows;
+
+                    rows.forEach(r => {
+                        if (r.qr_id) qrSet.add(r.qr_id);
+                    });
+                })
             );
+
+            // SETUP QR DROPDOWN
+            availableQrIds = [...qrSet];
+
+            if (availableQrIds.length === 0) {
+                qrSelect.innerHTML = `<option>No QR data</option>`;
+                skeleton.style.display = "none";
+                return;
+            }
+
+
+            qrSelect.innerHTML = "";
+            availableQrIds.forEach((id, index) => {
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.textContent = id;
+                qrSelect.appendChild(opt);
+
+                if (index === 0) selectedQrId = id;
+            });
+
+            qrSelect.value = selectedQrId;
+
+            // FRONTEND FILTER + COUNT
+            const results = days.map(d => {
+                const rows = scanCache[formatDateISO(d)] || [];
+                return rows.filter(r => r.qr_id === selectedQrId).length;
+            });
 
             const labels = days.map(d =>
                 d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
@@ -259,6 +342,7 @@
             skeleton.style.display = "none";
         }
 
+
         /* Default: last 7 days */
         const today = new Date();
         const weekAgo = new Date();
@@ -267,7 +351,7 @@
         fromInput.value = formatDateISO(weekAgo);
         toInput.value = formatDateISO(today);
 
-        loadReport();
+        if (isValidQr) loadReport();
 
         fromInput.onchange = loadReport;
         toInput.onchange = loadReport;

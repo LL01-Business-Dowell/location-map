@@ -118,28 +118,28 @@ async function fetchWeekLocations(dbId, qrId) {
 }
 
 
-// async function fetchLocationsByDate(dateStr) {
-//   const params = new URLSearchParams({
-//     database_id: DATABASE_ID,
-//     collection_name: collectionNameFromDate(dateStr),
-//     filters: JSON.stringify({}),
-//     page: 1,
-//     page_size: 200
-//   });
+async function fetchLocationsByDate(dateStr, dbId) {
+  const params = new URLSearchParams({
+    database_id: dbId,
+    collection_name: collectionNameFromDate(dateStr),
+    filters: JSON.stringify({}),
+    page: 1,
+    page_size: 200
+  });
 
-//   try {
-//     const res = await fetch(`${PROXY_BASE}/crud?${params}`);
-//     if (!res.ok) throw new Error("Fetch failed");
+  try {
+    const res = await fetch(`${PROXY_BASE}/crud?${params}`);
+    if (!res.ok) throw new Error("Fetch failed");
 
-//     const json = await res.json();
-//     if (Array.isArray(json)) return json;
-//     if (json.data && Array.isArray(json.data)) return json.data;
-//     return [];
-//   } catch (err) {
-//     console.error("Failed to fetch locations", err);
-//     return [];
-//   }
-// }
+    const json = await res.json();
+    if (Array.isArray(json)) return json;
+    if (json.data && Array.isArray(json.data)) return json.data;
+    return [];
+  } catch (err) {
+    console.error("Failed to fetch locations", err);
+    return [];
+  }
+}
 
 async function saveFeedback({ db_id, lat, lng, uid, feedback }) {
   const payload = {

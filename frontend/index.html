@@ -377,19 +377,7 @@
         const dbId = params.get("dbId");
         const qrId = params.get("qrId");
 
-        if (!dbId || !qrId) {
-            // Show invalid message
-            invalidMsg.style.display = "block";
-            statusEl.textContent = "";
-            statusEl.classList.remove("loading");
-
-            // Ensure nothing else runs
-            btn.disabled = true;
-            reportbtn.disabled = true;
-
-            console.warn("Invalid QR link — missing parameters");
-            return; // STOP EXECUTION
-        }
+        const isValidQr = !!(dbId && qrId);
 
         async function captureLocationOnLoad() {
 
@@ -492,7 +480,9 @@
         };
 
 
-        captureLocationOnLoad();
+        //captureLocationOnLoad();
+        if (isValidQr) captureLocationOnLoad();
+
     </script>
 </body>
 
