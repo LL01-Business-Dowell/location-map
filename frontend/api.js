@@ -366,9 +366,9 @@ async function addDbId(dbId, name, date, time) {
   }
 }
 
-async function createQrCode(clientId, qrId, qrName, clientName, date, time, dbId) {
+async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId) {
 
-  const url = `https://location-map-1.onrender.com/?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
+  const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
 
   const payload = {
     database_id: DATABASE_ID,

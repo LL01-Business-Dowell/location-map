@@ -96,7 +96,16 @@
             background: #f8fafc;
             margin-bottom: 8px;
             font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
+
+        .qr-item strong {
+            margin-top: 6px;
+        }
+
 
         /* Popup */
         .overlay {
@@ -241,6 +250,7 @@
         <div id="qrForm" style="display:none;">
             <input id="qrId" placeholder="QR Code ID" />
             <input id="qrName" placeholder="QR Code Name" />
+            <input id="qrUrl" placeholder="QR Code URL" />
             <button id="createQrBtn">Create QR Code</button>
         </div>
 
@@ -293,36 +303,65 @@
         clientSelect.onchange = async () => {
             const clientId = clientSelect.value;
             qrForm.style.display = clientId ? "block" : "none";
-            qrList.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+
+            qrList.innerHTML = `
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            `;
+
             if (!clientId) return;
 
             const qrs = await fetchQrCodes(clientId);
             qrList.innerHTML = "";
 
             const activeQrs = qrs.slice(1).filter(q => q.qr_status === 1);
+
             if (!activeQrs.length) {
-                qrList.innerHTML = `<div style="text-align:center;color:#6b7280;">No QR Codes created for this client</div>`;
+                qrList.innerHTML = `
+                    <div style="text-align:center;color:#6b7280;">
+                        No QR Codes created for this client
+                    </div>
+                `;
                 return;
             }
 
             activeQrs.forEach(q => {
                 const div = document.createElement("div");
                 div.className = "qr-item";
-                const qrContainerId = `qr-${q.qr_id}`;
+
                 div.innerHTML = `
-                <strong>${q.qr_name}</strong><br>
-                <small>ID: ${q.qr_id}</small>
-                <div id="${qrContainerId}" style="margin-top:10px;"></div>
-                <div style="display:flex;gap:8px;justify-content:center;">
+                    <strong>${q.qr_name}</strong>
+                    <small>ID: ${q.qr_id}</small>
+                `;
+
+                // ✅ create a UNIQUE container reference
+                const qrBox = document.createElement("div");
+                qrBox.style.marginTop = "10px";
+                div.appendChild(qrBox);
+
+                const actions = document.createElement("div");
+                actions.style.display = "flex";
+                actions.style.gap = "8px";
+                actions.style.justifyContent = "center";
+                actions.innerHTML = `
                     <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
-                    <button class="qr-btn" data-download="${qrContainerId}">Download PNG</button>
+                    <button class="qr-btn" data-download="">Download PNG</button>
                     <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
-                </div>
-            `;
+                `;
+                div.appendChild(actions);
+
                 qrList.appendChild(div);
-                new QRCode(document.getElementById(qrContainerId), { text: q.qr_url, width: 120, height: 120 });
+
+                // ✅ generate QR using direct DOM reference
+                new QRCode(qrBox, {
+                    text: q.qr_url,
+                    width: 120,
+                    height: 120
+                });
             });
         };
+
 
         document.addEventListener("click", async e => {
             if (e.target.dataset.url) {
@@ -354,7 +393,9 @@
             const btn = document.getElementById("createQrBtn");
             const qrId = document.getElementById("qrId").value.trim();
             const qrName = document.getElementById("qrName").value.trim();
-            if (!qrId || !qrName) return showToast("Enter ID and Name");
+            const qrUrl = document.getElementById("qrUrl").value.trim();
+
+            if (!qrId || !qrName || !qrUrl) return showToast("Enter ID and Name and URL");
 
             btn.disabled = true;
             showLoader();
@@ -365,7 +406,11 @@
             const time = t.replace("Z", "").split(".")[0];
             const dbId = await fetchDbId(clientName);
 
-            await createQrCode(clientSelect.value, qrId, qrName, clientName, date, time, dbId);
+            await createQrCode(clientSelect.value, qrId, qrName, qrUrl, clientName, date, time, dbId);
+
+            document.getElementById("qrId").value = "";
+            document.getElementById("qrName").value = "";
+            document.getElementById("qrUrl").value = "";
 
             hideLoader();
             btn.disabled = false;
