@@ -118,11 +118,11 @@ async function fetchWeekLocations(dbId, qrId) {
 }
 
 
-async function fetchLocationsByDate(dateStr, dbId) {
+async function fetchLocationsByDate(dateStr, dbId, qrId) {
   const params = new URLSearchParams({
     database_id: dbId,
     collection_name: collectionNameFromDate(dateStr),
-    filters: JSON.stringify({}),
+    filters: JSON.stringify({"qr_id": qrId}),
     page: 1,
     page_size: 200
   });
