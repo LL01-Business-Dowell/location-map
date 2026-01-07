@@ -13,7 +13,7 @@ const DATACUBE_API_KEY = process.env.DATACUBE_API_KEY; // 🔐
 // ===== MIDDLEWARE =====
 app.use(cors({
   origin: "*",          // allow all origins
-  methods: ["GET", "POST", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());

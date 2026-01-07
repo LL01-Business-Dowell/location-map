@@ -166,7 +166,7 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            pointer-events: none;
+            /* pointer-events: none; */
         }
 
         #globalLoader.active {
@@ -266,6 +266,20 @@
         </div>
     </div>
 
+    <div class="overlay" id="editQrPopup">
+        <div class="popup">
+            <button class="close-btn" id="closeEditQrPopup">✕</button>
+            <h3 style="margin-bottom:10px;">Edit QR Code</h3>
+
+            <input id="editQrId" placeholder="QR Code ID" />
+            <input id="editQrName" placeholder="QR Code Name" />
+            <input id="editQrUrl" placeholder="QR Code URL" />
+
+            <button id="saveEditQrBtn">Save Changes</button>
+        </div>
+    </div>
+
+
     <script src="config.js"></script>
     <script src="state.js"></script>
     <script src="utils.js"></script>
@@ -346,6 +360,7 @@
                 actions.style.justifyContent = "center";
                 actions.innerHTML = `
                     <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
+                    <button class="qr-btn" data-edit='${JSON.stringify(q)}'>Edit</button>
                     <button class="qr-btn" data-download="">Download PNG</button>
                     <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
                 `;
@@ -353,7 +368,6 @@
 
                 qrList.appendChild(div);
 
-                // ✅ generate QR using direct DOM reference
                 new QRCode(qrBox, {
                     text: q.qr_url,
                     width: 120,
@@ -387,6 +401,17 @@
                 showToast("QR code disabled");
                 clientSelect.onchange();
             }
+
+            if (e.target.dataset.edit) {
+                editingQr = JSON.parse(e.target.dataset.edit);
+
+                document.getElementById("editQrId").value = editingQr.qr_id;
+                document.getElementById("editQrName").value = editingQr.qr_name;
+                document.getElementById("editQrUrl").value = editingQr.qr_url;
+
+                document.getElementById("editQrPopup").classList.add("active");
+            }
+
         });
 
         document.getElementById("createQrBtn").onclick = async () => {
@@ -417,6 +442,55 @@
             showToast("QR Code created");
             clientSelect.onchange();
         };
+
+        document.getElementById("closeEditQrPopup").onclick = () => {
+            document.getElementById("editQrPopup").classList.remove("active");
+            editingQr = null;
+        };
+
+        document.getElementById("saveEditQrBtn").onclick = async () => {
+            if (!editingQr) return;
+
+            const btn = document.getElementById("saveEditQrBtn");
+
+            btn.disabled = true;
+
+            showLoader();
+
+            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+            const timestamp = new Date().toISOString();
+            const [date, t] = timestamp.split("T");
+            const time = t.replace("Z", "").split(".")[0];
+            const dbId = await fetchDbId(clientName);
+
+            const updatedQr = {
+                old_qr_id: editingQr.qr_id,
+                new_qr_id: document.getElementById("editQrId").value.trim(),
+                qr_name: document.getElementById("editQrName").value.trim(),
+                qr_url: document.getElementById("editQrUrl").value.trim(),
+                client_name: clientName,
+                db_id: dbId,
+                date: date,
+                time: time
+            };
+
+            if (!updatedQr.new_qr_id || !updatedQr.qr_name || !updatedQr.qr_url) {
+                return showToast("All fields required");
+            }
+
+            await updateQrCode(updatedQr);
+
+            btn.disabled = false;       
+            hideLoader();
+            showToast("QR updated");
+
+            document.getElementById("editQrPopup").classList.remove("active");
+            editingQr = null;
+
+            clientSelect.onchange();
+        };
+
+
 
         document.getElementById("newClientBtn").onclick = () =>
             document.getElementById("clientPopup").classList.add("active");

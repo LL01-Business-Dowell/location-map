@@ -72,7 +72,7 @@ async function fetchTodayLocations(dbId, qrId) {
   const params = new URLSearchParams({
     database_id: dbId,
     collection_name: todayCollectionName(),
-    filters: JSON.stringify({"qr_id": qrId}),
+    filters: JSON.stringify({ "qr_id": qrId }),
     page: 1,
     page_size: 200
   });
@@ -99,7 +99,7 @@ async function fetchWeekLocations(dbId, qrId) {
     const params = new URLSearchParams({
       database_id: dbId,
       collection_name: name,
-      filters: JSON.stringify({"qr_id": qrId}),
+      filters: JSON.stringify({ "qr_id": qrId }),
       page: 1,
       page_size: 500
     });
@@ -122,7 +122,7 @@ async function fetchLocationsByDate(dateStr, dbId, qrId) {
   const params = new URLSearchParams({
     database_id: dbId,
     collection_name: collectionNameFromDate(dateStr),
-    filters: JSON.stringify({"qr_id": qrId}),
+    filters: JSON.stringify({ "qr_id": qrId }),
     page: 1,
     page_size: 200
   });
@@ -396,6 +396,47 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
     console.error("Failed to save QR Code", err);
   }
 }
+
+async function updateQrCode({
+  old_qr_id,
+  new_qr_id,
+  qr_name,
+  qr_url,
+  client_name,
+  db_id,
+  date,
+  time
+}) {
+  const finalQrUrl =
+    `${qr_url}?dbId=${encodeURIComponent(db_id)}&qrId=${encodeURIComponent(new_qr_id)}`;
+
+  const payload = {
+    database_id: DATABASE_ID,
+    collection_name: client_name,
+    filters: {
+      qr_id: old_qr_id
+    },
+    update_data: {
+      qr_id: new_qr_id,
+      qr_name: qr_name,
+      qr_url: finalQrUrl,
+      date: date,
+      time: time
+    }
+  };
+
+  try {
+    await fetch(`${PROXY_BASE}/crud`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Failed to update QR Code", err);
+    throw err;
+  }
+}
+
 
 async function fetchDbId(clientName) {
   const params = new URLSearchParams({
