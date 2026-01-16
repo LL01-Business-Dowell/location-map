@@ -5,6 +5,27 @@
     <meta charset="UTF-8" />
     <title>DoWell Smart Labelling</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+        (function () {
+            const verified = sessionStorage.getItem("qr_verified");
+            const verifiedQr = sessionStorage.getItem("qr_verified_qrId");
+            const time = Number(sessionStorage.getItem("qr_verified_time"));
+
+            const params = new URLSearchParams(window.location.search);
+            const qrId = params.get("qrId");
+
+            if (
+                !verified ||
+                verifiedQr !== qrId ||
+                Date.now() - time > 5 * 60 * 1000
+            ) {
+                sessionStorage.clear();
+                window.location.replace("verify.html" + window.location.search);
+            }
+        })();
+
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -403,10 +424,12 @@
                     const timestamp = new Date().toISOString();
                     const [date, t] = timestamp.split("T");
                     const time = t.replace("Z", "").split(".")[0];
+                    const uid = sessionStorage.getItem("timestamp");
+                    if (!uid) return;
 
                     try {
                         //await ensureDailyCollection();
-                        await saveLocation(dbId, lat, lng, date, time, qrId, timestamp);
+                        await saveLocation(dbId, lat, lng, date, time, qrId, uid);
                         // statusEl.textContent = "Location saved successfully ✅";
                         statusEl.classList.remove('loading');
                     } catch (e) {
@@ -419,7 +442,7 @@
                     sessionStorage.setItem("locationCaptured", "true");
                     sessionStorage.setItem("latitude", lat);
                     sessionStorage.setItem("longitude", lng);
-                    sessionStorage.setItem("timestamp", timestamp);
+                    // sessionStorage.setItem("timestamp", timestamp);
 
                     btn.disabled = false;
                     reportbtn.disabled = false;
@@ -445,13 +468,13 @@
                 btn.classList.add("selected");
 
                 const feedback = btn.dataset.value;
+                const uid = sessionStorage.getItem("timestamp");
+                if (!uid) return;
 
                 try {
                     await saveFeedback({
                         db_id: dbId,
-                        lat: Number(sessionStorage.getItem("latitude")),
-                        lng: Number(sessionStorage.getItem("longitude")),
-                        uid: sessionStorage.getItem("timestamp"),
+                        uid: uid,
                         feedback: feedback
                     });
 
@@ -478,6 +501,11 @@
             });
             window.location.href = `scan-report.html?${params.toString()}`;
         };
+
+        window.addEventListener("beforeunload", () => {
+            sessionStorage.removeItem("locationCaptured");
+        });
+
 
 
         //captureLocationOnLoad();

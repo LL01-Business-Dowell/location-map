@@ -106,6 +106,12 @@
             margin-top: 6px;
         }
 
+        .qr-box {
+            width: 120px;
+            height: 120px;
+        }
+
+
 
         /* Popup */
         .overlay {
@@ -249,8 +255,14 @@
 
         <div id="qrForm" style="display:none;">
             <input id="qrId" placeholder="QR Code ID" />
+            <small id="qrIdError" style="color:red;display:none;">
+                QR ID already exists
+            </small>
+
             <input id="qrName" placeholder="QR Code Name" />
             <input id="qrUrl" placeholder="QR Code URL" />
+            <input type="file" id="qrLogo" accept="image/*" />
+
             <button id="createQrBtn">Create QR Code</button>
         </div>
 
@@ -274,6 +286,8 @@
             <input id="editQrId" placeholder="QR Code ID" />
             <input id="editQrName" placeholder="QR Code Name" />
             <input id="editQrUrl" placeholder="QR Code URL" />
+            <input type="file" id="editQrLogo" accept="image/*" />
+
 
             <button id="saveEditQrBtn">Save Changes</button>
         </div>
@@ -301,6 +315,66 @@
             setTimeout(() => t.classList.remove("show"), 2000);
         };
 
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderQr(qrBox, url, logo) {
+            // Remove previous QRCode nodes ONLY
+            while (qrBox.firstChild) {
+                qrBox.removeChild(qrBox.firstChild);
+            }
+
+            qrBox.style.position = "relative";
+
+            const qrCanvasWrapper = document.createElement("div");
+            qrBox.appendChild(qrCanvasWrapper);
+
+            new QRCode(qrCanvasWrapper, {
+                text: url,
+                width: 120,
+                height: 120,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            const center = document.createElement("div");
+            center.style.position = "absolute";
+            center.style.width = "38px";
+            center.style.height = "38px";
+            center.style.background = "#fff";
+            center.style.borderRadius = "8px";
+            center.style.left = "50%";
+            center.style.top = "50%";
+            center.style.transform = "translate(-50%, -50%)";
+            center.style.display = "flex";
+            center.style.alignItems = "center";
+            center.style.justifyContent = "center";
+            center.style.fontSize = "9px";
+            center.style.fontWeight = "700";
+            center.style.zIndex = "2";
+
+            if (logo) {
+                const img = document.createElement("img");
+                img.src = logo;
+                img.style.maxWidth = "100%";
+                img.style.maxHeight = "100%";
+                center.appendChild(img);
+            } else {
+                center.textContent = "SCAN";
+            }
+
+            qrBox.appendChild(center);
+        }
+
+
+
+
         async function loadClients() {
             showLoader();
             const clients = await fetchClients();
@@ -317,6 +391,11 @@
         clientSelect.onchange = async () => {
             const clientId = clientSelect.value;
             qrForm.style.display = clientId ? "block" : "none";
+
+            qrIdError.style.display = "none";
+            document.getElementById("createQrBtn").disabled = false;
+            qrIdInput.value = "";
+
 
             qrList.innerHTML = `
                 <div class="skeleton"></div>
@@ -349,9 +428,10 @@
                     <small>ID: ${q.qr_id}</small>
                 `;
 
-                // ✅ create a UNIQUE container reference
+
                 const qrBox = document.createElement("div");
                 qrBox.style.marginTop = "10px";
+                qrBox.className = "qr-box";
                 div.appendChild(qrBox);
 
                 const actions = document.createElement("div");
@@ -361,20 +441,47 @@
                 actions.innerHTML = `
                     <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
                     <button class="qr-btn" data-edit='${JSON.stringify(q)}'>Edit</button>
-                    <button class="qr-btn" data-download="">Download PNG</button>
+                    <button class="qr-btn" data-download>Download PNG</button>
                     <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
                 `;
                 div.appendChild(actions);
 
                 qrList.appendChild(div);
 
-                new QRCode(qrBox, {
-                    text: q.qr_url,
-                    width: 120,
-                    height: 120
-                });
+                renderQr(qrBox, q.qr_url, q.qr_logo);
+
             });
         };
+
+        const qrIdInput = document.getElementById("qrId");
+        const qrIdError = document.getElementById("qrIdError");
+
+        let lastCheckedQrId = null;
+
+        qrIdInput.addEventListener("blur", async () => {
+            const qrId = Number(qrIdInput.value);
+            const clientId = clientSelect.value;
+
+            if (!qrId || !clientId) return;
+
+            lastCheckedQrId = qrId;
+
+            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+            const dbId = await fetchDbId(clientName);
+
+            const exists = await checkQrIdExists(dbId, clientId, qrId);
+
+            if (qrId !== lastCheckedQrId) return;
+
+            if (exists) {
+                qrIdError.style.display = "block";
+                document.getElementById("createQrBtn").disabled = true;
+            } else {
+                qrIdError.style.display = "none";
+                document.getElementById("createQrBtn").disabled = false;
+            }
+        });
+
 
 
         document.addEventListener("click", async e => {
@@ -383,14 +490,33 @@
                 showToast("URL copied");
             }
 
-            if (e.target.dataset.download) {
-                const el = document.getElementById(e.target.dataset.download);
-                const canvas = await html2canvas(el);
+            // if (e.target.dataset.download) {
+            //     const el = document.getElementById(e.target.dataset.download);
+            //     const canvas = await html2canvas(el);
+            //     const a = document.createElement("a");
+            //     a.download = `${e.target.dataset.download}.png`;
+            //     a.href = canvas.toDataURL();
+            //     a.click();
+            // }
+
+            if (e.target.hasAttribute("data-download")) {
+                const qrItem = e.target.closest(".qr-item");
+                if (!qrItem) return;
+
+                const qrBox = qrItem.querySelector(".qr-box");
+                if (!qrBox) return;
+
+                const canvas = await html2canvas(qrBox, {
+                    backgroundColor: "#ffffff",
+                    scale: 3
+                });
+
                 const a = document.createElement("a");
-                a.download = `${e.target.dataset.download}.png`;
-                a.href = canvas.toDataURL();
+                a.download = "qr-code.png";
+                a.href = canvas.toDataURL("image/png");
                 a.click();
             }
+
 
             if (e.target.dataset.disable) {
                 if (!confirm("Disable this QR code?")) return;
@@ -416,9 +542,14 @@
 
         document.getElementById("createQrBtn").onclick = async () => {
             const btn = document.getElementById("createQrBtn");
-            const qrId = document.getElementById("qrId").value.trim();
+            // const qrId = document.getElementById("qrId").value.trim();
+            const qrId = Number(document.getElementById("qrId").value);
             const qrName = document.getElementById("qrName").value.trim();
             const qrUrl = document.getElementById("qrUrl").value.trim();
+
+            const logoFile = document.getElementById("qrLogo").files[0];
+            const logoBase64 = await fileToBase64(logoFile);
+
 
             if (!qrId || !qrName || !qrUrl) return showToast("Enter ID and Name and URL");
 
@@ -431,11 +562,21 @@
             const time = t.replace("Z", "").split(".")[0];
             const dbId = await fetchDbId(clientName);
 
-            await createQrCode(clientSelect.value, qrId, qrName, qrUrl, clientName, date, time, dbId);
+            const exists = await checkQrIdExists(dbId, clientSelect.value, qrId);
+            if (exists) {
+                hideLoader();
+                btn.disabled = false;
+                showToast("QR ID already exists");
+                return;
+            }
+
+            await createQrCode(clientSelect.value, qrId, qrName, qrUrl, clientName, date, time, dbId, logoBase64);
 
             document.getElementById("qrId").value = "";
             document.getElementById("qrName").value = "";
             document.getElementById("qrUrl").value = "";
+            document.getElementById("qrLogo").value = "";
+
 
             hideLoader();
             btn.disabled = false;
@@ -463,11 +604,17 @@
             const time = t.replace("Z", "").split(".")[0];
             const dbId = await fetchDbId(clientName);
 
+            const logoFile = document.getElementById("editQrLogo").files[0];
+            const logoBase64 = logoFile
+                ? await fileToBase64(logoFile)
+                : editingQr.qr_logo;
+
             const updatedQr = {
                 old_qr_id: editingQr.qr_id,
-                new_qr_id: document.getElementById("editQrId").value.trim(),
+                new_qr_id: Number(document.getElementById("editQrId").value),
                 qr_name: document.getElementById("editQrName").value.trim(),
-                qr_url: document.getElementById("editQrUrl").value.trim(),
+                qr_url: document.getElementById("editQrUrl").value.split("?")[0],
+                qr_logo: logoBase64,
                 client_name: clientName,
                 db_id: dbId,
                 date: date,
@@ -475,12 +622,24 @@
             };
 
             if (!updatedQr.new_qr_id || !updatedQr.qr_name || !updatedQr.qr_url) {
+                hideLoader();
+                btn.disabled = false;
                 return showToast("All fields required");
+            }
+
+            if (updatedQr.new_qr_id !== editingQr.qr_id) {
+                const exists = await checkQrIdExists(dbId, clientSelect.value, updatedQr.new_qr_id);
+                if (exists) {
+                    hideLoader();
+                    btn.disabled = false;
+                    showToast("QR ID already exists");
+                    return;
+                }
             }
 
             await updateQrCode(updatedQr);
 
-            btn.disabled = false;       
+            btn.disabled = false;
             hideLoader();
             showToast("QR updated");
 

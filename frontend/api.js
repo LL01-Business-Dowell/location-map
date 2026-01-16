@@ -16,6 +16,7 @@ async function ensureDailyCollection(dbId) {
           { name: "date", type: "string" },
           { name: "time", type: "string" },
           { name: "qr_id", type: "number" },
+          { name: "qr_image", type: "string" },
           { name: "feedback", type: "string" },
           { name: "uid", type: "string" }
         ]
@@ -34,7 +35,37 @@ async function ensureDailyCollection(dbId) {
   }
 }
 
-async function saveLocation(dbId, lat, lng, date, time, qrId, timestamp) {
+async function saveVerificationPhoto({ dbId, timestamp, qrId, imageBase64 }) {
+  await ensureDailyCollection(dbId);
+
+  const payload = {
+    database_id: dbId,
+    collection_name: todayCollectionName(),
+    documents: [
+      {
+        latitude: 0,
+        longitude: 0,
+        date: "",
+        time: "",
+        qr_id: qrId,
+        qr_image: imageBase64,
+        feedback: "",
+        uid: timestamp
+      }
+    ]
+  };
+
+  const res = await fetch(`${PROXY_BASE}/crud`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) throw new Error("Verification photo save failed");
+}
+
+
+async function saveLocation(dbId, lat, lng, date, time, qrId, uid) {
   try {
     await ensureDailyCollection(dbId);
   } catch (e) {
@@ -44,22 +75,21 @@ async function saveLocation(dbId, lat, lng, date, time, qrId, timestamp) {
   const payload = {
     database_id: dbId,
     collection_name: todayCollectionName(),
-    documents: [
-      {
-        latitude: lat,
-        longitude: lng,
-        date: date,
-        time: time,
-        qr_id: qrId,
-        feedback: "",
-        uid: timestamp
-      }
-    ]
+    filters: {
+      qr_id: qrId,
+      uid: uid
+    },
+    update_data: {
+      latitude: lat,
+      longitude: lng,
+      date: date,
+      time: time,
+    }
   };
 
   try {
     await fetch(`${PROXY_BASE}/crud`, {
-      method: "POST",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
@@ -141,13 +171,11 @@ async function fetchLocationsByDate(dateStr, dbId, qrId) {
   }
 }
 
-async function saveFeedback({ db_id, lat, lng, uid, feedback }) {
+async function saveFeedback({ db_id, uid, feedback }) {
   const payload = {
     database_id: db_id,
     collection_name: todayCollectionName(),
     filters: {
-      latitude: lat,
-      longitude: lng,
       uid: uid
     },
     update_data: {
@@ -261,6 +289,10 @@ async function createClient(name) {
             type: "number"
           },
           {
+            name: "qr_image",
+            type: "string"
+          },
+          {
             name: "feedback",
             type: "string"
           },
@@ -319,6 +351,10 @@ async function registerClient(dbId, name) {
             type: "string"
           },
           {
+            name: "qr_logo",
+            type: "string"
+          },
+          {
             name: "qr_status",
             type: "number"
           }
@@ -350,6 +386,7 @@ async function addDbId(dbId, name, date, time) {
         time: time,
         qr_name: "QR_Name",
         qr_url: "QR URL",
+        qr_logo: "QR_Logo",
         qr_status: 0
       }
     ]
@@ -366,7 +403,7 @@ async function addDbId(dbId, name, date, time) {
   }
 }
 
-async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId) {
+async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo) {
 
   const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
 
@@ -381,6 +418,7 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
         time: time,
         qr_name: qrName,
         qr_url: url,
+        qr_logo: qrLogo || null,
         qr_status: 1
       }
     ]
@@ -402,6 +440,7 @@ async function updateQrCode({
   new_qr_id,
   qr_name,
   qr_url,
+  qr_logo,
   client_name,
   db_id,
   date,
@@ -420,6 +459,7 @@ async function updateQrCode({
       qr_id: new_qr_id,
       qr_name: qr_name,
       qr_url: finalQrUrl,
+      qr_logo: qr_logo,
       date: date,
       time: time
     }
@@ -464,6 +504,34 @@ async function fetchDbId(clientName) {
     return null;
   }
 }
+
+async function checkQrIdExists(dbId, clientId, qrId) {
+  const params = new URLSearchParams({
+    database_id: dbId,
+    collection_name: clientId,
+    filters: JSON.stringify({ qr_id: qrId }),
+    page: 1,
+    page_size: 1
+  });
+
+  try {
+    const res = await fetch(`${PROXY_BASE}/crud?${params}`);
+    if (!res.ok) throw new Error("Fetch failed");
+
+    const json = await res.json();
+    const data = Array.isArray(json)
+      ? json
+      : Array.isArray(json.data)
+        ? json.data
+        : [];
+
+    return data.length > 0; // true = exists
+  } catch (err) {
+    console.error("QR ID check failed", err);
+    return false;
+  }
+}
+
 
 
 

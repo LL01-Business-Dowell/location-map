@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Verification Required</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 28px 20px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 16px;
+            margin-bottom: 14px;
+            border: 2px solid rgba(102, 126, 234, .3);
+            pointer-events: none;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Verification Required</h2>
+        <p>Please take a photo to continue</p>
+
+        <video id="video" autoplay playsinline></video>
+
+        <button id="captureBtn">Take Photo</button>
+        <button id="submitBtn" disabled>Submit & Scan QR Again</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const captureBtn = document.getElementById("captureBtn");
+        const submitBtn = document.getElementById("submitBtn");
+        const statusEl = document.getElementById("status");
+
+        let stream;
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    // video: { facingMode: { exact: "environment" } }
+                    video: { facingMode: "environment" }
+                });
+                video.srcObject = stream;
+            } catch (e) {
+                statusEl.textContent = "Camera access denied";
+            }
+        }
+
+        captureBtn.onclick = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const MAX_WIDTH = 1280;
+            const scale = MAX_WIDTH / video.videoWidth;
+
+            canvas.width = MAX_WIDTH;
+            canvas.height = video.videoHeight * scale;
+
+            canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // canvas.getContext("2d").drawImage(video, 0, 0);
+            submitBtn.disabled = false;
+            statusEl.textContent = "Photo captured ✔";
+        };
+
+        submitBtn.onclick = async () => {
+            statusEl.textContent = "Uploading verification...";
+
+            const imageBase64 = canvas.toDataURL("image/jpeg", 0.7);
+            const timestamp = new Date().toISOString();
+
+            const params = new URLSearchParams(window.location.search);
+            const qrId = params.get("qrId");
+            const dbId = params.get("dbId");
+
+            try {
+                await saveVerificationPhoto({
+                    dbId,
+                    timestamp,
+                    qrId,
+                    imageBase64
+                });
+
+                sessionStorage.setItem("qr_verified", "true");
+                sessionStorage.setItem("qr_verified_qrId", qrId);
+                sessionStorage.setItem("qr_verified_time", Date.now());
+                sessionStorage.setItem("timestamp", timestamp);
+
+                stream.getTracks().forEach(t => t.stop());
+
+                statusEl.textContent = "Verification complete. Please scan the QR again.";
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Failed to upload photo. Try again.";
+            }
+        };
+
+
+        startCamera();
+    </script>
+</body>
+
+</html>
