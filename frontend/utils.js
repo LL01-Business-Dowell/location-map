@@ -98,4 +98,27 @@ function highlightSelectedListItem() {
     });
 }
 
+async function resetToScanOnly(qrId) {
+    // Hide buttons completely
+    captureBtn.style.display = "none";
+    submitBtn.style.display = "none";
+    preview.style.display = "none";
+
+    photoCaptured = false;
+
+    statusEl.textContent = "Opening camera…";
+
+    await startCamera();
+
+    await new Promise(r => setTimeout(r, 500));
+
+    await startQrScan(qrId);
+}
+
+function normalizeUrl(url) {
+    return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
+
+
 

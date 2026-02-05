@@ -3,12 +3,19 @@ import fetch from "node-fetch";
 import cors from "cors";
 import "dotenv/config";
 
+import crypto from "crypto";
+
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ===== CONFIG =====
 const DATACUBE_BASE = "https://datacube.uxlivinglab.online/api";
 const DATACUBE_API_KEY = process.env.DATACUBE_API_KEY; // 🔐
+
+// ==== ENCRYPTION ====
+const ALGO = "aes-256-gcm";
+const KEY = Buffer.from(process.env.QR_ENCRYPTION_KEY, "hex");
 
 // ===== MIDDLEWARE =====
 app.use(cors({
@@ -25,6 +32,23 @@ function authHeaders() {
     "Authorization": `Api-Key ${DATACUBE_API_KEY}`
   };
 }
+
+//Encrypt Function
+function encryptPayload(payload) {
+  const iv = crypto.randomBytes(12); // GCM standard
+  const cipher = crypto.createCipheriv(ALGO, KEY, iv);
+
+  const encrypted = Buffer.concat([
+    cipher.update(JSON.stringify(payload), "utf8"),
+    cipher.final()
+  ]);
+
+  const tag = cipher.getAuthTag();
+
+  // iv + tag + ciphertext
+  return Buffer.concat([iv, tag, encrypted]).toString("base64url");
+}
+
 
 // ---------- ADD COLLECTION ----------
 app.post("/api/add_collection", async (req, res) => {
@@ -125,6 +149,34 @@ app.post("/api/create_database", async (req, res) => {
     res.status(500).json({ error: "Proxy error" });
   }
 });
+
+//build url
+app.post("/api/build_qr_url", (req, res) => {
+  try {
+    const { base_url, db_id, qr_id } = req.body;
+
+    if (!base_url || !db_id || !qr_id) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const cleanBase = base_url.endsWith("/")
+      ? base_url.slice(0, -1)
+      : base_url;
+
+    const encrypted = encryptPayload({
+      db_id,
+      qr_id
+    });
+
+    const finalUrl = `${cleanBase}?data=${encrypted}`;
+
+    res.json({ url: finalUrl });
+  } catch (err) {
+    console.error("QR build error:", err);
+    res.status(500).json({ error: "Failed to build QR URL" });
+  }
+});
+
 
 // ===== START SERVER =====
 app.listen(PORT, () => {

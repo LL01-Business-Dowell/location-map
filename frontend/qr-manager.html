@@ -286,7 +286,7 @@
             <input id="editQrId" placeholder="QR Code ID" />
             <input id="editQrName" placeholder="QR Code Name" />
             <input id="editQrUrl" placeholder="QR Code URL" />
-            <input type="file" id="editQrLogo" accept="image/*" />
+            <input type="file" id="editQrLogo" placeholder="Logo" accept="image/*" />
 
 
             <button id="saveEditQrBtn">Save Changes</button>
@@ -300,6 +300,7 @@
     <script src="api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 
     <script>
         const clientSelect = document.getElementById("clientSelect");
@@ -324,6 +325,27 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
+            const res = await fetch("/api/build_qr_url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    base_url: baseUrl,
+                    db_id: dbId,
+                    qr_id: qrId
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to build QR URL");
+            }
+
+            const data = await res.json();
+            return data.url;
+        }
+
+
 
         function renderQr(qrBox, url, logo) {
             // Remove previous QRCode nodes ONLY
@@ -366,7 +388,7 @@
                 img.style.maxHeight = "100%";
                 center.appendChild(img);
             } else {
-                center.textContent = "SCAN";
+                center.textContent = "SCAN ME";
             }
 
             qrBox.appendChild(center);
@@ -533,7 +555,7 @@
 
                 document.getElementById("editQrId").value = editingQr.qr_id;
                 document.getElementById("editQrName").value = editingQr.qr_name;
-                document.getElementById("editQrUrl").value = editingQr.qr_url;
+                document.getElementById("editQrUrl").value = editingQr.qr_url.split("?")[0];
 
                 document.getElementById("editQrPopup").classList.add("active");
             }
@@ -546,6 +568,9 @@
             const qrId = Number(document.getElementById("qrId").value);
             const qrName = document.getElementById("qrName").value.trim();
             const qrUrl = document.getElementById("qrUrl").value.trim();
+            const cleanBaseUrl = normalizeUrl(qrUrl);
+
+
 
             const logoFile = document.getElementById("qrLogo").files[0];
             const logoBase64 = await fileToBase64(logoFile);
@@ -570,7 +595,19 @@
                 return;
             }
 
-            await createQrCode(clientSelect.value, qrId, qrName, qrUrl, clientName, date, time, dbId, logoBase64);
+            let encryptedQrUrl;
+            try {
+                encryptedQrUrl = await buildEncryptedQrUrl(cleanBaseUrl, dbId, qrId);
+            } catch (err) {
+                hideLoader();
+                btn.disabled = false;
+                showToast("Failed to generate secure QR URL");
+                return;
+            }
+
+
+
+            await createQrCode(clientSelect.value, qrId, qrName, encryptedQrUrl, clientName, date, time, dbId, logoBase64);
 
             document.getElementById("qrId").value = "";
             document.getElementById("qrName").value = "";
@@ -609,11 +646,34 @@
                 ? await fileToBase64(logoFile)
                 : editingQr.qr_logo;
 
+            //const cleanBaseUrl = document.getElementById("editQrUrl").value.split("?")[0];
+            const cleanBaseUrl = normalizeUrl(
+                document.getElementById("editQrUrl").value
+            );
+
+            const newQrId = Number(document.getElementById("editQrId").value);
+
+            let encryptedQrUrl;
+            try {
+                encryptedQrUrl = await buildEncryptedQrUrl(
+                    cleanBaseUrl,
+                    dbId,
+                    newQrId
+                );
+            } catch (err) {
+                hideLoader();
+                btn.disabled = false;
+                showToast("Failed to generate secure QR URL");
+                return;
+            }
+
+
+
             const updatedQr = {
                 old_qr_id: editingQr.qr_id,
                 new_qr_id: Number(document.getElementById("editQrId").value),
                 qr_name: document.getElementById("editQrName").value.trim(),
-                qr_url: document.getElementById("editQrUrl").value.split("?")[0],
+                qr_url: encryptedQrUrl,
                 qr_logo: logoBase64,
                 client_name: clientName,
                 db_id: dbId,
