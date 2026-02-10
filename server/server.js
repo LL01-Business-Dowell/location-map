@@ -86,7 +86,7 @@ app.post("/api/crud", async (req, res) => {
 
 // ---------- CRUD (PUT) ----------
 app.put("/api/crud", async (req, res) => {
-    try {
+  try {
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
       method: "PUT",
       headers: authHeaders(),
@@ -119,23 +119,23 @@ app.get("/api/crud", async (req, res) => {
 
 // ---------- LIST COLLECTIONS ----------
 app.get("/api/list_collections", async (req, res) => {
-    try {
-        const qs = new URLSearchParams(req.query).toString();
-        const r = await fetch(`${DATACUBE_BASE}/list_collections?${qs}`, {
-            headers: authHeaders()
-        });
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const r = await fetch(`${DATACUBE_BASE}/list_collections?${qs}`, {
+      headers: authHeaders()
+    });
 
-        const data = await r.json();
-        res.status(r.status).json(data);
-    }catch (err) {
-        console.error("list_collection error:", err);
-        res.status(500).json({ error: "Proxy error" });
-    }
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch (err) {
+    console.error("list_collection error:", err);
+    res.status(500).json({ error: "Proxy error" });
+  }
 });
 
 // ---------- CREATE DATABASE ----------
 app.post("/api/create_database", async (req, res) => {
-    try {
+  try {
     const r = await fetch(`${DATACUBE_BASE}/create_database`, {
       method: "POST",
       headers: authHeaders(),
@@ -151,31 +151,82 @@ app.post("/api/create_database", async (req, res) => {
 });
 
 //build url
+// app.post("/api/build_qr_url", (req, res) => {
+//   try {
+//     const { base_url, db_id, qr_id } = req.body;
+
+//     if (!base_url || !db_id || !qr_id) {
+//       return res.status(400).json({ error: "Missing fields" });
+//     }
+
+//     const cleanBase = base_url.endsWith("/")
+//       ? base_url.slice(0, -1)
+//       : base_url;
+
+//     const encrypted = encryptPayload({
+//       db_id,
+//       qr_id
+//     });
+
+//     const finalUrl = `${cleanBase}?data=${encrypted}`;
+
+//     res.json({ url: finalUrl });
+//   } catch (err) {
+//     console.error("QR build error:", err);
+//     res.status(500).json({ error: "Failed to build QR URL" });
+//   }
+// });
+
 app.post("/api/build_qr_url", (req, res) => {
+  console.log("🔹 /api/build_qr_url hit");
+
   try {
-    const { base_url, db_id, qr_id } = req.body;
+    console.log("➡️ Request body:", req.body);
+
+    const { base_url, db_id, qr_id } = req.body || {};
 
     if (!base_url || !db_id || !qr_id) {
+      console.warn("⚠️ Missing fields", {
+        base_url,
+        db_id,
+        qr_id
+      });
+
       return res.status(400).json({ error: "Missing fields" });
     }
+
+    console.log("✅ Required fields present");
 
     const cleanBase = base_url.endsWith("/")
       ? base_url.slice(0, -1)
       : base_url;
 
-    const encrypted = encryptPayload({
-      db_id,
-      qr_id
-    });
+    console.log("🔹 Clean base URL:", cleanBase);
+
+    console.log("🔐 Starting encryption");
+    console.log("🔐 Payload:", { db_id, qr_id });
+
+    const encrypted = encryptPayload({ db_id, qr_id });
+
+    console.log("🔐 Encryption success");
+    console.log("🔐 Encrypted length:", encrypted.length);
 
     const finalUrl = `${cleanBase}?data=${encrypted}`;
 
+    console.log("✅ Final QR URL built");
+
     res.json({ url: finalUrl });
+
   } catch (err) {
-    console.error("QR build error:", err);
+    console.error("❌ QR build error");
+    console.error("❌ Error name:", err?.name);
+    console.error("❌ Error message:", err?.message);
+    console.error("❌ Stack:", err?.stack);
+
     res.status(500).json({ error: "Failed to build QR URL" });
   }
 });
+
 
 
 // ===== START SERVER =====
