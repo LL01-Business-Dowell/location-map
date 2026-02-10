@@ -326,27 +326,6 @@
             });
         }
 
-        async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
-            const res = await fetch("/api/build_qr_url", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    base_url: baseUrl,
-                    db_id: dbId,
-                    qr_id: qrId
-                })
-            });
-
-            if (!res.ok) {
-                throw new Error("Failed to build QR URL");
-            }
-
-            const data = await res.json();
-            return data.url;
-        }
-
-
-
         function renderQr(qrBox, url, logo) {
             // Remove previous QRCode nodes ONLY
             while (qrBox.firstChild) {
@@ -489,9 +468,11 @@
             lastCheckedQrId = qrId;
 
             const clientName = clientSelect.options[clientSelect.selectedIndex].text;
-            const dbId = await fetchDbId(clientName);
+            //const dbId = await fetchDbId(clientName);
 
-            const exists = await checkQrIdExists(dbId, clientId, qrId);
+            //const coll_name = await todayCollectionName();
+
+            const exists = await checkQrIdExists(clientName, qrId);
 
             if (qrId !== lastCheckedQrId) return;
 
@@ -587,13 +568,13 @@
             const time = t.replace("Z", "").split(".")[0];
             const dbId = await fetchDbId(clientName);
 
-            const exists = await checkQrIdExists(dbId, clientSelect.value, qrId);
-            if (exists) {
-                hideLoader();
-                btn.disabled = false;
-                showToast("QR ID already exists");
-                return;
-            }
+            // const exists = await checkQrIdExists(dbId, clientSelect.value, qrId);
+            // if (exists) {
+            //     hideLoader();
+            //     btn.disabled = false;
+            //     showToast("QR ID already exists");
+            //     return;
+            // }
 
             let encryptedQrUrl;
             try {

@@ -405,7 +405,7 @@ async function addDbId(dbId, name, date, time) {
 
 async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo) {
 
-  const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
+  //const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
 
   const payload = {
     database_id: DATABASE_ID,
@@ -417,7 +417,7 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
         date: date,
         time: time,
         qr_name: qrName,
-        qr_url: url,
+        qr_url: qrUrl,
         qr_logo: qrLogo || null,
         qr_status: 1
       }
@@ -446,8 +446,7 @@ async function updateQrCode({
   date,
   time
 }) {
-  const finalQrUrl =
-    `${qr_url}?dbId=${encodeURIComponent(db_id)}&qrId=${encodeURIComponent(new_qr_id)}`;
+  //const finalQrUrl = `${qr_url}?dbId=${encodeURIComponent(db_id)}&qrId=${encodeURIComponent(new_qr_id)}`;
 
   const payload = {
     database_id: DATABASE_ID,
@@ -458,7 +457,7 @@ async function updateQrCode({
     update_data: {
       qr_id: new_qr_id,
       qr_name: qr_name,
-      qr_url: finalQrUrl,
+      qr_url: qr_url,
       qr_logo: qr_logo,
       date: date,
       time: time
@@ -505,10 +504,10 @@ async function fetchDbId(clientName) {
   }
 }
 
-async function checkQrIdExists(dbId, clientId, qrId) {
+async function checkQrIdExists(clientName, qrId) {
   const params = new URLSearchParams({
-    database_id: dbId,
-    collection_name: clientId,
+    database_id: DATABASE_ID,
+    collection_name: clientName,
     filters: JSON.stringify({ qr_id: qrId }),
     page: 1,
     page_size: 1
@@ -531,6 +530,34 @@ async function checkQrIdExists(dbId, clientId, qrId) {
     return false;
   }
 }
+
+async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
+  const payload = {
+    base_url: baseUrl,
+    db_id: String(dbId),   // normalize
+    qr_id: String(qrId)    // normalize
+  };
+
+  try {
+    const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`QR URL build failed: ${text}`);
+    }
+
+    const json = await res.json();
+    return json.url;
+  } catch (err) {
+    console.error("Failed to build encrypted QR URL", err);
+    throw err;
+  }
+}
+
 
 
 
