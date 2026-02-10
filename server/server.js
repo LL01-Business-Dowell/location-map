@@ -227,6 +227,17 @@ app.post("/api/build_qr_url", (req, res) => {
 
     console.log("🔹 Clean base URL:", cleanBase);
 
+    console.log("🔑 ENV KEY:", process.env.QR_ENCRYPTION_KEY);
+    console.log(
+      "🔑 ENV KEY length:",
+      process.env.QR_ENCRYPTION_KEY?.length
+    );
+    console.log(
+      "🔑 BYTE length:",
+      Buffer.from(process.env.QR_ENCRYPTION_KEY || "", "hex").length
+    );
+
+
     // ---------- KEY VALIDATION (NEW) ----------
     const rawKey = process.env.QR_ENCRYPTION_KEY;
 
