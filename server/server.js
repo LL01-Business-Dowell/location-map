@@ -34,9 +34,37 @@ function authHeaders() {
 }
 
 //Encrypt Function
+// function encryptPayload(payload) {
+//   const iv = crypto.randomBytes(12); // GCM standard
+//   // const cipher = crypto.createCipheriv(ALGO, KEY, iv);
+//   const cipher = crypto.createCipheriv(ALGO, Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex"), iv);
+
+
+//   const encrypted = Buffer.concat([
+//     cipher.update(JSON.stringify(payload), "utf8"),
+//     cipher.final()
+//   ]);
+
+//   const tag = cipher.getAuthTag();
+
+//   // iv + tag + ciphertext
+//   return Buffer.concat([iv, tag, encrypted]).toString("base64url");
+// }
+
 function encryptPayload(payload) {
+  if (!process.env.QR_ENCRYPTION_KEY) {
+    throw new Error("QR_ENCRYPTION_KEY is missing");
+  }
+
+  const key = Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex");
+
+  if (key.length !== 32) {
+    throw new Error(`Invalid QR_ENCRYPTION_KEY length: ${key.length}`);
+  }
+
   const iv = crypto.randomBytes(12); // GCM standard
-  const cipher = crypto.createCipheriv(ALGO, KEY, iv);
+
+  const cipher = crypto.createCipheriv(ALGO, key, iv);
 
   const encrypted = Buffer.concat([
     cipher.update(JSON.stringify(payload), "utf8"),
@@ -48,6 +76,7 @@ function encryptPayload(payload) {
   // iv + tag + ciphertext
   return Buffer.concat([iv, tag, encrypted]).toString("base64url");
 }
+
 
 
 // ---------- ADD COLLECTION ----------
@@ -186,12 +215,7 @@ app.post("/api/build_qr_url", (req, res) => {
     const { base_url, db_id, qr_id } = req.body || {};
 
     if (!base_url || !db_id || !qr_id) {
-      console.warn("⚠️ Missing fields", {
-        base_url,
-        db_id,
-        qr_id
-      });
-
+      console.warn("⚠️ Missing fields", { base_url, db_id, qr_id });
       return res.status(400).json({ error: "Missing fields" });
     }
 
@@ -202,6 +226,25 @@ app.post("/api/build_qr_url", (req, res) => {
       : base_url;
 
     console.log("🔹 Clean base URL:", cleanBase);
+
+    // ---------- KEY VALIDATION (NEW) ----------
+    const rawKey = process.env.QR_ENCRYPTION_KEY;
+
+    console.log("🔑 Raw key present:", !!rawKey);
+    console.log("🔑 Raw key length:", rawKey?.length);
+
+    if (!rawKey) {
+      throw new Error("QR_ENCRYPTION_KEY is missing");
+    }
+
+    const key = Buffer.from(rawKey.trim(), "hex");
+
+    console.log("🔑 Key byte length:", key.length);
+
+    if (key.length !== 32) {
+      throw new Error(`Invalid key length: ${key.length}`);
+    }
+    // -----------------------------------------
 
     console.log("🔐 Starting encryption");
     console.log("🔐 Payload:", { db_id, qr_id });
@@ -226,6 +269,7 @@ app.post("/api/build_qr_url", (req, res) => {
     res.status(500).json({ error: "Failed to build QR URL" });
   }
 });
+
 
 
 
