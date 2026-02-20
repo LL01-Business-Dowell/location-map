@@ -546,7 +546,7 @@
         document.getElementById("createQrBtn").onclick = async () => {
             const btn = document.getElementById("createQrBtn");
             // const qrId = document.getElementById("qrId").value.trim();
-            const qrId = Number(document.getElementById("qrId").value);
+            const qrId = document.getElementById("qrId").value.trim();
             const qrName = document.getElementById("qrName").value.trim();
             const qrUrl = document.getElementById("qrUrl").value.trim();
             const cleanBaseUrl = normalizeUrl(qrUrl);
@@ -556,8 +556,9 @@
             const logoFile = document.getElementById("qrLogo").files[0];
             const logoBase64 = await fileToBase64(logoFile);
 
-
-            if (!qrId || !qrName || !qrUrl) return showToast("Enter ID and Name and URL");
+            if (!qrId) return showToast("Enter QR ID");
+            if (!qrName) return showToast("Enter QR Name");
+            if (!qrUrl) return showToast("Enter QR URL");
 
             btn.disabled = true;
             showLoader();
@@ -568,17 +569,17 @@
             const time = t.replace("Z", "").split(".")[0];
             const dbId = await fetchDbId(clientName);
 
-            // const exists = await checkQrIdExists(dbId, clientSelect.value, qrId);
-            // if (exists) {
-            //     hideLoader();
-            //     btn.disabled = false;
-            //     showToast("QR ID already exists");
-            //     return;
-            // }
+            const VERIFY_PAGE = "https://yourdomain.com/verify.html";
 
             let encryptedQrUrl;
             try {
-                encryptedQrUrl = await buildEncryptedQrUrl(cleanBaseUrl, dbId, qrId);
+                // encryptedQrUrl = await buildEncryptedQrUrl(cleanBaseUrl, dbId, qrId);
+                encryptedQrUrl = await buildEncryptedQrUrl(
+                    VERIFY_PAGE,
+                    cleanBaseUrl,
+                    dbId,
+                    qrId
+                );
             } catch (err) {
                 hideLoader();
                 btn.disabled = false;
@@ -634,9 +635,12 @@
 
             const newQrId = Number(document.getElementById("editQrId").value);
 
+            const VERIFY_PAGE = "https://yourdomain.com/verify.html";
+
             let encryptedQrUrl;
             try {
                 encryptedQrUrl = await buildEncryptedQrUrl(
+                    VERIFY_PAGE,
                     cleanBaseUrl,
                     dbId,
                     newQrId

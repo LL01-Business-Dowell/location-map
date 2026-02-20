@@ -531,11 +531,39 @@ async function checkQrIdExists(clientName, qrId) {
   }
 }
 
-async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
+// async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
+//   const payload = {
+//     base_url: baseUrl,
+//     db_id: String(dbId),   // normalize
+//     qr_id: String(qrId)    // normalize
+//   };
+
+//   try {
+//     const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(payload)
+//     });
+
+//     if (!res.ok) {
+//       const text = await res.text();
+//       throw new Error(`QR URL build failed: ${text}`);
+//     }
+
+//     const json = await res.json();
+//     return json.url;
+//   } catch (err) {
+//     console.error("Failed to build encrypted QR URL", err);
+//     throw err;
+//   }
+// }
+
+async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
   const payload = {
-    base_url: baseUrl,
-    db_id: String(dbId),   // normalize
-    qr_id: String(qrId)    // normalize
+    base_url: verifyBaseUrl,     // fixed verify page
+    target_url: targetUrl,       // user input URL
+    db_id: String(dbId),
+    qr_id: String(qrId)
   };
 
   try {
@@ -551,7 +579,7 @@ async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
     }
 
     const json = await res.json();
-    return json.url;
+    return json.url;   // this becomes the QR content
   } catch (err) {
     console.error("Failed to build encrypted QR URL", err);
     throw err;

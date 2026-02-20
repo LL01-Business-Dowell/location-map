@@ -77,6 +77,35 @@ function encryptPayload(payload) {
   return Buffer.concat([iv, tag, encrypted]).toString("base64url");
 }
 
+function decryptPayload(token) {
+  // const key = Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex");
+  if (!process.env.QR_ENCRYPTION_KEY) {
+    throw new Error("QR_ENCRYPTION_KEY missing");
+  }
+
+  const key = Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex");
+
+  if (key.length !== 32) {
+    throw new Error("Invalid encryption key length");
+  }
+
+  const buffer = Buffer.from(token, "base64url");
+
+  const iv = buffer.subarray(0, 12);
+  const tag = buffer.subarray(12, 28);
+  const encrypted = buffer.subarray(28);
+
+  const decipher = crypto.createDecipheriv(ALGO, key, iv);
+  decipher.setAuthTag(tag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final()
+  ]);
+
+  return JSON.parse(decrypted.toString("utf8"));
+}
+
 
 
 // ---------- ADD COLLECTION ----------
@@ -212,10 +241,15 @@ app.post("/api/build_qr_url", (req, res) => {
   try {
     console.log("➡️ Request body:", req.body);
 
-    const { base_url, db_id, qr_id } = req.body || {};
+    // const { base_url, db_id, qr_id } = req.body || {};
 
-    if (!base_url || !db_id || !qr_id) {
-      console.warn("⚠️ Missing fields", { base_url, db_id, qr_id });
+    // if (!base_url || !db_id || !qr_id) {
+    //   console.warn("⚠️ Missing fields", { base_url, db_id, qr_id });
+    //   return res.status(400).json({ error: "Missing fields" });
+    // }
+    const { base_url, target_url, db_id, qr_id } = req.body || {};
+
+    if (!base_url || !target_url || !db_id || !qr_id) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
@@ -260,12 +294,12 @@ app.post("/api/build_qr_url", (req, res) => {
     console.log("🔐 Starting encryption");
     console.log("🔐 Payload:", { db_id, qr_id });
 
-    const encrypted = encryptPayload({ db_id, qr_id });
+    const encrypted = encryptPayload({ target_url, db_id, qr_id });
 
     console.log("🔐 Encryption success");
     console.log("🔐 Encrypted length:", encrypted.length);
 
-    const finalUrl = `${cleanBase}?data=${encrypted}`;
+    const finalUrl = `${cleanBase}?token=${encrypted}`;
 
     console.log("✅ Final QR URL built");
 
@@ -278,6 +312,42 @@ app.post("/api/build_qr_url", (req, res) => {
     console.error("❌ Stack:", err?.stack);
 
     res.status(500).json({ error: "Failed to build QR URL" });
+  }
+});
+
+app.post("/api/encrypt", (req, res) => {
+  try {
+    const payload = req.body;
+
+    if (!payload || typeof payload !== "object") {
+      return res.status(400).json({ error: "Invalid payload" });
+    }
+
+    const token = encryptPayload(payload);
+
+    res.json({ token });
+
+  } catch (err) {
+    console.error("Encrypt error:", err);
+    res.status(500).json({ error: "Encryption failed" });
+  }
+});
+
+app.post("/api/decrypt", (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: "Missing token" });
+    }
+
+    const data = decryptPayload(token);
+
+    res.json(data);
+
+  } catch (err) {
+    console.error("Decrypt error:", err);
+    res.status(400).json({ error: "Invalid token" });
   }
 });
 

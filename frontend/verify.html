@@ -108,14 +108,51 @@
         const submitBtn = document.getElementById("submitBtn");
         const statusEl = document.getElementById("status");
 
-        const params = new URLSearchParams(location.search);
-        const dbId = params.get("dbId");
-        const qrId = params.get("qrId");
+        // const params = new URLSearchParams(location.search);
+        // const dbId = params.get("dbId");
+        // const qrId = params.get("qrId");
 
-        if (!dbId || !qrId) {
+        // if (!dbId || !qrId) {
+        //     statusEl.textContent = "Invalid verification link";
+        //     throw new Error("Missing dbId or qrId in URL");
+        // }
+        const params = new URLSearchParams(location.search);
+        const token = params.get("token");
+
+        if (!token) {
             statusEl.textContent = "Invalid verification link";
-            throw new Error("Missing dbId or qrId in URL");
+            throw new Error("Missing token in URL");
         }
+
+        let dbId = null;
+        let qrId = null;
+        let targetUrl = null;
+
+        (async () => {
+            try {
+                const res = await fetch("/api/decrypt", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token })
+                });
+
+                if (!res.ok) throw new Error("Decryption failed");
+
+                const data = await res.json();
+
+                dbId = data.db_id;
+                qrId = data.qr_id;
+                targetUrl = data.target_url;
+
+                console.log("[VERIFY] Decrypted:", { dbId, qrId, targetUrl });
+
+                await startCamera();
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Invalid or expired link";
+            }
+        })();
 
         let stream = null;
         let codeReader = new ZXing.BrowserMultiFormatReader();
@@ -155,7 +192,32 @@
                     if (!qrId || value.includes(qrId)) {
                         stopQrScan();
                         statusEl.textContent = "QR verified ✔ Redirecting...";
-                        setTimeout(() => location.href = `index.html?qrId=${qrId}&dbId=${dbId}&verified=true`, 700);
+                        // setTimeout(() => location.href = `index.html?qrId=${qrId}&dbId=${dbId}&verified=true`, 700);
+                        setTimeout(async () => {
+
+                            try {
+                                const encryptRes = await fetch("/api/encrypt", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        db_id: dbId,
+                                        qr_id: qrId,
+                                        verified: true
+                                    })
+                                });
+
+                                if (!encryptRes.ok) throw new Error("Encryption failed");
+
+                                const { token: newToken } = await encryptRes.json();
+
+                                location.href = `${targetUrl}?token=${encodeURIComponent(newToken)}`;
+
+                            } catch (err) {
+                                console.error("Redirect encryption failed", err);
+                                statusEl.textContent = "Redirect failed";
+                            }
+
+                        }, 700);
                     }
                 }
             });
@@ -231,10 +293,39 @@
         };
 
         /* ---------------- INIT ---------------- */
+        // (async () => {
+        //     console.log("[VERIFY] Params:", { dbId, qrId });
+        //     await startCamera();
+        //     startQrScan();
+        // })();
         (async () => {
-            console.log("[VERIFY] Params:", { dbId, qrId });
-            await startCamera();
-            startQrScan();
+            try {
+                const res = await fetch("/api/decrypt", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token })
+                });
+
+                if (!res.ok) throw new Error("Decryption failed");
+
+                const data = await res.json();
+
+                dbId = data.db_id;
+                qrId = data.qr_id;
+                targetUrl = data.target_url;
+
+                if (!dbId || !qrId || !targetUrl) {
+                    throw new Error("Invalid decrypted payload");
+                }
+
+                console.log("[VERIFY] Decrypted:", { dbId, qrId, targetUrl });
+
+                await startCamera();
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Invalid or expired link";
+            }
         })();
     </script>
 </body>
