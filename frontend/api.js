@@ -586,6 +586,33 @@ async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
   }
 }
 
+async function decryptToken(token) {
+  const res = await fetch(`${PROXY_BASE}/decrypt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token })
+  });
+
+  if (!res.ok) {
+    throw new Error("Decrypt failed");
+  }
+
+  return res.json();
+}
+
+async function encryptParams(data) {
+  const res = await fetch(`${PROXY_BASE}/encrypt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) {
+    throw new Error("Encrypt failed");
+  }
+
+  return res.json();
+}
 
 
 

@@ -108,7 +108,7 @@
         const submitBtn = document.getElementById("submitBtn");
         const statusEl = document.getElementById("status");
 
-        
+
         const params = new URLSearchParams(location.search);
         const token = params.get("token");
 
@@ -123,15 +123,7 @@
 
         (async () => {
             try {
-                const res = await fetch("/api/decrypt", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ token })
-                });
-
-                if (!res.ok) throw new Error("Decryption failed");
-
-                const data = await res.json();
+                const data = await decryptToken(token);
 
                 dbId = data.db_id;
                 qrId = data.qr_id;
@@ -189,19 +181,11 @@
                         setTimeout(async () => {
 
                             try {
-                                const encryptRes = await fetch("/api/encrypt", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                        db_id: dbId,
-                                        qr_id: qrId,
-                                        verified: true
-                                    })
+                                const { token: newToken } = await encryptParams({
+                                    db_id: dbId,
+                                    qr_id: qrId,
+                                    verified: true
                                 });
-
-                                if (!encryptRes.ok) throw new Error("Encryption failed");
-
-                                const { token: newToken } = await encryptRes.json();
 
                                 location.href = `${targetUrl}?token=${encodeURIComponent(newToken)}`;
 
