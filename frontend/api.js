@@ -626,7 +626,7 @@ async function recordQrScan({
     body: JSON.stringify({
       database_id: QR_SCAN_DB_ID,
       collection_name: "medsign_qr_scan",
-      documents: document
+      documents: [document]
     })
   });
 
