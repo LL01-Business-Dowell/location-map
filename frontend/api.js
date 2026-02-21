@@ -614,6 +614,34 @@ async function encryptParams(data) {
   return res.json();
 }
 
+async function recordQrScan({
+  document
+}) {
+
+  const response = await fetch(`${PROXY_BASE}/crud`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      database_id: QR_SCAN_DB_ID,
+      collection_name: "medsign_qr_scan",
+      documents: document
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const data = await response.json();
+
+  if (!data.success || !data.inserted_ids?.length) {
+    throw new Error("Insert failed - no ID returned");
+  }
+
+  return data.inserted_ids[0];
+}
 
 
 

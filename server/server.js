@@ -34,22 +34,6 @@ function authHeaders() {
 }
 
 //Encrypt Function
-// function encryptPayload(payload) {
-//   const iv = crypto.randomBytes(12); // GCM standard
-//   // const cipher = crypto.createCipheriv(ALGO, KEY, iv);
-//   const cipher = crypto.createCipheriv(ALGO, Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex"), iv);
-
-
-//   const encrypted = Buffer.concat([
-//     cipher.update(JSON.stringify(payload), "utf8"),
-//     cipher.final()
-//   ]);
-
-//   const tag = cipher.getAuthTag();
-
-//   // iv + tag + ciphertext
-//   return Buffer.concat([iv, tag, encrypted]).toString("base64url");
-// }
 
 function encryptPayload(payload) {
   if (!process.env.QR_ENCRYPTION_KEY) {
