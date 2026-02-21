@@ -566,6 +566,8 @@ async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
     qr_id: String(qrId)
   };
 
+  console.log(payload);
+
   try {
     const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
       method: "POST",
@@ -601,6 +603,10 @@ async function decryptToken(token) {
 }
 
 async function encryptParams(data) {
+
+  console.log("===== ENCRYPT REQUEST START =====");
+  console.log("Data being sent to encrypt:", data);
+
   const res = await fetch(`${PROXY_BASE}/encrypt`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -611,7 +617,9 @@ async function encryptParams(data) {
     throw new Error("Encrypt failed");
   }
 
-  return res.json();
+  response = res.json()
+  console.log("Encrypt response from server:", response);
+  return response;
 }
 
 async function recordQrScan({

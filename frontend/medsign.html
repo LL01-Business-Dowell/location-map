@@ -176,10 +176,17 @@
 
             try {
                 const data = await decryptToken(token);
+                console.log("FULL decrypt response:", data);
 
                 dbId = data.db_id;
                 qrId = data.qr_id;
                 targetUrl = data.target_url;
+
+                console.log("Parsed values →", {
+                    dbId,
+                    qrId,
+                    targetUrl
+                });
 
                 if (!dbId || !qrId || !targetUrl) {
                     throw new Error("Invalid decrypted payload");
@@ -226,7 +233,7 @@
 
                     try {
                         await saveLocation(dbId, lat, lng, date, time, qrId, timestamp);
-                        statusEl.textContent = "Location captured.";
+                        //statusEl.textContent = "Location captured.";
                     } catch (e) {
                         console.warn(e);
                     }
