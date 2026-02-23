@@ -62,7 +62,6 @@ function encryptPayload(payload) {
 }
 
 function decryptPayload(token) {
-  // const key = Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex");
   if (!process.env.QR_ENCRYPTION_KEY) {
     throw new Error("QR_ENCRYPTION_KEY missing");
   }
