@@ -132,6 +132,55 @@
             height: 100%;
             object-fit: cover;
         }
+
+        .clinical-check {
+            text-align: left;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .clinical-check h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .confirm-text {
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #334155;
+        }
+
+        .check-list {
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .check-list li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .clinical-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+        }
+
+        .exit-btn {
+            background: #ef4444;
+            color: white;
+        }
     </style>
 </head>
 
@@ -145,7 +194,29 @@
             <img src="assets/banner.png" alt="Medsign Banner">
         </div>
 
-        <button id="viewMapBtn" disabled>Continue</button>
+        <div class="clinical-check">
+            <h3>Clinical Safety Check</h3>
+
+            <p class="confirm-text">
+                I confirm that I have reviewed the generated prescription instructions.
+                I verify:
+            </p>
+
+            <ul class="check-list">
+                <li><b>Patient Identity:</b> Matches the intended recipient.</li>
+                <li><b>Clinical Intent:</b> Dosage and Frequency are medically accurate.</li>
+                <li><b>Compliance:</b> This audio matches signed/stamped prescription as per NMC guidelines.</li>
+                <li><b>Support Tool:</b> I understand this AI-voice supplements, but does not replace, the official written
+                    prescription.</li>
+            </ul>
+
+            <div class="clinical-buttons">
+                <button class="confirm-btn" id="viewMapBtn" disabled>Confirm and Record</button>
+                <button class="exit-btn" onclick="window.close()">Exit</button>
+            </div>
+        </div>
+
+        <!-- <button id="viewMapBtn" disabled>Continue</button> -->
 
         <div id="feedbackBox" style="margin: 16px 0;">
             <p style="margin-bottom: 10px; font-weight: 600;">
