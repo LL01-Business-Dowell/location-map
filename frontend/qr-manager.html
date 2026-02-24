@@ -326,8 +326,9 @@
             });
         }
 
-        function renderQr(qrBox, url, logo) {
-            // Remove previous QRCode nodes ONLY
+
+        function renderQr(qrBox, url, logo, size = 120) {
+
             while (qrBox.firstChild) {
                 qrBox.removeChild(qrBox.firstChild);
             }
@@ -339,32 +340,34 @@
 
             new QRCode(qrCanvasWrapper, {
                 text: url,
-                width: 120,
-                height: 120,
-                correctLevel: QRCode.CorrectLevel.L
+                width: size,
+                height: size,
+                correctLevel: QRCode.CorrectLevel.H
             });
+
+            const centerSize = size * 0.32;
 
             const center = document.createElement("div");
             center.style.position = "absolute";
-            center.style.width = "38px";
-            center.style.height = "38px";
+            center.style.width = centerSize + "px";
+            center.style.height = centerSize + "px";
             center.style.background = "#fff";
-            center.style.borderRadius = "8px";
+            center.style.borderRadius = (size * 0.08) + "px";
             center.style.left = "50%";
             center.style.top = "50%";
             center.style.transform = "translate(-50%, -50%)";
             center.style.display = "flex";
             center.style.alignItems = "center";
             center.style.justifyContent = "center";
-            center.style.fontSize = "9px";
+            center.style.fontSize = (size * 0.07) + "px";
             center.style.fontWeight = "700";
             center.style.zIndex = "2";
 
             if (logo) {
                 const img = document.createElement("img");
                 img.src = logo;
-                img.style.maxWidth = "100%";
-                img.style.maxHeight = "100%";
+                img.style.maxWidth = "80%";
+                img.style.maxHeight = "80%";
                 center.appendChild(img);
             } else {
                 center.textContent = "SCAN ME";
@@ -442,7 +445,12 @@
                 actions.innerHTML = `
                     <button class="qr-btn" data-url="${q.qr_url}">Copy URL</button>
                     <button class="qr-btn" data-edit='${JSON.stringify(q)}'>Edit</button>
-                    <button class="qr-btn" data-download>Download PNG</button>
+                    <button class="qr-btn"
+                            data-download
+                            data-url="${q.qr_url}"
+                            data-logo="${q.qr_logo || ''}">
+                        Download
+                    </button>
                     <button class="qr-btn" data-disable="${q.qr_id}">Disable</button>
                 `;
                 div.appendChild(actions);
@@ -493,31 +501,83 @@
                 showToast("URL copied");
             }
 
-            // if (e.target.dataset.download) {
-            //     const el = document.getElementById(e.target.dataset.download);
-            //     const canvas = await html2canvas(el);
-            //     const a = document.createElement("a");
-            //     a.download = `${e.target.dataset.download}.png`;
-            //     a.href = canvas.toDataURL();
-            //     a.click();
-            // }
-
             if (e.target.hasAttribute("data-download")) {
-                const qrItem = e.target.closest(".qr-item");
-                if (!qrItem) return;
 
-                const qrBox = qrItem.querySelector(".qr-box");
-                if (!qrBox) return;
+                const qrUrl = e.target.dataset.url;
+                const logoSrc = e.target.dataset.logo || null;
 
-                const canvas = await html2canvas(qrBox, {
-                    backgroundColor: "#ffffff",
-                    scale: 3
+                // Create high-res QR canvas
+                const tempDiv = document.createElement("div");
+                document.body.appendChild(tempDiv);
+                tempDiv.style.visibility = "hidden";
+
+                new QRCode(tempDiv, {
+                    text: qrUrl,
+                    width: 1200,
+                    height: 1200,
+                    correctLevel: QRCode.CorrectLevel.H
                 });
+
+                await new Promise(r => setTimeout(r, 300));
+
+                const qrCanvas = tempDiv.querySelector("canvas");
+
+                const finalCanvas = document.createElement("canvas");
+                finalCanvas.width = 1200;
+                finalCanvas.height = 1200;
+
+                const ctx = finalCanvas.getContext("2d");
+
+                // Draw QR
+                ctx.drawImage(qrCanvas, 0, 0);
+
+                // Draw center white box
+                const boxSize = 1200 * 0.20;
+                const boxX = (1200 - boxSize) / 2;
+                const boxY = (1200 - boxSize) / 2;
+
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.roundRect(boxX, boxY, boxSize, boxSize, 1200 * 0.08);
+                ctx.fill();
+
+                if (logoSrc) {
+                    const img = new Image();
+                    img.src = logoSrc;
+                    await new Promise(res => img.onload = res);
+
+                    const logoSize = boxSize * 0.8;
+                    const logoX = (1200 - logoSize) / 2;
+                    const logoY = (1200 - logoSize) / 2;
+
+                    ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
+                } else {
+                    ctx.fillStyle = "#000";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+
+                    // Smaller font size
+                    const fontSize = boxSize * 0.18;
+                    ctx.font = `bold ${fontSize}px Inter`;
+
+                    // Line spacing
+                    const lineGap = fontSize * 1.1;
+
+                    // Center point
+                    const centerX = 1200 / 2;
+                    const centerY = 1200 / 2;
+
+                    // Draw two lines
+                    ctx.fillText("SCAN", centerX, centerY - lineGap / 2);
+                    ctx.fillText("ME", centerX, centerY + lineGap / 2);
+                }
 
                 const a = document.createElement("a");
                 a.download = "qr-code.png";
-                a.href = canvas.toDataURL("image/png");
+                a.href = finalCanvas.toDataURL("image/png");
                 a.click();
+
+                document.body.removeChild(tempDiv);
             }
 
 
