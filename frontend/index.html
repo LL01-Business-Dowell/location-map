@@ -385,7 +385,7 @@
 
             // Check if location was already captured this session
             if (sessionStorage.getItem("locationCaptured")) {
-                //statusEl.textContent = "Location already captured ✅";
+                //statusEl.textContent = "Location already captured";
                 statusEl.classList.remove('loading');
                 btn.disabled = false;
                 reportbtn.disabled = false;
@@ -411,7 +411,7 @@
                     try {
                         //await ensureDailyCollection();
                         await saveLocation(dbId, lat, lng, date, time, qrId, uid);
-                        // statusEl.textContent = "Location saved successfully ✅";
+                        // statusEl.textContent = "Location saved successfully";
                         statusEl.classList.remove('loading');
                     } catch (e) {
                         console.warn("Save failed or skipped:", e);
