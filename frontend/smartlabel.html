@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>DoWell Smart Labelling</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- KEEPING YOUR ORIGINAL STYLES UNCHANGED --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .card {
+            background: white;
+            backdrop-filter: blur(10px);
+            padding: 32px 20px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 17px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 380px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 14px 36px;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .feedback-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #c7d2fe;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            color: black;
+        }
+
+        .feedback-btn.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .status {
+            margin-top: 12px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .logo-container {
+            color: white;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            max-height: 120px;
+            /* adjust if needed */
+            object-fit: contain;
+        }
+
+        .iframe-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .clinical-check {
+            text-align: left;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .clinical-check h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .confirm-text {
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #334155;
+        }
+
+        .check-list {
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .check-list li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .clinical-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+        }
+
+        .exit-btn {
+            background: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <!-- <div class="logo-container">
+            <img src="assets/logo.png" alt="Medsign Logo">
+        </div> -->
+
+        <h2>DoWell Smart Labelling</h2>
+        <p>Connecting you to your customers in real time</p>
+
+        <div class="iframe-container">
+            <img src="assets/banner.png" alt="Medsign Banner">
+        </div>
+
+        <div class="clinical-check">
+            <h3>Important Safety Information</h3>
+
+            <ul class="check-list">
+                <li><b>Understand Your Doctor:</b> This audio helps you understand your Doctor’s handwriting
+                    and instructions.</li>
+                <li><b>The Label/Prescription is Boss:</b> Always follow the printed instructions on your
+                    medicine strip, box, or paper prescription.</li>
+                <li><b>Stop if Different:</b> If the voice says something different than what is written on the
+                    medicine or your prescription paper, DO NOT take the medicine. Talk to your chemist or
+                    doctor immediately.</li>
+                <li><b>For You Only:</b> This audio and medicine are for you. Sharing medicine with others is
+                    dangerous.</li>
+            </ul>
+
+            <div class="clinical-buttons">
+                <button class="confirm-btn" id="viewMapBtn" disabled>Confirm and Hear</button>
+                <button class="exit-btn" onclick="window.close()">Exit</button>
+            </div>
+        </div>
+
+        <!-- <button id="viewMapBtn" disabled>Continue</button> -->
+
+        <div id="feedbackBox" style="margin: 16px 0;">
+            <p style="margin-bottom: 10px; font-weight: 600;">
+                Would you recommend our product to your friends?
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="feedback-btn" data-value="Yes">Yes</button>
+                <button class="feedback-btn" data-value="Maybe">Maybe</button>
+                <button class="feedback-btn" data-value="No">No</button>
+            </div>
+        </div>
+
+        <div class="status loading" id="status"></div>
+    </div>
+
+    <!-- Shared scripts -->
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+
+    <script>
+        const statusEl = document.getElementById("status");
+        const btn = document.getElementById("viewMapBtn");
+
+        let dbId = null;
+        let qrId = null;
+        let targetUrl = null;
+        let insertedId = null;
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get("token");
+
+            if (!token) {
+                statusEl.textContent = "Invalid link.";
+                statusEl.classList.remove("loading");
+                return;
+            }
+
+            try {
+                const data = await decryptToken(token);
+                console.log("FULL decrypt response:", data);
+
+                dbId = data.db_id;
+                qrId = data.qr_id;
+                targetUrl = data.target_url;
+
+                console.log("Parsed values →", {
+                    dbId,
+                    qrId,
+                    targetUrl
+                });
+
+                if (!dbId || !qrId || !targetUrl) {
+                    throw new Error("Invalid decrypted payload");
+                }
+
+                captureLocationOnLoad();
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Invalid or expired link.";
+                statusEl.classList.remove("loading");
+            }
+        }
+
+        async function captureLocationOnLoad() {
+            if (!navigator.geolocation) {
+                statusEl.textContent = "Geolocation not supported.";
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                    const lat = Number(pos.coords.latitude.toFixed(5));
+                    const lng = Number(pos.coords.longitude.toFixed(5));
+                    const timestamp = new Date().toISOString();
+                    const [date, t] = timestamp.split("T");
+                    const time = t.replace("Z", "").split(".")[0];
+
+                    try {
+                        insertedId = await recordQrScan({
+                            document: {
+                                qr_id: qrId,
+                                latitude: lat,
+                                longitude: lng,
+                                scanned_at: timestamp
+                            }
+                        });
+
+                    } catch (err) {
+                        console.error("Scan record failed:", err);
+                        statusEl.textContent = "Scan recording failed. Please try again.";
+                        return;
+                    }
+
+                    try {
+                        await saveLocation(dbId, lat, lng, date, time, qrId, timestamp);
+                        //statusEl.textContent = "Location captured.";
+                    } catch (e) {
+                        console.warn(e);
+                    }
+
+                    btn.disabled = false;
+                },
+                () => {
+                    statusEl.textContent = "Location permission denied.";
+                    btn.disabled = false;
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        document.querySelectorAll(".feedback-btn").forEach(button => {
+            button.onclick = async () => {
+                document.querySelectorAll(".feedback-btn")
+                    .forEach(b => b.classList.remove("selected"));
+
+                button.classList.add("selected");
+
+                try {
+                    await saveFeedback({
+                        db_id: dbId,
+                        feedback: button.dataset.value
+                    });
+                } catch (e) {
+                    console.warn("Feedback save failed", e);
+                }
+            };
+        });
+
+        btn.onclick = async () => {
+            if (!targetUrl || !insertedId) return;
+
+            try {
+                const { token: newToken } = await encryptParams({
+                    db_id: dbId,
+                    qr_id: qrId,
+                    scan_id: insertedId
+                });
+
+                window.location.href =
+                    `${targetUrl}?token=${encodeURIComponent(newToken)}`;
+
+            } catch (err) {
+                console.error("Redirect encryption failed:", err);
+            }
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

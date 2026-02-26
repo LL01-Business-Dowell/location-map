@@ -191,45 +191,12 @@ app.post("/api/create_database", async (req, res) => {
   }
 });
 
-//build url
-// app.post("/api/build_qr_url", (req, res) => {
-//   try {
-//     const { base_url, db_id, qr_id } = req.body;
-
-//     if (!base_url || !db_id || !qr_id) {
-//       return res.status(400).json({ error: "Missing fields" });
-//     }
-
-//     const cleanBase = base_url.endsWith("/")
-//       ? base_url.slice(0, -1)
-//       : base_url;
-
-//     const encrypted = encryptPayload({
-//       db_id,
-//       qr_id
-//     });
-
-//     const finalUrl = `${cleanBase}?data=${encrypted}`;
-
-//     res.json({ url: finalUrl });
-//   } catch (err) {
-//     console.error("QR build error:", err);
-//     res.status(500).json({ error: "Failed to build QR URL" });
-//   }
-// });
-
 app.post("/api/build_qr_url", (req, res) => {
   console.log("🔹 /api/build_qr_url hit");
 
   try {
     console.log("➡️ Request body:", req.body);
-
-    // const { base_url, db_id, qr_id } = req.body || {};
-
-    // if (!base_url || !db_id || !qr_id) {
-    //   console.warn("⚠️ Missing fields", { base_url, db_id, qr_id });
-    //   return res.status(400).json({ error: "Missing fields" });
-    // }
+    
     const { base_url, target_url, db_id, qr_id } = req.body || {};
 
     if (!base_url || !target_url || !db_id || !qr_id) {

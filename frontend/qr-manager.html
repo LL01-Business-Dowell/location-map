@@ -629,7 +629,8 @@
             const time = t.replace("Z", "").split(".")[0];
             const dbId = await fetchDbId(clientName);
 
-            const VERIFY_PAGE = "https://location-map-1.onrender.com/medsign.html";
+            const VERIFY_PAGE = "https://location-map-1.onrender.com/smartlabel.html";
+            // const VERIFY_PAGE = "https://location-map-1.onrender.com/medsign.html";
 
             let encryptedQrUrl;
             try {
@@ -695,7 +696,8 @@
 
             const newQrId = Number(document.getElementById("editQrId").value);
 
-            const VERIFY_PAGE = "https://location-map-1.onrender.com/medsign.html";
+            // const VERIFY_PAGE = "https://location-map-1.onrender.com/medsign.html";
+            const VERIFY_PAGE = "https://location-map-1.onrender.com/smartlabel.html";
 
             let encryptedQrUrl;
             try {
