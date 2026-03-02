@@ -299,7 +299,6 @@
     <script src="utils.js"></script>
     <script src="api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script> -->
 
 
     <script>
@@ -480,7 +479,14 @@
                 qrList.appendChild(div);
 
                 // renderQr(qrBox, q.qr_url, q.qr_logo);
-                renderQr(qrBox, q.qr_url, null);
+                // renderQr(qrBox, q.qr_url, null);
+                if (q.qr_image) {
+                    const img = document.createElement("img");
+                    img.src = q.qr_image;
+                    img.style.width = "120px";
+                    img.style.height = "120px";
+                    qrBox.appendChild(img);
+                }
 
             });
         };
@@ -603,27 +609,41 @@
             //     document.body.removeChild(tempDiv);
             // }
 
+            // if (e.target.hasAttribute("data-download")) {
+
+            //     const qrUrl = e.target.dataset.url;
+            //     const logoFile = document.getElementById("qrLogo").files[0] || null;
+
+            //     try {
+            //         const blob = await generateCustomQrImage(qrUrl, "#000000", logoFile);
+
+            //         const downloadUrl = URL.createObjectURL(blob);
+
+            //         const a = document.createElement("a");
+            //         a.href = downloadUrl;
+            //         a.download = "qr-code.png";
+            //         a.click();
+
+            //         URL.revokeObjectURL(downloadUrl);
+
+            //     } catch (err) {
+            //         console.error(err);
+            //         showToast("Download failed");
+            //     }
+            // }
+
             if (e.target.hasAttribute("data-download")) {
+                const qrImage = q.qr_image;
 
-                const qrUrl = e.target.dataset.url;
-                const logoFile = document.getElementById("qrLogo").files[0] || null;
-
-                try {
-                    const blob = await generateCustomQrImage(qrUrl, "#000000", logoFile);
-
-                    const downloadUrl = URL.createObjectURL(blob);
-
-                    const a = document.createElement("a");
-                    a.href = downloadUrl;
-                    a.download = "qr-code.png";
-                    a.click();
-
-                    URL.revokeObjectURL(downloadUrl);
-
-                } catch (err) {
-                    console.error(err);
-                    showToast("Download failed");
+                if (!qrImage) {
+                    showToast("No QR image found");
+                    return;
                 }
+
+                const a = document.createElement("a");
+                a.href = qrImage;
+                a.download = "qr-code.png";
+                a.click();
             }
 
 
@@ -697,11 +717,18 @@
             // const logoFile = document.getElementById("qrLogo").files[0] || null;
 
             // Generate once to confirm API works
-            await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile);
+            // await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile);
+            const qrBlob = await generateCustomQrImage(
+                encryptedQrUrl,
+                "#000000",
+                logoFile
+            );
+
+            const qrImageBase64 = await blobToBase64(qrBlob);
 
 
 
-            await createQrCode(clientSelect.value, qrId, qrName, encryptedQrUrl, clientName, date, time, dbId, logoBase64);
+            await createQrCode(clientSelect.value, qrId, qrName, encryptedQrUrl, clientName, date, time, dbId, logoBase64, qrImageBase64);
 
             document.getElementById("qrId").value = "";
             document.getElementById("qrName").value = "";

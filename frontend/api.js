@@ -355,6 +355,10 @@ async function registerClient(dbId, name) {
             type: "string"
           },
           {
+            name: "qr_image",
+            type: "string"
+          },
+          {
             name: "qr_status",
             type: "number"
           }
@@ -403,7 +407,7 @@ async function addDbId(dbId, name, date, time) {
   }
 }
 
-async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo) {
+async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo, qrImage) {
 
   //const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
 
@@ -419,6 +423,7 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
         qr_name: qrName,
         qr_url: qrUrl,
         qr_logo: qrLogo || null,
+        qr_image: qrImage,
         qr_status: 1
       }
     ]
