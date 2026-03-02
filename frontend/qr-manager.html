@@ -525,6 +525,25 @@
 
 
         document.addEventListener("click", async e => {
+
+            if (e.target.hasAttribute("data-download")) {
+
+                const qrItem = e.target.closest(".qr-item");
+                const img = qrItem?.querySelector("img");
+
+                if (!img || !img.src) {
+                    showToast("No QR image found");
+                    return;
+                }
+
+                const a = document.createElement("a");
+                a.href = img.src;
+                a.download = "qr-code.png";
+                a.click();
+
+                return; // ⛔ stop further execution
+            }
+
             if (e.target.dataset.url) {
                 await navigator.clipboard.writeText(e.target.dataset.url);
                 showToast("URL copied");
@@ -631,20 +650,6 @@
             //         showToast("Download failed");
             //     }
             // }
-
-            if (e.target.hasAttribute("data-download")) {
-                const qrImage = q.qr_image;
-
-                if (!qrImage) {
-                    showToast("No QR image found");
-                    return;
-                }
-
-                const a = document.createElement("a");
-                a.href = qrImage;
-                a.download = "qr-code.png";
-                a.click();
-            }
 
 
             if (e.target.dataset.disable) {
@@ -792,6 +797,14 @@
                 return;
             }
 
+            const qrBlob = await generateCustomQrImage(
+                encryptedQrUrl,
+                "#000000",
+                logoFile || null
+            );
+
+            const qrImageBase64 = await blobToBase64(qrBlob);
+
 
 
             const updatedQr = {
@@ -800,6 +813,7 @@
                 qr_name: document.getElementById("editQrName").value.trim(),
                 qr_url: encryptedQrUrl,
                 qr_logo: logoBase64,
+                qr_image: qrImageBase64,
                 client_name: clientName,
                 db_id: dbId,
                 date: date,
