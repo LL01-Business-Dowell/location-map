@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thank You</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+  }
+
+  .card {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    max-width: 420px;
+    width: 90%;
+  }
+
+  h1 {
+    margin: 0 0 12px;
+    font-size: 24px;
+    color: #111827;
+  }
+
+  p {
+    color: #6b7280;
+    margin-bottom: 28px;
+    font-size: 15px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+
+  .close-btn {
+    background: #111827;
+    color: white;
+  }
+
+  .return-btn {
+    background: #e5e7eb;
+    color: #111827;
+  }
+
+  .note {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Thank You</h1>
+
+  <button class="close-btn" onclick="closeTab()">Close This Tab</button>
+  <!-- <button class="return-btn" onclick="goHome()">Return to Home</button>
+
+  <div class="note">
+    If the tab doesn’t close automatically, you may close it manually.
+  </div> -->
+</div>
+
+<script>
+function closeTab() {
+  // Works only if opened via window.open()
+  window.open('', '_self');
+  window.close();
+}
+
+// function goHome() {
+//   // Change to your actual homepage
+//   window.location.href = "/";
+// }
+</script>
+
+</body>
+</html>

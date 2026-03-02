@@ -212,7 +212,8 @@
 
             <div class="clinical-buttons">
                 <button class="confirm-btn" id="viewMapBtn" disabled>Confirm and Hear</button>
-                <button class="exit-btn" onclick="window.close()">Exit</button>
+                <!-- <button class="exit-btn" onclick="window.close()">Exit</button> -->
+                <button class="exit-btn" id="exitBtn">Exit</button>
             </div>
         </div>
 
@@ -348,6 +349,15 @@
                 }
             };
         });
+
+        document.getElementById("exitBtn").onclick = () => {
+            document.body.style.opacity = "0";
+            document.body.style.transition = "opacity 0.3s ease";
+
+            setTimeout(() => {
+                window.location.replace("thankyou.html");
+            }, 300);
+        };
 
         btn.onclick = async () => {
             if (!targetUrl || !insertedId) return;

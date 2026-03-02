@@ -651,6 +651,31 @@ async function recordQrScan({
   return data.inserted_ids[0];
 }
 
+async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
+
+  const formData = new FormData();
+  formData.append("link", link);
+  formData.append("color", color);
+
+  if (logoFile) {
+    formData.append("logo", logoFile);
+  }
+
+  const res = await fetch(
+    "https://www.dowellsmartlabelling.uxlivinglab.org/api/v1/qr/create-custom-qr",
+    {
+      method: "POST",
+      body: formData
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error("QR API failed: " + text);
+  }
+
+  return await res.blob();  // PNG binary
+}
 
 
 
