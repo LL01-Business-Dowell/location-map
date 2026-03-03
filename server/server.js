@@ -5,6 +5,11 @@ import "dotenv/config";
 
 import crypto from "crypto";
 
+import FormData from "form-data";
+import multer from "multer";
+
+const upload = multer();
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -301,6 +306,48 @@ app.post("/api/decrypt", (req, res) => {
   }
 });
 
+app.post("/api/generate_qr", upload.single("logo"), async (req, res) => {
+  try {
+    const { link, color } = req.body;
+
+    if (!link || !color) {
+      return res.status(400).json({ error: "Missing link or color" });
+    }
+
+    const formData = new FormData();
+    formData.append("link", link);
+    formData.append("color", color);
+
+    if (req.file) {
+      formData.append("logo", req.file.buffer, {
+        filename: req.file.originalname,
+        contentType: req.file.mimetype
+      });
+    }
+
+    const response = await fetch(
+      "https://www.dowellsmartlabelling.uxlivinglab.org/api/v1/qr/create-custom-qr",
+      {
+        method: "POST",
+        body: formData,
+        headers: formData.getHeaders()
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      return res.status(response.status).send(text);
+    }
+
+    //Stream PNG directly back
+    res.setHeader("Content-Type", "image/png");
+    response.body.pipe(res);
+
+  } catch (err) {
+    console.error("QR proxy error:", err);
+    res.status(500).json({ error: "QR generation failed" });
+  }
+});
 
 
 
