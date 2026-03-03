@@ -723,6 +723,9 @@
 
             // Generate once to confirm API works
             // await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile);
+            console.log("Logo file:", logoFile);
+            console.log("Is File instance:", logoFile instanceof File);
+            
             const qrBlob = await generateCustomQrImage(
                 encryptedQrUrl,
                 "#000000",

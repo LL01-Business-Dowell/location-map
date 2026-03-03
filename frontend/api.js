@@ -446,6 +446,7 @@ async function updateQrCode({
   qr_name,
   qr_url,
   qr_logo,
+  qr_image,
   client_name,
   db_id,
   date,
@@ -464,6 +465,7 @@ async function updateQrCode({
       qr_name: qr_name,
       qr_url: qr_url,
       qr_logo: qr_logo,
+      qr_image: qr_image,
       date: date,
       time: time
     }
@@ -665,6 +667,8 @@ async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
   if (logoFile) {
     formData.append("logo", logoFile);
   }
+
+  console.log([...formData.entries()]);
 
   const res = await fetch(
     "https://www.dowellsmartlabelling.uxlivinglab.org/api/v1/qr/create-custom-qr",
