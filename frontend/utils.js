@@ -128,5 +128,88 @@ async function blobToBase64(blob) {
     });
 }
 
+function getSelectedQrImages(){
+
+return [...document.querySelectorAll("#qrPrintList input:checked")]
+.map(i => i.value);
+
+}
+
+function openPrintLayout(images,paper){
+
+const page = window.open("", "_blank");
+
+const width = paper==="A4" ? "21cm" : "29.7cm";
+const height = paper==="A4" ? "29.7cm" : "42cm";
+
+page.document.write(`
+
+<html>
+<head>
+
+<style>
+
+body{
+margin:0;
+padding:1cm;
+}
+
+.sheet{
+
+width:${width};
+height:${height};
+
+display:grid;
+
+grid-template-columns:repeat(auto-fill,2.5cm);
+grid-auto-rows:2.5cm;
+
+gap:0.5cm;
+
+}
+
+.qr{
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.qr img{
+width:2cm;
+height:2cm;
+}
+
+@page{
+size:${paper};
+margin:1cm;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sheet">
+
+${images.map(img=>`
+<div class="qr">
+<img src="${img}">
+</div>
+`).join("")}
+
+</div>
+
+</body>
+
+</html>
+
+`);
+
+page.document.close();
+
+page.print();
+
+}
 
 

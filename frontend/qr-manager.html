@@ -234,6 +234,103 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* PRINT POPUP */
+
+        #printPopup .popup {
+            width: 520px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .print-header {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .paper-select {
+            display: flex;
+            gap: 16px;
+        }
+
+        .paper-select label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .print-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .print-toolbar button {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        #qrPrintList {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-height: 300px;
+            overflow: auto;
+        }
+
+        .qr-select-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: .2s;
+            background: #fafafa;
+        }
+
+        .qr-select-card:hover {
+            background: #f1f5f9;
+        }
+
+        .qr-select-card img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 6px;
+        }
+
+        .qr-select-card input {
+            margin-bottom: 6px;
+        }
+
+        .print-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .print-actions button {
+            flex: 1;
+        }
+
+        .qr-wrapper {
+            display: inline-block;
+            padding: 10px;
+            /* inner padding */
+            border-radius: 16px;
+            /* rounded corners */
+            border: 3px solid #000;
+            /* thick border */
+            background: white;
+        }
+
+        .qr-print-item {
+            display: inline-block;
+            margin: 0.5cm;
+            /* outer spacing (IMPORTANT) */
+            position: relative;
+        }
     </style>
 </head>
 
@@ -266,6 +363,10 @@
             <button id="createQrBtn">Create QR Code</button>
         </div>
 
+        <button id="printSheetBtn">
+            Print / Export QR Sheet
+        </button>
+
         <div class="qr-list" id="qrList"></div>
     </div>
 
@@ -293,18 +394,63 @@
         </div>
     </div>
 
+    <div class="overlay" id="printPopup">
+        <div class="popup">
+
+            <button class="close-btn" id="closePrintPopup">✕</button>
+
+            <div class="print-header">
+                Print / Export QR Sheet
+            </div>
+
+            <div class="paper-select">
+                <label>
+                    <input type="radio" name="paperSize" value="A4" checked>
+                    A4
+                </label>
+
+                <label>
+                    <input type="radio" name="paperSize" value="A3">
+                    A3
+                </label>
+            </div>
+
+            <div class="print-toolbar">
+                <button id="selectAllBtn">Select All</button>
+                <button id="clearAllBtn">Clear</button>
+
+                <span id="selectedCount">0 selected</span>
+            </div>
+
+            <div id="qrPrintList"></div>
+
+            <div class="print-actions">
+                <button id="generatePrintBtn">
+                    Open Print Layout
+                </button>
+
+                <button id="downloadPdfBtn">
+                    Download PDF
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 
     <script src="config.js"></script>
     <script src="state.js"></script>
     <script src="utils.js"></script>
     <script src="api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 
     <script>
         const clientSelect = document.getElementById("clientSelect");
         const qrList = document.getElementById("qrList");
         const qrForm = document.getElementById("qrForm");
+        let availableQrs = [];
 
         const showLoader = () => document.getElementById("globalLoader").classList.add("active");
         const hideLoader = () => document.getElementById("globalLoader").classList.remove("active");
@@ -432,6 +578,7 @@
 
             const qrs = await fetchQrCodes(clientId);
             qrList.innerHTML = "";
+            availableQrs = [];
 
             const activeQrs = qrs.slice(1).filter(q => q.qr_status === 1);
 
@@ -458,6 +605,8 @@
                 qrBox.style.marginTop = "10px";
                 qrBox.className = "qr-box";
                 div.appendChild(qrBox);
+
+                availableQrs.push(q);
 
                 const actions = document.createElement("div");
                 actions.style.display = "flex";
@@ -549,108 +698,6 @@
                 showToast("URL copied");
             }
 
-            // if (e.target.hasAttribute("data-download")) {
-
-            //     const qrUrl = e.target.dataset.url;
-            //     const logoSrc = e.target.dataset.logo || null;
-
-            //     // Create high-res QR canvas
-            //     const tempDiv = document.createElement("div");
-            //     document.body.appendChild(tempDiv);
-            //     tempDiv.style.visibility = "hidden";
-
-            //     new QRCode(tempDiv, {
-            //         text: qrUrl,
-            //         width: 1200,
-            //         height: 1200,
-            //         correctLevel: QRCode.CorrectLevel.H
-            //     });
-
-            //     await new Promise(r => setTimeout(r, 300));
-
-            //     const qrCanvas = tempDiv.querySelector("canvas");
-
-            //     const finalCanvas = document.createElement("canvas");
-            //     finalCanvas.width = 1200;
-            //     finalCanvas.height = 1200;
-
-            //     const ctx = finalCanvas.getContext("2d");
-
-            //     // Draw QR
-            //     ctx.drawImage(qrCanvas, 0, 0);
-
-            //     // Draw center white box
-            //     const boxSize = 1200 * 0.20;
-            //     const boxX = (1200 - boxSize) / 2;
-            //     const boxY = (1200 - boxSize) / 2;
-
-            //     ctx.fillStyle = "#ffffff";
-            //     ctx.beginPath();
-            //     ctx.roundRect(boxX, boxY, boxSize, boxSize, 1200 * 0.08);
-            //     ctx.fill();
-
-            //     if (logoSrc) {
-            //         const img = new Image();
-            //         img.src = logoSrc;
-            //         await new Promise(res => img.onload = res);
-
-            //         const logoSize = boxSize * 0.8;
-            //         const logoX = (1200 - logoSize) / 2;
-            //         const logoY = (1200 - logoSize) / 2;
-
-            //         ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
-            //     } else {
-            //         ctx.fillStyle = "#000";
-            //         ctx.textAlign = "center";
-            //         ctx.textBaseline = "middle";
-
-            //         // Smaller font size
-            //         const fontSize = boxSize * 0.18;
-            //         ctx.font = `bold ${fontSize}px Inter`;
-
-            //         // Line spacing
-            //         const lineGap = fontSize * 1.1;
-
-            //         // Center point
-            //         const centerX = 1200 / 2;
-            //         const centerY = 1200 / 2;
-
-            //         // Draw two lines
-            //         ctx.fillText("SCAN", centerX, centerY - lineGap / 2);
-            //         ctx.fillText("ME", centerX, centerY + lineGap / 2);
-            //     }
-
-            //     const a = document.createElement("a");
-            //     a.download = "qr-code.png";
-            //     a.href = finalCanvas.toDataURL("image/png");
-            //     a.click();
-
-            //     document.body.removeChild(tempDiv);
-            // }
-
-            // if (e.target.hasAttribute("data-download")) {
-
-            //     const qrUrl = e.target.dataset.url;
-            //     const logoFile = document.getElementById("qrLogo").files[0] || null;
-
-            //     try {
-            //         const blob = await generateCustomQrImage(qrUrl, "#000000", logoFile);
-
-            //         const downloadUrl = URL.createObjectURL(blob);
-
-            //         const a = document.createElement("a");
-            //         a.href = downloadUrl;
-            //         a.download = "qr-code.png";
-            //         a.click();
-
-            //         URL.revokeObjectURL(downloadUrl);
-
-            //     } catch (err) {
-            //         console.error(err);
-            //         showToast("Download failed");
-            //     }
-            // }
-
 
             if (e.target.dataset.disable) {
                 if (!confirm("Disable this QR code?")) return;
@@ -725,7 +772,7 @@
             // await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile);
             console.log("Logo file:", logoFile);
             console.log("Is File instance:", logoFile instanceof File);
-            
+
             const qrBlob = await generateCustomQrImage(
                 encryptedQrUrl,
                 "#000000",
@@ -883,6 +930,228 @@
             document.getElementById("clientPopup").classList.remove("active");
             document.getElementById("clientNameInput").value = "";
             loadClients();
+        };
+
+        document.getElementById("printSheetBtn").onclick = () => {
+
+            const list = document.getElementById("qrPrintList");
+            list.innerHTML = "";
+
+            availableQrs.forEach(q => {
+
+                const card = document.createElement("label");
+                card.className = "qr-select-card";
+
+                card.innerHTML = `
+                    <input type="checkbox" value="${q.qr_image}">
+                    <img src="${q.qr_image}">
+                    <div>${q.qr_id}</div>
+                    `;
+
+                list.appendChild(card);
+
+            });
+
+            updateSelectedCount();
+
+            document.getElementById("printPopup").classList.add("active");
+
+        };
+
+        document.getElementById("selectAllBtn").onclick = () => {
+
+            document
+                .querySelectorAll("#qrPrintList input")
+                .forEach(cb => cb.checked = true);
+
+            updateSelectedCount();
+
+        };
+
+        document.getElementById("clearAllBtn").onclick = () => {
+
+            document
+                .querySelectorAll("#qrPrintList input")
+                .forEach(cb => cb.checked = false);
+
+            updateSelectedCount();
+
+        };
+
+        document.getElementById("closePrintPopup").onclick = () => {
+            document.getElementById("printPopup").classList.remove("active");
+        };
+
+        function updateSelectedCount() {
+
+            const count = document.querySelectorAll(
+                "#qrPrintList input:checked"
+            ).length;
+
+            document.getElementById("selectedCount").textContent =
+                count + " selected";
+
+        }
+
+        document.addEventListener("change", e => {
+
+            if (e.target.closest("#qrPrintList")) {
+                updateSelectedCount();
+            }
+
+        });
+
+        document.getElementById("generatePrintBtn").onclick = () => {
+
+            const images = getSelectedQrImages();
+
+            if (!images.length) {
+                showToast("Select QR codes");
+                return;
+            }
+
+            const paper = document.querySelector("input[name=paperSize]:checked").value;
+
+            openPrintLayout(images, paper);
+
+        };
+
+        document.getElementById("downloadPdfBtn").onclick = async () => {
+
+            const selected = [];
+
+            document.querySelectorAll("#qrPrintList input:checked").forEach(cb => {
+                const card = cb.closest(".qr-select-card");
+                const img = card.querySelector("img").src;
+                const name = card.querySelector("div").textContent;
+                selected.push({ img, name });
+            });
+
+            if (!selected.length) {
+                showToast("Select QR codes");
+                return;
+            }
+
+            const paper = document.querySelector("input[name=paperSize]:checked").value;
+
+            const { jsPDF } = window.jspdf;
+
+            const pdf = new jsPDF({
+                orientation: "portrait",
+                unit: "cm",
+                format: paper
+            });
+
+            const pageWidth = paper === "A4" ? 21 : 29.7;
+            const pageHeight = paper === "A4" ? 29.7 : 42;
+
+            // ---- CONFIG ----
+            const qrSize = 2.2;
+            const padding = 0.3;
+            const labelHeight = 0.6;
+
+            const cellWidth = qrSize + padding * 2;
+            const cellHeight = qrSize + padding * 2 + labelHeight;
+
+            const gap = 0.2;
+            const margin = 0.5;
+
+            // ---- GRID CALC ----
+            const cols = Math.floor((pageWidth - margin * 2 + gap) / (cellWidth + gap));
+            const rows = Math.floor((pageHeight - margin * 2 + gap) / (cellHeight + gap));
+
+            const gridWidth = cols * cellWidth + (cols - 1) * gap;
+            const gridHeight = rows * cellHeight + (rows - 1) * gap;
+
+            const startX = margin;
+            const startY = margin;
+
+            let index = 0;
+
+            while (index < selected.length) {
+
+                // =========================
+                // ✂️ DRAW GRID (ONCE PER PAGE)
+                // =========================
+                pdf.setDrawColor(180);
+                pdf.setLineWidth(0.02);
+                pdf.setLineDash([0.05, 0.05]);
+
+                // Vertical lines
+                for (let c = 0; c <= cols; c++) {
+                    const x = startX + c * (cellWidth + gap) - gap / 2;
+
+                    pdf.line(
+                        x,
+                        startY - gap / 2,
+                        x,
+                        startY + gridHeight + gap / 2
+                    );
+                }
+
+                // Horizontal lines
+                for (let r = 0; r <= rows; r++) {
+                    const y = startY + r * (cellHeight + gap) - gap / 2;
+
+                    pdf.line(
+                        startX - gap / 2,
+                        y,
+                        startX + gridWidth + gap / 2,
+                        y
+                    );
+                }
+
+                pdf.setLineDash([]);
+
+                // =========================
+                // 🔲 PLACE QR CODES
+                // =========================
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+
+                        if (index >= selected.length) break;
+
+                        const item = selected[index];
+
+                        const x = startX + c * (cellWidth + gap);
+                        const y = startY + r * (cellHeight + gap);
+
+                        // 🔴 Optional border (keep or remove)
+                        pdf.setDrawColor(255, 0, 0);
+                        pdf.setLineWidth(0.05);
+                        pdf.rect(x, y, cellWidth, cellHeight);
+
+                        // QR image
+                        pdf.addImage(
+                            item.img,
+                            "PNG",
+                            x + padding,
+                            y + padding,
+                            qrSize,
+                            qrSize
+                        );
+
+                        // Label
+                        pdf.setTextColor(0);
+                        pdf.setFontSize(8);
+                        pdf.text(
+                            item.name,
+                            x + cellWidth / 2,
+                            y + cellHeight - 0.25,
+                            { align: "center" }
+                        );
+
+                        index++;
+                    }
+                }
+
+                // New page if items remain
+                if (index < selected.length) {
+                    pdf.addPage();
+                }
+            }
+
+            pdf.save("qr-sheet.pdf");
         };
 
         loadClients();
