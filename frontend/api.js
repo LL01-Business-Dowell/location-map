@@ -686,30 +686,77 @@ async function recordQrScan({
 //   return await res.blob();  // PNG binary
 // }
 
+// async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
+
+//   const formData = new FormData();
+//   formData.append("link", link);
+//   formData.append("color", color);
+
+//   if (logoFile) {
+//     formData.append("logo", logoFile);
+//   }
+
+//   const res = await fetch(
+//     `${PROXY_BASE}/generate_qr`,
+//     {
+//       method: "POST",
+//       body: formData
+//     }
+//   );
+
+//   if (!res.ok) {
+//     const text = await res.text();
+//     throw new Error("QR API failed: " + text);
+//   }
+
+//   return await res.blob();
+// }
+
 async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
 
-  const formData = new FormData();
-  formData.append("link", link);
-  formData.append("color", color);
+    const size = 800; // 🔥 HIGH RESOLUTION (CRITICAL)
 
-  if (logoFile) {
-    formData.append("logo", logoFile);
-  }
+    const canvas = document.createElement("canvas");
 
-  const res = await fetch(
-    `${PROXY_BASE}/generate_qr`,
-    {
-      method: "POST",
-      body: formData
+    await QRCode.toCanvas(canvas, link, {
+        width: size,
+        margin: 4, // 🔥 quiet zone (important for scanning)
+        color: {
+            dark: color,
+            light: "#FFFFFF"
+        },
+        errorCorrectionLevel: "H"
+    });
+
+    // =========================
+    // ADD LOGO (OPTIONAL)
+    // =========================
+    if (logoFile) {
+        const ctx = canvas.getContext("2d");
+
+        const logo = new Image();
+        logo.src = URL.createObjectURL(logoFile);
+
+        await new Promise(resolve => {
+            logo.onload = resolve;
+        });
+
+        const logoSize = size * 0.2; // ⚠️ keep small (20%)
+
+        const x = (size - logoSize) / 2;
+        const y = (size - logoSize) / 2;
+
+        // White background for logo
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(x, y, logoSize, logoSize);
+
+        ctx.drawImage(logo, x, y, logoSize, logoSize);
     }
-  );
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error("QR API failed: " + text);
-  }
-
-  return await res.blob();
+    // Convert to blob (HIGH QUALITY)
+    return await new Promise(resolve => {
+        canvas.toBlob(resolve, "image/png", 1.0);
+    });
 }
 
 
