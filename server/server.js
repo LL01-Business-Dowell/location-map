@@ -113,14 +113,13 @@ function decryptPayload(token) {
  *   qr_id      - QR code ID
  *   created_at - ISO timestamp
  */
-async function storeQrToken({ alias, token, target_url, db_id, qr_id }) {
+async function storeQrToken({ alias, target_url, db_id, qr_id }) {
   const payload = {
     database_id: DB_ID,
     collection_name: "qr_tokens",
     documents: [
       {
         alias,
-        token,
         target_url,
         db_id: String(db_id),
         qr_id: String(qr_id),
@@ -348,16 +347,16 @@ app.post("/api/build_qr_url", async (req, res) => {
     const cleanBase = base_url.endsWith("/") ? base_url.slice(0, -1) : base_url;
 
     // 1. Encrypt the payload
-    const token = encryptPayload({ target_url, db_id, qr_id });
+    // const token = encryptPayload({ target_url, db_id, qr_id });
 
     // 2. Generate a short unique alias
     const alias = generateAlias(8);
 
     // 3. Store token + alias in DataCube
-    await storeQrToken({ alias, token, target_url, db_id, qr_id });
+    await storeQrToken({ alias, target_url, db_id, qr_id });
 
     // 4. Return short alias-based URL
-    const finalUrl = `${cleanBase}?alias=${alias}`;
+    const finalUrl = `${cleanBase}?id=${alias}`;
 
     res.json({ url: finalUrl, alias, token });
 
@@ -487,15 +486,14 @@ app.get("/api/resolve/:alias", async (req, res) => {
     }
 
     // 2. Decrypt the token
-    const decrypted = decryptPayload(record.token);
+    // const decrypted = decryptPayload(record.token);
 
     // 3. Return everything the caller needs
     res.json({
-      alias: record.alias,
-      token: record.token,
-      target_url: decrypted.target_url,
-      db_id: decrypted.db_id,
-      qr_id: decrypted.qr_id,
+      alias:      record.alias,
+      target_url: record.target_url,
+      db_id:      record.db_id,
+      qr_id:      record.qr_id,
       created_at: record.created_at
     });
 
@@ -555,14 +553,13 @@ app.put("/api/update_qr_token", async (req, res) => {
     }
 
     // Re-encrypt with updated data
-    const token = encryptPayload({ target_url, db_id, qr_id });
+    // const token = encryptPayload({ target_url, db_id, qr_id });
 
     const payload = {
       database_id: DB_ID,
       collection_name: "qr_tokens",
       filters: { alias },
       update_data: {
-        token,
         target_url,
         db_id: String(db_id),
         qr_id: String(qr_id),

@@ -536,37 +536,6 @@ async function checkQrIdExists(clientName, qrId) {
   }
 }
 
-
-// async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
-//   const payload = {
-//     base_url: verifyBaseUrl,     // fixed verify page
-//     target_url: targetUrl,       // user input URL
-//     db_id: String(dbId),
-//     qr_id: String(qrId)
-//   };
-
-//   console.log(payload);
-
-//   try {
-//     const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(payload)
-//     });
-
-//     if (!res.ok) {
-//       const text = await res.text();
-//       throw new Error(`QR URL build failed: ${text}`);
-//     }
-
-//     const json = await res.json();
-//     return json.url;   // this becomes the QR content
-//   } catch (err) {
-//     console.error("Failed to build encrypted QR URL", err);
-//     throw err;
-//   }
-// }
-
 /**
  * Calls the server to encrypt the QR payload, store it,
  * and return a short alias-based URL.

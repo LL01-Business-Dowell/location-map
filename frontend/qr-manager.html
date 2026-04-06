@@ -672,86 +672,61 @@
 
         document.getElementById("createQrBtn").onclick = async () => {
             const btn = document.getElementById("createQrBtn");
-            // const qrId = document.getElementById("qrId").value.trim();
             const qrId = document.getElementById("qrId").value.trim();
             const qrName = document.getElementById("qrName").value.trim();
             const qrUrl = document.getElementById("qrUrl").value.trim();
             const cleanBaseUrl = normalizeUrl(qrUrl);
 
-
-
-            const logoFile = document.getElementById("qrLogo").files[0];
-            const logoBase64 = await fileToBase64(logoFile);
-
             if (!qrId) return showToast("Enter QR ID");
             if (!qrName) return showToast("Enter QR Name");
             if (!qrUrl) return showToast("Enter QR URL");
 
+            const logoFile = document.getElementById("qrLogo").files[0];
+            const logoBase64 = await fileToBase64(logoFile);
+
             btn.disabled = true;
             showLoader();
 
-            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
-            const timestamp = new Date().toISOString();
-            const [date, t] = timestamp.split("T");
-            const time = t.replace("Z", "").split(".")[0];
-            const dbId = await fetchDbId(clientName);
-
-            // const VERIFY_PAGE = "https://location-map-1.onrender.com/smartlabel.html";
-            // const VERIFY_PAGE = "https://location-map-1.onrender.com/medsign.html";
-            const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
-
-            let encryptedQrUrl;
             try {
+                const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+                const timestamp = new Date().toISOString();
+                const [date, t] = timestamp.split("T");
+                const time = t.replace("Z", "").split(".")[0];
+                const dbId = await fetchDbId(clientName);
+
+                const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
+
+                // 1. Build alias-based URL — returns { url, alias, token }
                 const { url: encryptedQrUrl, alias: qrAlias } = await buildEncryptedQrUrl(
                     VERIFY_PAGE, cleanBaseUrl, dbId, qrId
                 );
 
+                // 2. Generate QR image using the alias URL
+                const qrBlob = await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile);
+                const qrImageBase64 = await blobToBase64(qrBlob);
+
+                // 3. Save to DB — single call with all data ready
                 await createQrCode(
                     clientSelect.value, qrId, qrName, encryptedQrUrl,
                     clientName, date, time, dbId, logoBase64, qrImageBase64,
                     qrAlias
                 );
+
+                document.getElementById("qrId").value = "";
+                document.getElementById("qrName").value = "";
+                document.getElementById("qrUrl").value = "";
+                document.getElementById("qrLogo").value = "";
+
+                showToast("QR Code created");
+                clientSelect.onchange();
+
             } catch (err) {
+                console.error("Create QR failed:", err);
+                showToast("Failed to generate secure QR URL");
+            } finally {
                 hideLoader();
                 btn.disabled = false;
-                showToast("Failed to generate secure QR URL");
-                return;
             }
-
-            // const logoFile = document.getElementById("qrLogo").files[0] || null;
-
-            // Generate once to confirm API works
-            // await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile);
-            console.log("Logo file:", logoFile);
-            console.log("Is File instance:", logoFile instanceof File);
-
-            const qrBlob = await generateCustomQrImage(
-                encryptedQrUrl,
-                "#000000",
-                logoFile
-            );
-
-            const qrImageBase64 = await blobToBase64(qrBlob);
-
-
-
-            // await createQrCode(clientSelect.value, qrId, qrName, encryptedQrUrl, clientName, date, time, dbId, logoBase64, qrImageBase64);
-            await createQrCode(
-                clientSelect.value, qrId, qrName, encryptedQrUrl,
-                clientName, date, time, dbId, logoBase64, qrImageBase64,
-                qrAlias
-            );
-
-            document.getElementById("qrId").value = "";
-            document.getElementById("qrName").value = "";
-            document.getElementById("qrUrl").value = "";
-            document.getElementById("qrLogo").value = "";
-
-
-            hideLoader();
-            btn.disabled = false;
-            showToast("QR Code created");
-            clientSelect.onchange();
         };
 
         document.getElementById("closeEditQrPopup").onclick = () => {
@@ -763,97 +738,72 @@
             if (!editingQr) return;
 
             const btn = document.getElementById("saveEditQrBtn");
-
             btn.disabled = true;
-
             showLoader();
 
-            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
-            const timestamp = new Date().toISOString();
-            const [date, t] = timestamp.split("T");
-            const time = t.replace("Z", "").split(".")[0];
-            const dbId = await fetchDbId(clientName);
-
-            const logoFile = document.getElementById("editQrLogo").files[0];
-            const logoBase64 = logoFile
-                ? await fileToBase64(logoFile)
-                : editingQr.qr_logo;
-
-            //const cleanBaseUrl = document.getElementById("editQrUrl").value.split("?")[0];
-            const cleanBaseUrl = normalizeUrl(
-                document.getElementById("editQrUrl").value
-            );
-
-            const newQrId = Number(document.getElementById("editQrId").value);
-
-            // const VERIFY_PAGE = "https://location-map-1.onrender.com/medsign.html";
-            // const VERIFY_PAGE = "https://location-map-1.onrender.com/smartlabel.html";
-            const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
-
-            let encryptedQrUrl;
             try {
-                const { token } = await updateQrToken(
-                    editingQr.qr_alias,
-                    cleanBaseUrl,
-                    dbId,
-                    newQrId
-                );
-            } catch (err) {
-                hideLoader();
-                btn.disabled = false;
-                showToast("Failed to generate secure QR URL");
-                return;
-            }
+                const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+                const timestamp = new Date().toISOString();
+                const [date, t] = timestamp.split("T");
+                const time = t.replace("Z", "").split(".")[0];
+                const dbId = await fetchDbId(clientName);
 
-            const qrBlob = await generateCustomQrImage(
-                encryptedQrUrl,
-                "#000000",
-                logoFile || null
-            );
+                const logoFile = document.getElementById("editQrLogo").files[0];
+                const logoBase64 = logoFile ? await fileToBase64(logoFile) : editingQr.qr_logo;
+                const cleanBaseUrl = normalizeUrl(document.getElementById("editQrUrl").value);
+                const newQrId = Number(document.getElementById("editQrId").value);
+                const newQrName = document.getElementById("editQrName").value.trim();
 
-            const qrImageBase64 = await blobToBase64(qrBlob);
-
-
-
-            const updatedQr = {
-                old_qr_id: editingQr.qr_id,
-                new_qr_id: Number(document.getElementById("editQrId").value),
-                qr_name: document.getElementById("editQrName").value.trim(),
-                qr_url: encryptedQrUrl,
-                qr_logo: logoBase64,
-                qr_image: qrImageBase64,
-                client_name: clientName,
-                db_id: dbId,
-                date: date,
-                time: time
-            };
-
-            if (!updatedQr.new_qr_id || !updatedQr.qr_name || !updatedQr.qr_url) {
-                hideLoader();
-                btn.disabled = false;
-                return showToast("All fields required");
-            }
-
-            if (updatedQr.new_qr_id !== editingQr.qr_id) {
-                const exists = await checkQrIdExists(dbId, clientSelect.value, updatedQr.new_qr_id);
-                if (exists) {
-                    hideLoader();
-                    btn.disabled = false;
-                    showToast("QR ID already exists");
-                    return;
+                if (!newQrId || !newQrName || !cleanBaseUrl) {
+                    return showToast("All fields required");
                 }
+
+                if (newQrId !== editingQr.qr_id) {
+                    const exists = await checkQrIdExists(clientName, newQrId);
+                    if (exists) {
+                        showToast("QR ID already exists");
+                        return;
+                    }
+                }
+
+                // 1. Update alias record — keeps same alias, re-encrypts
+                const { token, alias } = await updateQrToken(
+                    editingQr.qr_alias, cleanBaseUrl, dbId, newQrId
+                );
+
+                // 2. Rebuild the short alias URL (alias unchanged)
+                const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
+                const encryptedQrUrl = `${VERIFY_PAGE}?alias=${editingQr.qr_alias}`;
+
+                // 3. Regenerate QR image
+                const qrBlob = await generateCustomQrImage(encryptedQrUrl, "#000000", logoFile || null);
+                const qrImageBase64 = await blobToBase64(qrBlob);
+
+                // 4. Update QR record in DB
+                await updateQrCode({
+                    old_qr_id: editingQr.qr_id,
+                    new_qr_id: newQrId,
+                    qr_name: newQrName,
+                    qr_url: encryptedQrUrl,
+                    qr_logo: logoBase64,
+                    qr_image: qrImageBase64,
+                    client_name: clientName,
+                    db_id: dbId,
+                    date, time
+                });
+
+                showToast("QR updated");
+                document.getElementById("editQrPopup").classList.remove("active");
+                editingQr = null;
+                clientSelect.onchange();
+
+            } catch (err) {
+                console.error("Edit QR failed:", err);
+                showToast("Failed to update QR code");
+            } finally {
+                hideLoader();
+                btn.disabled = false;
             }
-
-            await updateQrCode(updatedQr);
-
-            btn.disabled = false;
-            hideLoader();
-            showToast("QR updated");
-
-            document.getElementById("editQrPopup").classList.remove("active");
-            editingQr = null;
-
-            clientSelect.onchange();
         };
 
 
