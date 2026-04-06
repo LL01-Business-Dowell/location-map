@@ -407,26 +407,24 @@ async function addDbId(dbId, name, date, time) {
   }
 }
 
-async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo, qrImage) {
+async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo, qrImage, qrAlias) {
 
   //const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
 
   const payload = {
     database_id: DATABASE_ID,
     collection_name: clientName,
-    documents: [
-      {
-        qr_id: qrId,
-        db_id: dbId,
-        date: date,
-        time: time,
-        qr_name: qrName,
-        qr_url: qrUrl,
-        qr_logo: qrLogo || null,
-        qr_image: qrImage,
-        qr_status: 1
-      }
-    ]
+    documents: [{
+      qr_id: qrId,
+      db_id: dbId,
+      date, time,
+      qr_name: qrName,
+      qr_url: qrUrl,
+      qr_alias: qrAlias,   
+      qr_logo: qrLogo || null,
+      qr_image: qrImage,
+      qr_status: 1
+    }]
   };
 
   try {
@@ -538,12 +536,16 @@ async function checkQrIdExists(clientName, qrId) {
   }
 }
 
-// async function buildEncryptedQrUrl(baseUrl, dbId, qrId) {
+
+// async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
 //   const payload = {
-//     base_url: baseUrl,
-//     db_id: String(dbId),   // normalize
-//     qr_id: String(qrId)    // normalize
+//     base_url: verifyBaseUrl,     // fixed verify page
+//     target_url: targetUrl,       // user input URL
+//     db_id: String(dbId),
+//     qr_id: String(qrId)
 //   };
+
+//   console.log(payload);
 
 //   try {
 //     const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
@@ -558,41 +560,67 @@ async function checkQrIdExists(clientName, qrId) {
 //     }
 
 //     const json = await res.json();
-//     return json.url;
+//     return json.url;   // this becomes the QR content
 //   } catch (err) {
 //     console.error("Failed to build encrypted QR URL", err);
 //     throw err;
 //   }
 // }
 
+/**
+ * Calls the server to encrypt the QR payload, store it,
+ * and return a short alias-based URL.
+ *
+ * Returns: { url, alias, token }
+ *   url   - Short URL to embed in QR code
+ *   alias - 8-char alias (save this in your QR record!)
+ *   token - Full encrypted token (for reference)
+ */
 async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
   const payload = {
-    base_url: verifyBaseUrl,     // fixed verify page
-    target_url: targetUrl,       // user input URL
+    base_url: verifyBaseUrl,
+    target_url: targetUrl,
     db_id: String(dbId),
     qr_id: String(qrId)
   };
 
-  console.log(payload);
+  const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-  try {
-    const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`QR URL build failed: ${text}`);
-    }
-
-    const json = await res.json();
-    return json.url;   // this becomes the QR content
-  } catch (err) {
-    console.error("Failed to build encrypted QR URL", err);
-    throw err;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`QR URL build failed: ${text}`);
   }
+
+  return res.json(); // { url, alias, token }
+}
+
+/**
+ * Updates an existing alias record with new QR data.
+ * Call this from your edit flow instead of buildEncryptedQrUrl.
+ *
+ * @param {string} alias      - The existing alias saved with the QR record
+ * @param {string} targetUrl  - New destination URL
+ * @param {string|number} dbId
+ * @param {string|number} qrId
+ */
+async function updateQrToken(alias, targetUrl, dbId, qrId) {
+  const res = await fetch(`${PROXY_BASE}/update_qr_token`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      alias,
+      target_url: targetUrl,
+      db_id: String(dbId),
+      qr_id: String(qrId)
+    })
+  });
+
+  if (!res.ok) throw new Error("Failed to update QR token");
+  return res.json();
 }
 
 async function decryptToken(token) {
@@ -658,106 +686,54 @@ async function recordQrScan({
   return data.inserted_ids[0];
 }
 
-// async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
-
-//   const formData = new FormData();
-//   formData.append("link", link);
-//   formData.append("color", color);
-
-//   if (logoFile) {
-//     formData.append("logo", logoFile);
-//   }
-
-//   console.log([...formData.entries()]);
-
-//   const res = await fetch(
-//     "https://www.dowellsmartlabelling.uxlivinglab.org/api/v1/qr/create-custom-qr",
-//     {
-//       method: "POST",
-//       body: formData
-//     }
-//   );
-
-//   if (!res.ok) {
-//     const text = await res.text();
-//     throw new Error("QR API failed: " + text);
-//   }
-
-//   return await res.blob();  // PNG binary
-// }
-
-// async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
-
-//   const formData = new FormData();
-//   formData.append("link", link);
-//   formData.append("color", color);
-
-//   if (logoFile) {
-//     formData.append("logo", logoFile);
-//   }
-
-//   const res = await fetch(
-//     `${PROXY_BASE}/generate_qr`,
-//     {
-//       method: "POST",
-//       body: formData
-//     }
-//   );
-
-//   if (!res.ok) {
-//     const text = await res.text();
-//     throw new Error("QR API failed: " + text);
-//   }
-
-//   return await res.blob();
-// }
 
 async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
 
-    const size = 800; // 🔥 HIGH RESOLUTION (CRITICAL)
+    // Build QR using API (reliable)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(link)}`;
 
+    const res = await fetch(qrUrl);
+    if (!res.ok) throw new Error("QR fetch failed");
+
+    const blob = await res.blob();
+
+    // If NO logo → return directly
+    if (!logoFile) return blob;
+
+    // =========================
+    // ADD LOGO (CANVAS)
+    // =========================
     const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-    await QRCode.toCanvas(canvas, link, {
-        width: size,
-        margin: 4, // 🔥 quiet zone (important for scanning)
-        color: {
-            dark: color,
-            light: "#FFFFFF"
-        },
-        errorCorrectionLevel: "H"
-    });
+    const baseImg = new Image();
+    baseImg.src = URL.createObjectURL(blob);
 
-    // =========================
-    // ADD LOGO (OPTIONAL)
-    // =========================
-    if (logoFile) {
-        const ctx = canvas.getContext("2d");
+    await new Promise(resolve => baseImg.onload = resolve);
 
-        const logo = new Image();
-        logo.src = URL.createObjectURL(logoFile);
+    canvas.width = 800;
+    canvas.height = 800;
 
-        await new Promise(resolve => {
-            logo.onload = resolve;
-        });
+    ctx.drawImage(baseImg, 0, 0, 800, 800);
 
-        const logoSize = size * 0.2; // ⚠️ keep small (20%)
+    // Load logo
+    const logo = new Image();
+    logo.src = URL.createObjectURL(logoFile);
 
-        const x = (size - logoSize) / 2;
-        const y = (size - logoSize) / 2;
+    await new Promise(resolve => logo.onload = resolve);
 
-        // White background for logo
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(x, y, logoSize, logoSize);
+    const logoSize = 160;
+    const x = (800 - logoSize) / 2;
+    const y = (800 - logoSize) / 2;
 
-        ctx.drawImage(logo, x, y, logoSize, logoSize);
-    }
+    // White background for logo
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(x, y, logoSize, logoSize);
 
-    // Convert to blob (HIGH QUALITY)
+    ctx.drawImage(logo, x, y, logoSize, logoSize);
+
     return await new Promise(resolve => {
         canvas.toBlob(resolve, "image/png", 1.0);
     });
 }
-
-
 

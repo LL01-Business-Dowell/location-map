@@ -437,14 +437,15 @@
         </div>
     </div>
 
-
+    <!-- <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script> -->
     <script src="config.js"></script>
     <script src="state.js"></script>
     <script src="utils.js"></script>
     <script src="api.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+
 
 
     <script>
@@ -701,12 +702,14 @@
 
             let encryptedQrUrl;
             try {
-                // encryptedQrUrl = await buildEncryptedQrUrl(cleanBaseUrl, dbId, qrId);
-                encryptedQrUrl = await buildEncryptedQrUrl(
-                    VERIFY_PAGE,
-                    cleanBaseUrl,
-                    dbId,
-                    qrId
+                const { url: encryptedQrUrl, alias: qrAlias } = await buildEncryptedQrUrl(
+                    VERIFY_PAGE, cleanBaseUrl, dbId, qrId
+                );
+
+                await createQrCode(
+                    clientSelect.value, qrId, qrName, encryptedQrUrl,
+                    clientName, date, time, dbId, logoBase64, qrImageBase64,
+                    qrAlias
                 );
             } catch (err) {
                 hideLoader();
@@ -732,7 +735,12 @@
 
 
 
-            await createQrCode(clientSelect.value, qrId, qrName, encryptedQrUrl, clientName, date, time, dbId, logoBase64, qrImageBase64);
+            // await createQrCode(clientSelect.value, qrId, qrName, encryptedQrUrl, clientName, date, time, dbId, logoBase64, qrImageBase64);
+            await createQrCode(
+                clientSelect.value, qrId, qrName, encryptedQrUrl,
+                clientName, date, time, dbId, logoBase64, qrImageBase64,
+                qrAlias
+            );
 
             document.getElementById("qrId").value = "";
             document.getElementById("qrName").value = "";
@@ -784,8 +792,8 @@
 
             let encryptedQrUrl;
             try {
-                encryptedQrUrl = await buildEncryptedQrUrl(
-                    VERIFY_PAGE,
+                const { token } = await updateQrToken(
+                    editingQr.qr_alias,
                     cleanBaseUrl,
                     dbId,
                     newQrId
