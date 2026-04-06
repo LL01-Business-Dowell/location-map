@@ -18,6 +18,8 @@ const PORT = process.env.PORT || 3001;
 const DATACUBE_BASE = "https://datacube.uxlivinglab.online/api";
 const DATACUBE_API_KEY = process.env.DATACUBE_API_KEY; // 🔐
 
+const DB_ID = "69985c0844ca8a1af7fd639e";
+
 // ==== ENCRYPTION ====
 const ALGO = "aes-256-gcm";
 const KEY = Buffer.from(process.env.QR_ENCRYPTION_KEY, "hex");
@@ -113,7 +115,7 @@ function decryptPayload(token) {
  */
 async function storeQrToken({ alias, token, target_url, db_id, qr_id }) {
   const payload = {
-    database_id: process.env.DATABASE_ID,
+    database_id: DB_ID,
     collection_name: "qr_tokens",
     documents: [
       {
@@ -509,7 +511,7 @@ app.get("/api/resolve/:alias", async (req, res) => {
  */
 async function fetchQrTokenByAlias(alias) {
   const params = new URLSearchParams({
-    database_id: process.env.DATABASE_ID,
+    database_id: DB_ID,
     collection_name: "qr_tokens",
     filters: JSON.stringify({ alias }),
     page: 1,
@@ -556,7 +558,7 @@ app.put("/api/update_qr_token", async (req, res) => {
     const token = encryptPayload({ target_url, db_id, qr_id });
 
     const payload = {
-      database_id: process.env.DATABASE_ID,
+      database_id: DB_ID,
       collection_name: "qr_tokens",
       filters: { alias },
       update_data: {
