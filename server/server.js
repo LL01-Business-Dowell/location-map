@@ -358,7 +358,7 @@ app.post("/api/build_qr_url", async (req, res) => {
     // 4. Return short alias-based URL
     const finalUrl = `${cleanBase}?id=${alias}`;
 
-    res.json({ url: finalUrl, alias, token });
+    res.json({ url: finalUrl, alias });
 
   } catch (err) {
     console.error("QR build error:", err.message);

@@ -422,6 +422,15 @@
                 <span id="selectedCount">0 selected</span>
             </div>
 
+            <div style="display:flex; align-items:center; gap:10px; font-size:13px;">
+                <label for="perPageSelect" style="color:#374151; font-weight:500; white-space:nowrap;">
+                    QR codes per page:
+                </label>
+                <select id="perPageSelect" style="margin-top:0; width:auto; padding:6px 10px; font-size:13px;">
+                    <option value="auto">Auto (fill page)</option>
+                </select>
+            </div>
+
             <div id="qrPrintList"></div>
 
             <div class="print-actions">
@@ -890,8 +899,17 @@
             document.getElementById("printPopup").classList.remove("active");
         };
 
-        function updateSelectedCount() {
+        // function updateSelectedCount() {
 
+        //     const count = document.querySelectorAll(
+        //         "#qrPrintList input:checked"
+        //     ).length;
+
+        //     document.getElementById("selectedCount").textContent =
+        //         count + " selected";
+
+        // }
+        function updateSelectedCount() {
             const count = document.querySelectorAll(
                 "#qrPrintList input:checked"
             ).length;
@@ -899,6 +917,23 @@
             document.getElementById("selectedCount").textContent =
                 count + " selected";
 
+            // Rebuild per-page dropdown based on how many are selected
+            const sel = document.getElementById("perPageSelect");
+            const prev = sel.value; // remember current selection
+
+            sel.innerHTML = `<option value="auto">Auto (fill page)</option>`;
+
+            for (let i = 1; i <= count; i++) {
+                const opt = document.createElement("option");
+                opt.value = i;
+                opt.textContent = i;
+                sel.appendChild(opt);
+            }
+
+            // Restore previous selection if still valid
+            if ([...sel.options].some(o => o.value === prev)) {
+                sel.value = prev;
+            }
         }
 
         document.addEventListener("change", e => {
@@ -941,6 +976,7 @@
             }
 
             const paper = document.querySelector("input[name=paperSize]:checked").value;
+            const perPageValue = document.getElementById("perPageSelect").value;
 
             const { jsPDF } = window.jspdf;
 
@@ -953,113 +989,98 @@
             const pageWidth = paper === "A4" ? 21 : 29.7;
             const pageHeight = paper === "A4" ? 29.7 : 42;
 
-            // ---- CONFIG ----
+            // ---- CONFIG (unchanged) ----
             const qrSize = 2.2;
             const padding = 0.2;
             const labelHeight = 0.3;
-
             const cellWidth = qrSize + padding * 2;
             const cellHeight = qrSize + padding * 2 + labelHeight;
-
             const gap = 0.2;
             const margin = 0.5;
 
             // ---- GRID CALC ----
-            const cols = Math.floor((pageWidth - margin * 2 + gap) / (cellWidth + gap));
-            const rows = Math.floor((pageHeight - margin * 2 + gap) / (cellHeight + gap));
+            const autoCols = Math.floor((pageWidth - margin * 2 + gap) / (cellWidth + gap));
+            const autoRows = Math.floor((pageHeight - margin * 2 + gap) / (cellHeight + gap));
 
-            const gridWidth = cols * cellWidth + (cols - 1) * gap;
-            const gridHeight = rows * cellHeight + (rows - 1) * gap;
+            let cols, rows, perPage;
+
+            if (perPageValue === "auto") {
+                // Original behaviour — fill the page
+                cols = autoCols;
+                rows = autoRows;
+                perPage = cols * rows;
+            } else {
+                // User picked an exact number — figure out the grid that fits it
+                // Keep the same column width logic, just limit total cells per page
+                perPage = Number(perPageValue);
+                cols = Math.min(perPage, autoCols);       // never wider than auto
+                rows = Math.ceil(perPage / cols);         // as many rows as needed
+            }
 
             const startX = margin;
             const startY = margin;
 
-            let index = 0;
+            // Split selected into pages of `perPage`
+            const pages = [];
+            for (let i = 0; i < selected.length; i += perPage) {
+                pages.push(selected.slice(i, i + perPage));
+            }
 
-            while (index < selected.length) {
+            pages.forEach((pageItems, pageIndex) => {
 
-                // =========================
-                // DRAW GRID (ONCE PER PAGE)
-                // =========================
+                if (pageIndex > 0) pdf.addPage();
+
+                const gridCols = Math.min(pageItems.length, cols);
+                const gridRows = Math.ceil(pageItems.length / gridCols);
+                const gridWidth = gridCols * cellWidth + (gridCols - 1) * gap;
+                const gridHeight = gridRows * cellHeight + (gridRows - 1) * gap;
+
+                // ---- DRAW GRID ----
                 pdf.setDrawColor(180);
                 pdf.setLineWidth(0.02);
                 pdf.setLineDash([0.05, 0.05]);
 
-                // Vertical lines
-                for (let c = 0; c <= cols; c++) {
+                for (let c = 0; c <= gridCols; c++) {
                     const x = startX + c * (cellWidth + gap) - gap / 2;
-
-                    pdf.line(
-                        x,
-                        startY - gap / 2,
-                        x,
-                        startY + gridHeight + gap / 2
-                    );
+                    pdf.line(x, startY - gap / 2, x, startY + gridHeight + gap / 2);
                 }
 
-                // Horizontal lines
-                for (let r = 0; r <= rows; r++) {
+                for (let r = 0; r <= gridRows; r++) {
                     const y = startY + r * (cellHeight + gap) - gap / 2;
-
-                    pdf.line(
-                        startX - gap / 2,
-                        y,
-                        startX + gridWidth + gap / 2,
-                        y
-                    );
+                    pdf.line(startX - gap / 2, y, startX + gridWidth + gap / 2, y);
                 }
 
                 pdf.setLineDash([]);
 
-                // =========================
-                // PLACE QR CODES
-                // =========================
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
+                // ---- PLACE QR CODES ----
+                pageItems.forEach((item, idx) => {
+                    const c = idx % gridCols;
+                    const r = Math.floor(idx / gridCols);
 
-                        if (index >= selected.length) break;
+                    const x = startX + c * (cellWidth + gap);
+                    const y = startY + r * (cellHeight + gap);
 
-                        const item = selected[index];
+                    pdf.setDrawColor(255, 0, 0);
+                    pdf.setLineWidth(0.05);
+                    pdf.rect(x, y, cellWidth, cellHeight);
 
-                        const x = startX + c * (cellWidth + gap);
-                        const y = startY + r * (cellHeight + gap);
+                    pdf.addImage(
+                        item.img, "PNG",
+                        x + padding, y + padding,
+                        qrSize, qrSize,
+                        undefined, "NONE"
+                    );
 
-                        // 🔴 Optional border (keep or remove)
-                        pdf.setDrawColor(255, 0, 0);
-                        pdf.setLineWidth(0.05);
-                        pdf.rect(x, y, cellWidth, cellHeight);
-
-                        // QR image
-                        pdf.addImage(
-                            item.img,
-                            "PNG",
-                            x + padding,
-                            y + padding,
-                            qrSize,
-                            qrSize,
-                            undefined,
-                            "NONE"
-                        );
-
-                        // Label
-                        pdf.setTextColor(0);
-                        pdf.setFontSize(8);
-                        pdf.text(
-                            item.name,
-                            x + cellWidth / 2,
-                            y + cellHeight - 0.25,
-                            { align: "center" }
-                        );
-
-                        index++;
-                    }
-                }
-
-                // New page if items remain
-                if (index < selected.length) {
-                    pdf.addPage();
-                }
-            }
+                    pdf.setTextColor(0);
+                    pdf.setFontSize(8);
+                    pdf.text(
+                        item.name,
+                        x + cellWidth / 2,
+                        y + cellHeight - 0.25,
+                        { align: "center" }
+                    );
+                });
+            });
 
             pdf.save("qr-sheet.pdf");
         };
