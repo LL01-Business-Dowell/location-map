@@ -197,20 +197,6 @@
         </div>
 
         <div class="clinical-check">
-            <!-- <h3>Important Safety Information</h3>
-
-            <ul class="check-list">
-                <li><b>Understand Your Doctor:</b> This audio helps you understand your Doctor’s handwriting
-                    and instructions.</li>
-                <li><b>The Label/Prescription is Boss:</b> Always follow the printed instructions on your
-                    medicine strip, box, or paper prescription.</li>
-                <li><b>Stop if Different:</b> If the voice says something different than what is written on the
-                    medicine or your prescription paper, DO NOT take the medicine. Talk to your chemist or
-                    doctor immediately.</li>
-                <li><b>For You Only:</b> This audio and medicine are for you. Sharing medicine with others is
-                    dangerous.</li>
-            </ul> -->
-
             <div class="clinical-buttons">
                 <button class="confirm-btn" id="viewMapBtn" disabled>Continue</button>
                 <!-- <button class="exit-btn" onclick="window.close()">Exit</button> -->
@@ -248,6 +234,7 @@
         let qrId = null;
         let targetUrl = null;
         let insertedId = null;
+        let currentAlias = null;
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
@@ -266,9 +253,11 @@
                 if (alias) {
                     // New flow — resolve alias directly, no decryption needed
                     data = await resolveAlias(alias);
+                    currentAlias = alias;
                 } else {
                     // Old flow — for already-printed QR codes with ?token=
                     data = await decryptToken(token);
+                    currentAlias = null;
                 }
 
                 // console.log("Resolved QR data:", data);
@@ -366,36 +355,19 @@
             }, 300);
         };
 
-        btn.onclick = async () => {
+        btn.onclick = () => {
             if (!targetUrl) return;
 
-            // SPECIAL CASE: Audience Align survey (NO encryption)
+            // SPECIAL CASE: Audience Align survey
             if (targetUrl.includes("surveys.audience-align.com")) {
-
-                // Append uid safely (handles existing params)
                 const separator = targetUrl.includes("?") ? "&" : "?";
-                const finalUrl = `${targetUrl}${separator}uid=${qrId}`;
-
-                window.location.href = finalUrl;
+                window.location.href = `${targetUrl}${separator}uid=${qrId}`;
                 return;
             }
 
-            // DEFAULT FLOW (existing encrypted logic)
-            if (!insertedId) return;
-
-            try {
-                const { token: newToken } = await encryptParams({
-                    db_id: dbId,
-                    qr_id: qrId,
-                    scan_id: insertedId
-                });
-
-                window.location.href =
-                    `${targetUrl}?token=${encodeURIComponent(newToken)}`;
-
-            } catch (err) {
-                console.error("Redirect encryption failed:", err);
-            }
+            // DEFAULT FLOW — append alias as the parameter
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            window.location.href = `${targetUrl}${separator}alias=${currentAlias}`;
         };
 
         init();
