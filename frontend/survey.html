@@ -251,30 +251,36 @@
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
-            const token = params.get("token");
+            const alias = params.get("id");
+            const token = params.get("token"); // kept for backward compat with old printed QRs
 
-            if (!token) {
+            if (!alias && !token) {
                 statusEl.textContent = "Invalid link.";
                 statusEl.classList.remove("loading");
                 return;
             }
 
             try {
-                const data = await decryptToken(token);
-                console.log("FULL decrypt response:", data);
+                let data;
+
+                if (alias) {
+                    // New flow — resolve alias directly, no decryption needed
+                    data = await resolveAlias(alias);
+                } else {
+                    // Old flow — for already-printed QR codes with ?token=
+                    data = await decryptToken(token);
+                }
+
+                // console.log("Resolved QR data:", data);
 
                 dbId = data.db_id;
                 qrId = data.qr_id;
                 targetUrl = data.target_url;
 
-                console.log("Parsed values →", {
-                    dbId,
-                    qrId,
-                    targetUrl
-                });
+                // console.log("Parsed values →", { dbId, qrId, targetUrl });
 
                 if (!dbId || !qrId || !targetUrl) {
-                    throw new Error("Invalid decrypted payload");
+                    throw new Error("Incomplete QR payload");
                 }
 
                 captureLocationOnLoad();

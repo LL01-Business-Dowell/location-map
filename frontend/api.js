@@ -567,6 +567,17 @@ async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
   return res.json(); // { url, alias, token }
 }
 
+async function resolveAlias(alias) {
+    const res = await fetch(`${PROXY_BASE}/resolve/${alias}`);
+
+    if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Failed to resolve alias");
+    }
+
+    return res.json(); // { alias, target_url, db_id, qr_id, created_at }
+}
+
 /**
  * Updates an existing alias record with new QR data.
  * Call this from your edit flow instead of buildEncryptedQrUrl.
