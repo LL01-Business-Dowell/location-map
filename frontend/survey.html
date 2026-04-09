@@ -367,7 +367,7 @@
 
             // DEFAULT FLOW — append alias as the parameter
             const separator = targetUrl.includes("?") ? "&" : "?";
-            window.location.href = `${targetUrl}${separator}alias=${currentAlias}`;
+            window.location.href = `${targetUrl}${separator}id=${currentAlias}`;
         };
 
         init();
