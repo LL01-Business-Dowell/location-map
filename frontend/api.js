@@ -260,7 +260,6 @@ async function disableQrCode(clientId, qrId) {
   return res.json();
 }
 
-
 async function createClient(name) {
   const payload = {
     db_name: name,
@@ -481,7 +480,6 @@ async function updateQrCode({
   }
 }
 
-
 async function fetchDbId(clientName) {
   const params = new URLSearchParams({
     database_id: DATABASE_ID,
@@ -536,15 +534,6 @@ async function checkQrIdExists(clientName, qrId) {
   }
 }
 
-/**
- * Calls the server to encrypt the QR payload, store it,
- * and return a short alias-based URL.
- *
- * Returns: { url, alias, token }
- *   url   - Short URL to embed in QR code
- *   alias - 8-char alias (save this in your QR record!)
- *   token - Full encrypted token (for reference)
- */
 async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
   const payload = {
     base_url: verifyBaseUrl,
@@ -578,15 +567,6 @@ async function resolveAlias(alias) {
     return res.json(); // { alias, target_url, db_id, qr_id, created_at }
 }
 
-/**
- * Updates an existing alias record with new QR data.
- * Call this from your edit flow instead of buildEncryptedQrUrl.
- *
- * @param {string} alias      - The existing alias saved with the QR record
- * @param {string} targetUrl  - New destination URL
- * @param {string|number} dbId
- * @param {string|number} qrId
- */
 async function updateQrToken(alias, targetUrl, dbId, qrId) {
   const res = await fetch(`${PROXY_BASE}/update_qr_token`, {
     method: "PUT",
@@ -601,40 +581,6 @@ async function updateQrToken(alias, targetUrl, dbId, qrId) {
 
   if (!res.ok) throw new Error("Failed to update QR token");
   return res.json();
-}
-
-async function decryptToken(token) {
-  const res = await fetch(`${PROXY_BASE}/decrypt`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token })
-  });
-
-  if (!res.ok) {
-    throw new Error("Decrypt failed");
-  }
-
-  return res.json();
-}
-
-async function encryptParams(data) {
-
-  console.log("===== ENCRYPT REQUEST START =====");
-  console.log("Data being sent to encrypt:", data);
-
-  const res = await fetch(`${PROXY_BASE}/encrypt`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-
-  if (!res.ok) {
-    throw new Error("Encrypt failed");
-  }
-
-  response = res.json()
-  console.log("Encrypt response from server:", response);
-  return response;
 }
 
 async function recordQrScan({
