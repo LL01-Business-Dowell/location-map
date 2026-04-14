@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Bulk QR Generator</title>
+    <title>Dowell QR Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
@@ -488,7 +488,7 @@
                         pdf.rect(x, y, cellWidth, cellHeight);
                         pdf.addImage(item.img, "PNG", x + padding, y + padding, qrSize, qrSize, undefined, "NONE");
                         pdf.setTextColor(0); pdf.setFontSize(6);
-                        pdf.text(item.name, x + cellWidth / 2, y + cellHeight - 0.1, { align: "center" });
+                        pdf.text(item.alias, x + cellWidth / 2, y + cellHeight - 0.1, { align: "center" });
                         index++;
                     }
                 }
