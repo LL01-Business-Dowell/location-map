@@ -573,11 +573,11 @@ app.post("/api/send_pdf_email", async (req, res) => {
     console.log("  [send_pdf_email] fetching PDF from signed_url:", signed_url.slice(0, 80) + "...");
 
     let url_signed = "https://datacube.uxlivinglab.online" + signed_url;
-    console.log("Actual signed url foe fetching: " + url_signed);
+    console.log("Actual signed url for fetching: " + url_signed);
 
-    if (!signed_url.startsWith("http")) {
-      throw new Error("Invalid signed_url — does not start with http: " + signed_url);
-    }
+    // if (!signed_url.startsWith("http")) {
+    //   throw new Error("Invalid signed_url — does not start with http: " + signed_url);
+    // }
 
     const fileRes = await fetch(url_signed);
     console.log("  [send_pdf_email] signed_url fetch status:", fileRes.status);
@@ -592,9 +592,9 @@ app.post("/api/send_pdf_email", async (req, res) => {
 
     console.log("  [send_pdf_email] sending via SMTP...");
     const info = await mailer.sendMail({
-      from:    `"QR Manager" <${process.env.SMTP_USER}>`,
+      from:    `"Dowell QR Code" <${process.env.SMTP_USER}>`,
       to:      email,
-      subject: `QR Code Batch Ready — ${qr_count} codes (${pdf_id})`,
+      subject: `Your QR Codes are Ready`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
           <h2 style="color:#7c6af7;margin-bottom:8px;">Your QR Codes are Ready</h2>
@@ -603,16 +603,8 @@ app.post("/api/send_pdf_email", async (req, res) => {
           </p>
           <table style="background:#f8fafc;border-radius:10px;padding:16px;width:100%;border-collapse:collapse;">
             <tr>
-              <td style="color:#888;padding:4px 0;font-size:13px;">PDF ID</td>
-              <td style="font-family:monospace;font-size:13px;text-align:right;">${pdf_id}</td>
-            </tr>
-            <tr>
               <td style="color:#888;padding:4px 0;font-size:13px;">QR codes</td>
               <td style="font-size:13px;text-align:right;">${qr_count}</td>
-            </tr>
-            <tr>
-              <td style="color:#888;padding:4px 0;font-size:13px;">Client</td>
-              <td style="font-size:13px;text-align:right;">${client_name || "—"}</td>
             </tr>
           </table>
           <p style="color:#888;font-size:12px;margin-top:20px;">

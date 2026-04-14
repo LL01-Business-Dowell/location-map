@@ -773,22 +773,59 @@ async function sendPdfByEmail({ email, signedUrl, pdfId, qrCount, clientName }) 
 }
 
 
+// ── uploadPdf ─────────────────────────────────────────────────────────
+// REPLACE your existing uploadPdf function with this.
+//
+// DataCube's /files/ endpoint returns a signed_url that may be a
+// relative path or partial URL. This function normalises it so the
+// server can fetch the file correctly when sending the email.
+
 async function uploadPdf(pdfBlob, filename) {
-  const base64 = await blobToBase64(pdfBlob);
+    const base64 = await blobToBase64(pdfBlob);
 
-  const res = await fetch(`${PROXY_BASE}/upload_pdf`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pdf_base64: base64, filename })
-  });
+    const res = await fetch(`${PROXY_BASE}/upload_pdf`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ pdf_base64: base64, filename })
+    });
 
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw new Error(json.error || "Failed to upload PDF");
-  }
+    if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || "Failed to upload PDF");
+    }
 
-  // return res.json(); 
-  const data = await res.json();
-  console.log("upload_pdf server response:", data); // ADD THIS
-  return data;
+    const data = await res.json();
+    console.log("upload_pdf server response:", data);
+
+    // ── SIGNED URL NORMALISATION ──────────────────────────────────────
+    // DataCube sometimes returns just the path portion of the signed URL,
+    // e.g. "/api/v2/files/stream/69d3ba...?expires=...&sig=..."
+    // We need the full URL for the server to be able to fetch it.
+    //
+    // If DataCube returns a full https:// URL already, this is a no-op.
+    // If it returns a path, we prepend the DataCube base URL.
+    const DATACUBE_BASE = "https://datacube.uxlivinglab.online";
+
+    let signedUrl = data.signed_url || data.signedUrl || null;
+
+    if (signedUrl && !signedUrl.startsWith("http")) {
+        // Path like "/api/v2/files/stream/..." → prepend base
+        signedUrl = DATACUBE_BASE + (signedUrl.startsWith("/") ? "" : "/") + signedUrl;
+        console.log("upload_pdf: normalised signed_url →", signedUrl.slice(0, 80) + "...");
+    }
+
+    if (!data.file_id && !data.fileId) {
+        console.error("upload_pdf: unexpected DataCube response:", data);
+        throw new Error("DataCube returned no file_id. Response: " + JSON.stringify(data));
+    }
+
+    if (!signedUrl) {
+        console.error("upload_pdf: no signed_url in DataCube response:", data);
+        throw new Error("DataCube returned no signed_url. Response: " + JSON.stringify(data));
+    }
+
+    return {
+        file_id:    data.file_id || data.fileId,
+        signed_url: signedUrl
+    };
 }

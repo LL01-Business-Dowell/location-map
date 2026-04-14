@@ -49,21 +49,6 @@
             margin-bottom: 48px;
         }
 
-        .header-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(124, 106, 247, 0.12);
-            border: 1px solid rgba(124, 106, 247, 0.3);
-            border-radius: 100px;
-            padding: 5px 14px;
-            font-size: 12px;
-            font-family: 'DM Mono', monospace;
-            color: var(--accent);
-            margin-bottom: 20px;
-            letter-spacing: 0.04em;
-        }
-
         .header h1 {
             font-size: clamp(28px, 5vw, 42px);
             font-weight: 600;
@@ -106,7 +91,7 @@
             text-transform: uppercase;
         }
 
-        .field input {
+        .field input[type="email"] {
             width: 100%;
             background: var(--surface2);
             border: 1px solid var(--border);
@@ -119,36 +104,31 @@
             transition: border-color 0.2s;
         }
 
-        .field input:focus {
+        .field input[type="email"]:focus {
             border-color: var(--accent);
         }
 
-        .field input::placeholder {
+        .field input[type="email"]::placeholder {
             color: var(--muted);
         }
 
+        /* ── qty row fix: constrain so nothing overflows ── */
         .qty-row {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             background: var(--surface2);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 8px 8px 8px 16px;
-        }
-
-        .qty-display {
-            flex: 1;
-            font-size: 15px;
-            color: var(--text);
-            font-family: 'DM Mono', monospace;
-            min-width: 30px;
-            text-align: center;
+            padding: 8px 12px;
+            overflow: hidden;       /* clip anything that tries to escape */
+            width: 100%;
         }
 
         .qty-btn {
             width: 36px;
             height: 36px;
+            min-width: 36px;        /* prevent shrinking */
             border-radius: 8px;
             border: 1px solid var(--border);
             background: var(--surface);
@@ -162,17 +142,22 @@
             flex-shrink: 0;
         }
 
-        .qty-btn:hover {
-            background: var(--accent);
-            border-color: var(--accent);
+        .qty-btn:hover { background: var(--accent); border-color: var(--accent); }
+        .qty-btn:active { transform: scale(0.94); }
+
+        .qty-display {
+            font-size: 15px;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            text-align: center;
+            min-width: 28px;
+            flex-shrink: 0;
         }
 
-        .qty-btn:active {
-            transform: scale(0.94);
-        }
-
+        /* number input: takes remaining space, won't overflow */
         .qty-manual {
-            width: 70px;
+            flex: 1;
+            min-width: 0;           /* key fix — allows flex child to shrink below content size */
             text-align: center;
             background: transparent;
             border: none;
@@ -180,13 +165,18 @@
             font-family: 'DM Mono', monospace;
             font-size: 14px;
             outline: none;
-            flex-shrink: 0;
         }
+
+        /* hide browser spinner arrows */
+        .qty-manual::-webkit-inner-spin-button,
+        .qty-manual::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .qty-manual { -moz-appearance: textfield; }
 
         .qty-max {
             font-size: 12px;
             color: var(--muted);
-            margin-left: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .submit-btn {
@@ -204,25 +194,11 @@
             margin-top: 8px;
         }
 
-        .submit-btn:hover {
-            background: #6b5ce7;
-            transform: translateY(-1px);
-        }
+        .submit-btn:hover { background: #6b5ce7; transform: translateY(-1px); }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
 
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        .submit-btn:disabled {
-            background: var(--muted);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        #progressSection {
-            display: none;
-            margin-top: 28px;
-        }
+        #progressSection { display: none; margin-top: 28px; }
 
         .progress-label {
             display: flex;
@@ -263,13 +239,8 @@
             transition: color 0.2s;
         }
 
-        .step-item.active {
-            color: var(--text);
-        }
-
-        .step-item.done {
-            color: var(--success);
-        }
+        .step-item.active { color: var(--text); }
+        .step-item.done   { color: var(--success); }
 
         .step-dot {
             width: 8px;
@@ -281,15 +252,8 @@
             transition: all 0.2s;
         }
 
-        .step-item.active .step-dot {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .step-item.done .step-dot {
-            background: var(--success);
-            border-color: var(--success);
-        }
+        .step-item.active .step-dot { background: var(--accent); border-color: var(--accent); }
+        .step-item.done   .step-dot { background: var(--success); border-color: var(--success); }
 
         #resultSection {
             display: none;
@@ -300,24 +264,10 @@
             padding: 20px;
         }
 
-        .result-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--success);
-            margin-bottom: 4px;
-        }
+        .result-title { font-size: 14px; font-weight: 600; color: var(--success); margin-bottom: 4px; }
+        .result-sub   { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 
-        .result-sub {
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 16px;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 14px;
-        }
+        .result-actions { display: flex; gap: 10px; margin-top: 14px; }
 
         .result-btn {
             flex: 1;
@@ -333,19 +283,9 @@
             color: var(--text);
         }
 
-        .result-btn:hover {
-            border-color: var(--border-hover);
-        }
-
-        .result-btn.primary {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        .result-btn.primary:hover {
-            background: #6b5ce7;
-        }
+        .result-btn:hover { border-color: var(--border-hover); }
+        .result-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+        .result-btn.primary:hover { background: #6b5ce7; }
 
         #errorMsg {
             display: none;
@@ -370,11 +310,7 @@
             margin-right: 8px;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .pdf-meta {
             margin-top: 14px;
@@ -387,28 +323,21 @@
             line-height: 1.8;
         }
 
-        .pdf-meta span {
-            color: var(--text);
-        }
+        .pdf-meta span { color: var(--text); }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <!-- <div class="header-badge">⚡ Bulk Generator</div> -->
         <h1>Generate QR Codes</h1>
-        <p>Enter your email and how many QR codes you need. We'll generate, package as PDF, and send it to you.</p>
+        <p>Enter your email and how many QR codes you need. We'll generate and package them as a PDF for download.</p>
     </div>
 
     <div class="card">
+
         <div class="field">
             <label>Email address</label>
             <input type="email" id="emailInput" placeholder="you@company.com" />
-        </div>
-
-        <div class="field">
-            <label>Target URL</label>
-            <input type="url" id="targetUrlInput" placeholder="https://your-destination.com" />
         </div>
 
         <div class="field">
@@ -417,12 +346,12 @@
                 <button class="qty-btn" id="qtyDown">&#8722;</button>
                 <span class="qty-display" id="qtyDisplay">10</span>
                 <button class="qty-btn" id="qtyUp">+</button>
-                <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="500" />
-                <span class="qty-max">max 500</span>
+                <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="63" />
+                <span class="qty-max">max 63</span>
             </div>
         </div>
 
-        <button class="submit-btn" id="generateBtn">Generate &amp; Send PDF</button>
+        <button class="submit-btn" id="generateBtn">Generate PDF</button>
 
         <div id="progressSection">
             <div class="progress-label">
@@ -433,28 +362,20 @@
                 <div class="progress-fill" id="progressFill"></div>
             </div>
             <div class="progress-steps">
-                <!-- <div class="step-item" id="step1">
-                    <div class="step-dot"></div> Generating unique IDs
-                </div>
                 <div class="step-item" id="step2">
-                    <div class="step-dot"></div> Creating aliases &amp; QR codes
-                </div> -->
+                    <div class="step-dot"></div> Creating QR codes
+                </div>
                 <div class="step-item" id="step3">
                     <div class="step-dot"></div> Building PDF
                 </div>
-                <!-- <div class="step-item" id="step4">
-                    <div class="step-dot"></div> Saving to database
-                </div> -->
-                <div class="step-item" id="step5">
-                    <div class="step-dot"></div> Sending email
+                <div class="step-item" id="step4">
+                    <div class="step-dot"></div> Finalising
                 </div>
             </div>
         </div>
 
         <div id="resultSection">
-            <div class="result-title">&#10003; Done!</div>
-            <div class="result-sub" id="resultSub">PDF sent to your email.</div>
-            <div class="pdf-meta" id="pdfMeta"></div>
+            <div class="result-sub" id="resultSub">Your PDF is ready.</div>
             <div class="result-actions">
                 <button class="result-btn primary" id="downloadBtn">Download PDF</button>
                 <button class="result-btn" id="resetBtn">Generate more</button>
@@ -469,42 +390,43 @@
     <script src="utils.js"></script>
     <script src="api.js"></script>
     <script>
-        // ── HARDCODED CONFIG ────────────────────────────────────────────────
-        // 1. Create a client in qr-manager.html first, then copy the db_id
-        //    from the qr_id:0 record in that client's metadata collection.
-        const QR_CLIENT_NAME = "smartlabel";   // e.g. "AcmeCorp"
-        const QR_CLIENT_ID = "smartlabel";   // same as client name
-        const QR_DB_ID = "699fe155c8c70686924129d8";  // db_id from metadata
+        // ── HARDCODED CONFIG ───────────────────────────────────────────
+        const QR_CLIENT_NAME = "smartlabel";
+        const QR_CLIENT_ID   = "smartlabel";
+        const QR_DB_ID       = "699fe155c8c70686924129d8";
+        const PDF_DB_ID      = "69ddc4a7d429a8ea72581ba4";
 
-        // 2. Manually create a database in DataCube for PDF records,
-        //    then paste its ID here.
-        const PDF_DB_ID = "69ddc4a7d429a8ea72581ba4";
+        // Target URL embedded in every QR code — change here when needed
+        const TARGET_URL  = "https://www.dowellsmartlabelling.uxlivinglab.org/order";
 
-        // 3. Verify page — change when needed
+        // Verify/landing page
         const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
-        // ───────────────────────────────────────────────────────────────────
-        // ─────────────────────────────────────────────────
+        // ───────────────────────────────────────────────────────────────
 
+        const MAX_QTY = 63;
         let qty = 10;
         let generatedPdfBlob = null;
-        let generatedPdfId = null;
+        let generatedPdfId   = null;
 
+        // ── qty controls ───────────────────────────────────────────────
         function setQty(n) {
-            qty = Math.max(1, Math.min(500, n));
+            qty = Math.max(1, Math.min(MAX_QTY, n));
             document.getElementById("qtyDisplay").textContent = qty;
             document.getElementById("qtyInput").value = qty;
         }
-        document.getElementById("qtyDown").onclick = () => setQty(qty - 1);
-        document.getElementById("qtyUp").onclick = () => setQty(qty + 1);
+        document.getElementById("qtyDown").onclick  = () => setQty(qty - 1);
+        document.getElementById("qtyUp").onclick    = () => setQty(qty + 1);
         document.getElementById("qtyInput").oninput = (e) => setQty(Number(e.target.value) || 1);
 
+        // ── progress helpers ───────────────────────────────────────────
         function setProgress(pct, text) {
             document.getElementById("progressFill").style.width = pct + "%";
-            document.getElementById("progressPct").textContent = pct + "%";
-            document.getElementById("progressText").textContent = text;
+            document.getElementById("progressPct").textContent  = pct + "%";
+            if (text) document.getElementById("progressText").textContent = text;
         }
         function setStep(id, state) {
             const el = document.getElementById(id);
+            if (!el) return;
             el.classList.remove("active", "done");
             el.classList.add(state);
         }
@@ -514,44 +436,46 @@
             el.style.display = "block";
         }
 
+        // ── ID generator ───────────────────────────────────────────────
         function generateIds(n) {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            const chars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             const digits = "0123456789";
-            const ids = new Set();
+            const ids    = new Set();
             while (ids.size < n) {
                 let first = "";
                 for (let i = 0; i < 4; i++) first += chars[Math.floor(Math.random() * chars.length)];
                 let last = "";
-                for (let i = 0; i < 4; i++) last += digits[Math.floor(Math.random() * digits.length)];
+                for (let i = 0; i < 4; i++) last  += digits[Math.floor(Math.random() * digits.length)];
                 ids.add(first + last);
             }
             return [...ids];
         }
 
+        // ── PDF builder ────────────────────────────────────────────────
         async function buildPdf(qrItems, paper) {
             paper = paper || "A4";
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ orientation: "portrait", unit: "cm", format: paper });
-            const pageWidth = paper === "A4" ? 21 : 29.7;
+            const pageWidth  = paper === "A4" ? 21   : 29.7;
             const pageHeight = paper === "A4" ? 29.7 : 42;
             const qrSize = 2.2, padding = 0.2, labelHeight = 0.3;
-            const cellWidth = qrSize + padding * 2;
+            const cellWidth  = qrSize + padding * 2;
             const cellHeight = qrSize + padding * 2 + labelHeight;
             const gap = 0.2, margin = 0.5;
-            const cols = Math.floor((pageWidth - margin * 2 + gap) / (cellWidth + gap));
+            const cols = Math.floor((pageWidth  - margin * 2 + gap) / (cellWidth  + gap));
             const rows = Math.floor((pageHeight - margin * 2 + gap) / (cellHeight + gap));
-            const gridWidth = cols * cellWidth + (cols - 1) * gap;
+            const gridWidth  = cols * cellWidth  + (cols - 1) * gap;
             const gridHeight = rows * cellHeight + (rows - 1) * gap;
             let index = 0;
             while (index < qrItems.length) {
                 pdf.setDrawColor(180); pdf.setLineWidth(0.02); pdf.setLineDash([0.05, 0.05]);
                 for (let c = 0; c <= cols; c++) {
                     const x = margin + c * (cellWidth + gap) - gap / 2;
-                    pdf.line(x, margin - gap / 2, x, margin + gridHeight + gap / 2);
+                    pdf.line(x, margin - gap/2, x, margin + gridHeight + gap/2);
                 }
                 for (let r = 0; r <= rows; r++) {
                     const y = margin + r * (cellHeight + gap) - gap / 2;
-                    pdf.line(margin - gap / 2, y, margin + gridWidth + gap / 2, y);
+                    pdf.line(margin - gap/2, y, margin + gridWidth + gap/2, y);
                 }
                 pdf.setLineDash([]);
                 for (let r = 0; r < rows; r++) {
@@ -573,180 +497,149 @@
             return pdf;
         }
 
+        // ── generate flow ──────────────────────────────────────────────
         document.getElementById("generateBtn").onclick = async () => {
             const email = document.getElementById("emailInput").value.trim();
-            const targetUrl = normalizeUrl(document.getElementById("targetUrlInput").value.trim());
 
             document.getElementById("errorMsg").style.display = "none";
             if (!email) return showError("Please enter an email address.");
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Invalid email address.");
-            if (!targetUrl) return showError("Please enter a target URL.");
 
-            document.getElementById("resultSection").style.display = "none";
+            document.getElementById("resultSection").style.display  = "none";
             document.getElementById("progressSection").style.display = "block";
-            ["step1", "step2", "step3", "step4", "step5"].forEach(s => {
-                document.getElementById(s).classList.remove("active", "done");
+            ["step2", "step3", "step4"].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.remove("active", "done");
             });
 
             const btn = document.getElementById("generateBtn");
             btn.disabled = true;
             btn.innerHTML = '<span class="btn-spinner"></span> Working...';
-
             setProgress(0, "Starting...");
 
             try {
-                setStep("step1", "active");
-                setProgress(5, "Generating unique IDs...");
-
-                const dbId = QR_DB_ID;
+                // ── IDs ────────────────────────────────────────────────
+                setProgress(5, "Generating IDs...");
+                const dbId  = QR_DB_ID;
                 const qrIds = generateIds(qty);
                 const pdfId = generateIds(1)[0];
                 const timestamp = new Date().toISOString();
                 const [date, tp] = timestamp.split("T");
                 const time = tp.replace("Z", "").split(".")[0];
+                setProgress(10);
 
-                setStep("step1", "done");
-                setProgress(15, "IDs generated");
-
-                // ── STEP 2: create alias + QR image per code ──────────────────────
+                // ── STEP 2: aliases + QR images ────────────────────────
                 setStep("step2", "active");
-                setProgress(20, "Creating QR codes...");
+                setProgress(15, "Creating QR codes...");
 
                 const qrItems = [];
-
                 for (let i = 0; i < qrIds.length; i++) {
-                    const qrId = qrIds[i];
-                    // Proper name: QR-0001-xK9m1234, QR-0002-pL3r5678 ...
+                    const qrId   = qrIds[i];
                     const qrName = "QR-" + String(i + 1).padStart(4, "0") + "-" + qrId;
 
                     const { url: qrUrl, alias } = await buildEncryptedQrUrl(
-                        VERIFY_PAGE, targetUrl, QR_DB_ID, qrId
+                        VERIFY_PAGE, TARGET_URL, dbId, qrId
                     );
 
-                    const blob = await generateCustomQrImage(qrUrl, "#000000", null);
+                    const blob   = await generateCustomQrImage(qrUrl, "#000000", null);
                     const imgB64 = await blobToBase64(blob);
 
                     qrItems.push({ id: qrId, name: qrName, img: imgB64, alias, qrUrl });
 
-                    setProgress(20 + Math.round(((i + 1) / qrIds.length) * 40),
-                        "Creating QR " + (i + 1) + " of " + qrIds.length + "...");
+                    setProgress(
+                        15 + Math.round(((i + 1) / qrIds.length) * 45),
+                        "Creating QR " + (i + 1) + " of " + qrIds.length + "..."
+                    );
                 }
 
                 setStep("step2", "done");
-                setProgress(60, "All QR codes created");
+                setProgress(60, "QR codes ready");
 
-                // ── STEP 3: build PDF ──────────────────────────────────────────────
+                // ── STEP 3: build PDF ──────────────────────────────────
                 setStep("step3", "active");
                 setProgress(62, "Building PDF...");
 
-                const pdf = await buildPdf(qrItems);
+                const pdf     = await buildPdf(qrItems);
                 const pdfBlob = pdf.output("blob");
                 generatedPdfBlob = pdfBlob;
-                generatedPdfId = pdfId;
+                generatedPdfId   = pdfId;
 
                 setStep("step3", "done");
-                setProgress(68, "PDF built — uploading...");
+                setProgress(75, "PDF built");
 
-                // Upload PDF to DataCube file storage
-                // Server handles the upload so the API key stays server-side
+                // ── STEP 4: save to DataCube ───────────────────────────
+                setStep("step4", "active");
+                setProgress(78, "Finalising...");
+
+                // Upload PDF file to DataCube storage
                 const filename = "qr-bulk-" + pdfId + ".pdf";
                 const { file_id, signed_url } = await uploadPdf(pdfBlob, filename);
                 console.log("uploadPdf response:", { file_id, signed_url });
 
-                setProgress(75, "PDF uploaded");
-
-                // ── STEP 4: save to DataCube ───────────────────────────────────────
-                setStep("step4", "active");
-                setProgress(78, "Saving to database...");
-
+                // Save each QR code record
                 for (let i = 0; i < qrItems.length; i++) {
                     const item = qrItems[i];
                     await createQrCode(
-                        QR_CLIENT_ID,
-                        item.id,
-                        item.name,
-                        item.qrUrl,
-                        QR_CLIENT_NAME,
-                        date,
-                        time,
-                        QR_DB_ID,
-                        null,
-                        item.img,
-                        item.alias,
-                        pdfId
+                        QR_CLIENT_ID, item.id, item.name, item.qrUrl,
+                        QR_CLIENT_NAME, date, time, QR_DB_ID,
+                        null, item.img, item.alias, pdfId
                     );
                 }
 
+                // Save PDF batch record
                 await savePdfRecord({
                     pdfId,
-                    pdfDbId: PDF_DB_ID,
+                    pdfDbId:    PDF_DB_ID,
                     clientName: QR_CLIENT_NAME,
-                    qrDbId: QR_DB_ID,
+                    qrDbId:     QR_DB_ID,
                     email,
-                    qrCount: qty,
-                    qrIds: qrItems.map(i => i.id),
-                    qrNames: qrItems.map(i => i.name),
+                    qrCount:    qty,
+                    qrIds:      qrItems.map(i => i.id),
+                    qrNames:    qrItems.map(i => i.name),
                     date,
                     time,
-                    fileId: file_id,      // ← from uploadPdf
-                    signedUrl: signed_url    // ← from uploadPdf
+                    fileId:     file_id,
+                    signedUrl:  signed_url
                 });
 
                 setStep("step4", "done");
-                setProgress(90, "Saved to database");
-
-                // ── STEP 5: send email ─────────────────────────────────────────────
-                setStep("step5", "active");
-                setProgress(92, "Sending email...");
-
-                // Server fetches PDF from DataCube using signed_url — no base64 here
-                await sendPdfByEmail({
-                    email,
-                    signedUrl: signed_url,   // ← server downloads from DataCube
-                    pdfId,
-                    qrCount: qty,
-                    clientName: QR_CLIENT_NAME
-                });
-
-                setStep("step5", "done");
                 setProgress(100, "Complete!");
 
+                // ── show result ────────────────────────────────────────
                 document.getElementById("resultSection").style.display = "block";
                 document.getElementById("resultSub").textContent =
-                    "PDF with " + qty + " QR codes sent to " + email;
-                document.getElementById("pdfMeta").innerHTML =
-                    "PDF ID: <span>" + pdfId + "</span><br>" +
-                    "File ID: <span>" + file_id + "</span><br>" +
-                    "QR codes: <span>" + qty + "</span><br>" +
-                    "Created: <span>" + date + " " + time + "</span>";
+                    qty + " QR codes generated successfully.";
 
             } catch (err) {
                 console.error("Bulk generate failed:", err);
                 showError("Something went wrong: " + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = "Generate &amp; Send PDF";
+                btn.innerHTML = "Generate PDF";
             }
         };
 
+        // ── download PDF ───────────────────────────────────────────────
         document.getElementById("downloadBtn").onclick = () => {
             if (!generatedPdfBlob) return;
             const a = document.createElement("a");
-            a.href = URL.createObjectURL(generatedPdfBlob);
+            a.href     = URL.createObjectURL(generatedPdfBlob);
             a.download = "qr-bulk-" + generatedPdfId + ".pdf";
             a.click();
         };
 
+        // ── reset ──────────────────────────────────────────────────────
         document.getElementById("resetBtn").onclick = () => {
-            document.getElementById("resultSection").style.display = "none";
+            document.getElementById("resultSection").style.display   = "none";
             document.getElementById("progressSection").style.display = "none";
-            document.getElementById("errorMsg").style.display = "none";
-            ["step1", "step2", "step3", "step4", "step5"].forEach(s => {
-                document.getElementById(s).classList.remove("active", "done");
+            document.getElementById("errorMsg").style.display        = "none";
+            ["step2", "step3", "step4"].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.remove("active", "done");
             });
             setProgress(0, "");
             generatedPdfBlob = null;
-            generatedPdfId = null;
+            generatedPdfId   = null;
         };
     </script>
 </body>
