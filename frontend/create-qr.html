@@ -395,8 +395,8 @@
 
 <body>
     <div class="header">
-        <div class="header-badge">⚡ Bulk Generator</div>
-        <h1>Generate QR Codes<br>in Bulk</h1>
+        <!-- <div class="header-badge">⚡ Bulk Generator</div> -->
+        <h1>Generate QR Codes</h1>
         <p>Enter your email and how many QR codes you need. We'll generate, package as PDF, and send it to you.</p>
     </div>
 
@@ -492,7 +492,6 @@
         function setQty(n) {
             qty = Math.max(1, Math.min(500, n));
             document.getElementById("qtyDisplay").textContent = qty;
-            document.getElementById("qtyInput").value = qty;
         }
         document.getElementById("qtyDown").onclick = () => setQty(qty - 1);
         document.getElementById("qtyUp").onclick = () => setQty(qty + 1);
@@ -598,7 +597,7 @@
                 setStep("step1", "active");
                 setProgress(5, "Generating unique IDs...");
 
-                const dbId = HARDCODED_DB_ID;
+                const dbId = QR_DB_ID;
                 const qrIds = generateIds(qty);
                 const pdfId = generateIds(1)[0];
                 const timestamp = new Date().toISOString();
@@ -635,14 +634,24 @@
                 setStep("step2", "done");
                 setProgress(60, "All QR codes created");
 
+                // ── STEP 3: build PDF ──────────────────────────────────────────────
                 setStep("step3", "active");
                 setProgress(62, "Building PDF...");
+
                 const pdf = await buildPdf(qrItems);
                 const pdfBlob = pdf.output("blob");
                 generatedPdfBlob = pdfBlob;
                 generatedPdfId = pdfId;
+
                 setStep("step3", "done");
-                setProgress(75, "PDF ready");
+                setProgress(68, "PDF built — uploading...");
+
+                // Upload PDF to DataCube file storage
+                // Server handles the upload so the API key stays server-side
+                const filename = "qr-bulk-" + pdfId + ".pdf";
+                const { file_id, signed_url } = await uploadPdf(pdfBlob, filename);
+
+                setProgress(75, "PDF uploaded");
 
                 // ── STEP 4: save to DataCube ───────────────────────────────────────
                 setStep("step4", "active");
@@ -653,47 +662,59 @@
                     await createQrCode(
                         QR_CLIENT_ID,
                         item.id,
-                        item.name,        // ← proper name like "QR-0001-xK9m1234"
+                        item.name,
                         item.qrUrl,
                         QR_CLIENT_NAME,
                         date,
                         time,
                         QR_DB_ID,
-                        null,             // no logo for bulk
+                        null,
                         item.img,
                         item.alias,
                         pdfId
                     );
                 }
 
-                // Save PDF record into the dedicated PDF database
                 await savePdfRecord({
                     pdfId,
-                    pdfDbId: PDF_DB_ID,           // ← dedicated PDF database
+                    pdfDbId: PDF_DB_ID,
                     clientName: QR_CLIENT_NAME,
                     qrDbId: QR_DB_ID,
                     email,
                     qrCount: qty,
                     qrIds: qrItems.map(i => i.id),
-                    qrNames: qrItems.map(i => i.name),   // ← save names too
+                    qrNames: qrItems.map(i => i.name),
                     date,
-                    time
+                    time,
+                    fileId: file_id,      // ← from uploadPdf
+                    signedUrl: signed_url    // ← from uploadPdf
                 });
 
                 setStep("step4", "done");
                 setProgress(90, "Saved to database");
 
+                // ── STEP 5: send email ─────────────────────────────────────────────
                 setStep("step5", "active");
                 setProgress(92, "Sending email...");
-                const pdfBase64 = await blobToBase64(pdfBlob);
-                await sendPdfByEmail({ email, pdfBase64, pdfId, qrCount: qty, clientName: HARDCODED_CLIENT_NAME });
+
+                // Server fetches PDF from DataCube using signed_url — no base64 here
+                await sendPdfByEmail({
+                    email,
+                    signedUrl: signed_url,   // ← server downloads from DataCube
+                    pdfId,
+                    qrCount: qty,
+                    clientName: QR_CLIENT_NAME
+                });
+
                 setStep("step5", "done");
                 setProgress(100, "Complete!");
 
                 document.getElementById("resultSection").style.display = "block";
-                document.getElementById("resultSub").textContent = "PDF with " + qty + " QR codes sent to " + email;
+                document.getElementById("resultSub").textContent =
+                    "PDF with " + qty + " QR codes sent to " + email;
                 document.getElementById("pdfMeta").innerHTML =
                     "PDF ID: <span>" + pdfId + "</span><br>" +
+                    "File ID: <span>" + file_id + "</span><br>" +
                     "QR codes: <span>" + qty + "</span><br>" +
                     "Created: <span>" + date + " " + time + "</span>";
 

@@ -419,7 +419,7 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
       date, time,
       qr_name: qrName,
       qr_url: qrUrl,
-      qr_alias: qrAlias,   
+      qr_alias: qrAlias,
       qr_logo: qrLogo || null,
       qr_image: qrImage,
       qr_status: 1
@@ -467,15 +467,15 @@ async function createBulkQrCode(
     database_id: DATABASE_ID,
     collection_name: clientName,
     documents: [{
-      qr_id:     qrId,
-      db_id:     dbId,
+      qr_id: qrId,
+      db_id: dbId,
       date,
       time,
-      qr_name:   qrName,
-      qr_url:    qrUrl,
-      qr_alias:  qrAlias,
-      qr_logo:   qrLogo || null,
-      qr_image:  qrImage,
+      qr_name: qrName,
+      qr_url: qrUrl,
+      qr_alias: qrAlias,
+      qr_logo: qrLogo || null,
+      qr_image: qrImage,
       qr_status: 1,
       qr_pdf_id: pdfId    // null for manual QRs, set for bulk batches
     }]
@@ -612,14 +612,14 @@ async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
 }
 
 async function resolveAlias(alias) {
-    const res = await fetch(`${PROXY_BASE}/resolve/${alias}`);
+  const res = await fetch(`${PROXY_BASE}/resolve/${alias}`);
 
-    if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.error || "Failed to resolve alias");
-    }
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || "Failed to resolve alias");
+  }
 
-    return res.json(); // { alias, target_url, db_id, qr_id, created_at }
+  return res.json(); // { alias, target_url, db_id, qr_id, created_at }
 }
 
 async function updateQrToken(alias, targetUrl, dbId, qrId) {
@@ -670,71 +670,79 @@ async function recordQrScan({
 
 async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
 
-    // Build QR using API (reliable)
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(link)}`;
+  // Build QR using API (reliable)
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(link)}`;
 
-    const res = await fetch(qrUrl);
-    if (!res.ok) throw new Error("QR fetch failed");
+  const res = await fetch(qrUrl);
+  if (!res.ok) throw new Error("QR fetch failed");
 
-    const blob = await res.blob();
+  const blob = await res.blob();
 
-    // If NO logo → return directly
-    if (!logoFile) return blob;
+  // If NO logo → return directly
+  if (!logoFile) return blob;
 
-    // =========================
-    // ADD LOGO (CANVAS)
-    // =========================
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+  // =========================
+  // ADD LOGO (CANVAS)
+  // =========================
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-    const baseImg = new Image();
-    baseImg.src = URL.createObjectURL(blob);
+  const baseImg = new Image();
+  baseImg.src = URL.createObjectURL(blob);
 
-    await new Promise(resolve => baseImg.onload = resolve);
+  await new Promise(resolve => baseImg.onload = resolve);
 
-    canvas.width = 800;
-    canvas.height = 800;
+  canvas.width = 800;
+  canvas.height = 800;
 
-    ctx.drawImage(baseImg, 0, 0, 800, 800);
+  ctx.drawImage(baseImg, 0, 0, 800, 800);
 
-    // Load logo
-    const logo = new Image();
-    logo.src = URL.createObjectURL(logoFile);
+  // Load logo
+  const logo = new Image();
+  logo.src = URL.createObjectURL(logoFile);
 
-    await new Promise(resolve => logo.onload = resolve);
+  await new Promise(resolve => logo.onload = resolve);
 
-    const logoSize = 160;
-    const x = (800 - logoSize) / 2;
-    const y = (800 - logoSize) / 2;
+  const logoSize = 160;
+  const x = (800 - logoSize) / 2;
+  const y = (800 - logoSize) / 2;
 
-    // White background for logo
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(x, y, logoSize, logoSize);
+  // White background for logo
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(x, y, logoSize, logoSize);
 
-    ctx.drawImage(logo, x, y, logoSize, logoSize);
+  ctx.drawImage(logo, x, y, logoSize, logoSize);
 
-    return await new Promise(resolve => {
-        canvas.toBlob(resolve, "image/png", 1.0);
-    });
+  return await new Promise(resolve => {
+    canvas.toBlob(resolve, "image/png", 1.0);
+  });
 }
 
 
 // ── savePdfRecord ─────────────────────────────────────────────────────
-async function savePdfRecord({ pdfId, pdfDbId, clientName, qrDbId, email, qrCount, qrIds, qrNames, date, time }) {
+// REPLACE the existing savePdfRecord with this:
+
+async function savePdfRecord({
+  pdfId, pdfDbId, clientName, qrDbId, email,
+  qrCount, qrIds, qrNames, date, time,
+  fileId, signedUrl    // ← new
+}) {
   const res = await fetch(`${PROXY_BASE}/save_pdf_record`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      pdf_db_id:   pdfDbId,
-      pdf_id:      pdfId,
+      pdf_db_id: pdfDbId,
+      pdf_id: pdfId,
       client_name: clientName,
-      qr_db_id:    String(qrDbId),
+      qr_db_id: String(qrDbId),
       email,
-      qr_count:    qrCount,
-      qr_ids:      qrIds,
-      qr_names:    qrNames,
+      qr_count: qrCount,
+      qr_ids: qrIds,
+      qr_names: qrNames,
       date,
-      time
+      time,
+      file_id: fileId || null,
+      signed_url: signedUrl || null
     })
   });
 
@@ -743,13 +751,14 @@ async function savePdfRecord({ pdfId, pdfDbId, clientName, qrDbId, email, qrCoun
 }
 
 // ── sendPdfByEmail ────────────────────────────────────────────────────
-async function sendPdfByEmail({ email, pdfBase64, pdfId, qrCount, clientName }) {
+
+async function sendPdfByEmail({ email, signedUrl, pdfId, qrCount, clientName }) {
   const res = await fetch(`${PROXY_BASE}/send_pdf_email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email,
-      pdf_base64:  pdfBase64,
+      signed_url:  signedUrl,   // ← server fetches file from here
       pdf_id:      pdfId,
       qr_count:    qrCount,
       client_name: clientName
@@ -761,4 +770,22 @@ async function sendPdfByEmail({ email, pdfBase64, pdfId, qrCount, clientName }) 
     throw new Error(json.error || "Failed to send email");
   }
   return res.json();
+}
+
+
+async function uploadPdf(pdfBlob, filename) {
+  const base64 = await blobToBase64(pdfBlob);
+
+  const res = await fetch(`${PROXY_BASE}/upload_pdf`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pdf_base64: base64, filename })
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || "Failed to upload PDF");
+  }
+
+  return res.json(); 
 }

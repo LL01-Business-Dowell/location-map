@@ -2,6 +2,7 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import "dotenv/config";
+import crypto from "crypto";
 
 
 import FormData from "form-data";
@@ -258,10 +259,10 @@ app.get("/api/resolve/:alias", async (req, res) => {
     }
 
     res.json({
-      alias:      record.alias,
+      alias: record.alias,
       target_url: record.target_url,
-      db_id:      record.db_id,
-      qr_id:      record.qr_id,
+      db_id: record.db_id,
+      qr_id: record.qr_id,
       created_at: record.created_at
     });
 
@@ -320,7 +321,7 @@ app.put("/api/update_qr_token", async (req, res) => {
 
     if (!r.ok) throw new Error("DataCube update failed");
 
-    res.json({ success: true, alias, token });
+    res.json({ success: true, alias });
 
   } catch (err) {
     console.error("Update token error:", err.message);
@@ -342,8 +343,8 @@ app.put("/api/update_qr_token", async (req, res) => {
 import nodemailer from "nodemailer";
 
 const mailer = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST,
-  port:   Number(process.env.SMTP_PORT) || 587,
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 587,
   secure: false,
   auth: {
     user: process.env.SMTP_USER,
@@ -376,16 +377,18 @@ app.post("/api/setup_pdf_collection", async (req, res) => {
       collections: [{
         name: "pdf_records",
         fields: [
-          { name: "pdf_id",       type: "string" },
-          { name: "client_name",  type: "string" },
-          { name: "qr_db_id",     type: "string" },
-          { name: "email",        type: "string" },
-          { name: "qr_count",     type: "number" },
-          { name: "qr_ids",       type: "string" },
-          { name: "qr_names",     type: "string" },
-          { name: "date",         type: "string" },
-          { name: "time",         type: "string" },
-          { name: "created_at",   type: "string" }
+          { name: "pdf_id", type: "string" },
+          { name: "client_name", type: "string" },
+          { name: "qr_db_id", type: "string" },
+          { name: "email", type: "string" },
+          { name: "qr_count", type: "number" },
+          { name: "qr_ids", type: "string" },
+          { name: "qr_names", type: "string" },
+          { name: "date", type: "string" },
+          { name: "time", type: "string" },
+          { name: "created_at", type: "string" },
+          { name: "file_id", type: "string" }, 
+          { name: "signed_url", type: "string" }
         ]
       }]
     };
@@ -430,7 +433,8 @@ app.post("/api/save_pdf_record", async (req, res) => {
   try {
     const {
       pdf_db_id, pdf_id, client_name, qr_db_id,
-      email, qr_count, qr_ids, qr_names, date, time
+      email, qr_count, qr_ids, qr_names, date, time,
+      file_id, signed_url
     } = req.body || {};
 
     if (!pdf_db_id || !pdf_id || !client_name || !qr_db_id || !email || !qr_count || !qr_ids) {
@@ -438,7 +442,7 @@ app.post("/api/save_pdf_record", async (req, res) => {
     }
 
     const payload = {
-      database_id:     pdf_db_id,
+      database_id: pdf_db_id,
       collection_name: "pdf_records",
       documents: [{
         pdf_id,
@@ -446,11 +450,13 @@ app.post("/api/save_pdf_record", async (req, res) => {
         qr_db_id,
         email,
         qr_count,
-        qr_ids:    JSON.stringify(qr_ids),
-        qr_names:  JSON.stringify(qr_names || []),
+        qr_ids: JSON.stringify(qr_ids),
+        qr_names: JSON.stringify(qr_names || []),
         date,
         time,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        file_id: req.body.file_id || null,
+        signed_url: req.body.signed_url || null
       }]
     };
 
@@ -489,26 +495,29 @@ app.post("/api/save_pdf_record", async (req, res) => {
  */
 app.post("/api/send_pdf_email", async (req, res) => {
   try {
-    const { email, pdf_base64, pdf_id, qr_count, client_name } = req.body || {};
+    const { email, signed_url, pdf_id, qr_count, client_name } = req.body || {};
 
-    if (!email || !pdf_base64 || !pdf_id) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!email || !signed_url || !pdf_id) {
+      return res.status(400).json({ error: "Missing required fields: email, signed_url, pdf_id" });
     }
 
-    const base64Data = pdf_base64.includes(",")
-      ? pdf_base64.split(",")[1]
-      : pdf_base64;
+    // Fetch PDF buffer from DataCube signed URL
+    // Signed URLs are self-authenticating — no API key needed
+    const fileRes = await fetch(signed_url);
+    if (!fileRes.ok) throw new Error(`Failed to fetch PDF from signed URL: ${fileRes.status}`);
+
+    const arrayBuffer = await fileRes.arrayBuffer();
+    const pdfBuffer = Buffer.from(arrayBuffer);
 
     await mailer.sendMail({
-      from:    `"QR Manager" <${process.env.SMTP_USER}>`,
-      to:      email,
+      from: `"QR Manager" <${process.env.SMTP_USER}>`,
+      to: email,
       subject: `QR Code Batch Ready — ${qr_count} codes (${pdf_id})`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
           <h2 style="color:#7c6af7;margin-bottom:8px;">Your QR Codes are Ready</h2>
           <p style="color:#555;margin-bottom:16px;">
-            Your bulk QR code batch for <strong>${client_name || "your client"}</strong>
-            has been generated successfully.
+            Your QR codes batch has been generated successfully.
           </p>
           <table style="background:#f8fafc;border-radius:10px;padding:16px;width:100%;border-collapse:collapse;">
             <tr>
@@ -519,10 +528,6 @@ app.post("/api/send_pdf_email", async (req, res) => {
               <td style="color:#888;padding:4px 0;font-size:13px;">QR codes</td>
               <td style="font-size:13px;text-align:right;">${qr_count}</td>
             </tr>
-            <tr>
-              <td style="color:#888;padding:4px 0;font-size:13px;">Client</td>
-              <td style="font-size:13px;text-align:right;">${client_name || "—"}</td>
-            </tr>
           </table>
           <p style="color:#888;font-size:12px;margin-top:20px;">
             The PDF is attached. Each QR code is labeled with its unique name and ID.
@@ -530,9 +535,8 @@ app.post("/api/send_pdf_email", async (req, res) => {
         </div>
       `,
       attachments: [{
-        filename:    `qr-bulk-${pdf_id}.pdf`,
-        content:     base64Data,
-        encoding:    "base64",
+        filename: `qr-bulk-${pdf_id}.pdf`,
+        content: pdfBuffer,
         contentType: "application/pdf"
       }]
     });
@@ -586,7 +590,7 @@ app.post("/api/send_pdf_email", async (req, res) => {
  */
 app.get("/api/public/pdf/:pdf_id", async (req, res) => {
   try {
-    const { pdf_id }  = req.params;
+    const { pdf_id } = req.params;
     const { pdf_db_id } = req.query;
 
     if (!pdf_db_id) {
@@ -594,11 +598,11 @@ app.get("/api/public/pdf/:pdf_id", async (req, res) => {
     }
 
     const params = new URLSearchParams({
-      database_id:     pdf_db_id,
+      database_id: pdf_db_id,
       collection_name: "pdf_records",
-      filters:         JSON.stringify({ pdf_id }),
-      page:            1,
-      page_size:       1
+      filters: JSON.stringify({ pdf_id }),
+      page: 1,
+      page_size: 1
     });
 
     const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, {
@@ -609,8 +613,8 @@ app.get("/api/public/pdf/:pdf_id", async (req, res) => {
 
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data
-               : Array.isArray(json)      ? json
-               : [];
+      : Array.isArray(json) ? json
+        : [];
 
     if (!docs.length) {
       return res.status(404).json({ error: "PDF record not found" });
@@ -620,16 +624,18 @@ app.get("/api/public/pdf/:pdf_id", async (req, res) => {
 
     // Parse the JSON-stringified arrays back
     res.json({
-      pdf_id:      doc.pdf_id,
+      pdf_id: doc.pdf_id,
       client_name: doc.client_name,
-      qr_db_id:    doc.qr_db_id,
-      email:       doc.email,
-      qr_count:    doc.qr_count,
-      qr_ids:      JSON.parse(doc.qr_ids   || "[]"),
-      qr_names:    JSON.parse(doc.qr_names || "[]"),
-      date:        doc.date,
-      time:        doc.time,
-      created_at:  doc.created_at
+      qr_db_id: doc.qr_db_id,
+      email: doc.email,
+      qr_count: doc.qr_count,
+      qr_ids: JSON.parse(doc.qr_ids || "[]"),
+      qr_names: JSON.parse(doc.qr_names || "[]"),
+      date: doc.date,
+      time: doc.time,
+      created_at: doc.created_at,
+      file_id:    doc.file_id    || null,
+      signed_url: doc.signed_url || null,
     });
 
   } catch (err) {
@@ -671,11 +677,11 @@ app.get("/api/public/pdf", async (req, res) => {
     const filters = client_name ? { client_name } : {};
 
     const params = new URLSearchParams({
-      database_id:     pdf_db_id,
+      database_id: pdf_db_id,
       collection_name: "pdf_records",
-      filters:         JSON.stringify(filters),
-      page:            Number(page),
-      page_size:       Math.min(Number(page_size), 200)
+      filters: JSON.stringify(filters),
+      page: Number(page),
+      page_size: Math.min(Number(page_size), 200)
     });
 
     const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, {
@@ -686,21 +692,23 @@ app.get("/api/public/pdf", async (req, res) => {
 
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data
-               : Array.isArray(json)      ? json
-               : [];
+      : Array.isArray(json) ? json
+        : [];
 
     // Parse stringified arrays in each record
     const data = docs.map(doc => ({
-      pdf_id:      doc.pdf_id,
+      pdf_id: doc.pdf_id,
       client_name: doc.client_name,
-      qr_db_id:    doc.qr_db_id,
-      email:       doc.email,
-      qr_count:    doc.qr_count,
-      qr_ids:      JSON.parse(doc.qr_ids   || "[]"),
-      qr_names:    JSON.parse(doc.qr_names || "[]"),
-      date:        doc.date,
-      time:        doc.time,
-      created_at:  doc.created_at
+      qr_db_id: doc.qr_db_id,
+      email: doc.email,
+      qr_count: doc.qr_count,
+      qr_ids: JSON.parse(doc.qr_ids || "[]"),
+      qr_names: JSON.parse(doc.qr_names || "[]"),
+      date: doc.date,
+      time: doc.time,
+      created_at: doc.created_at,
+      file_id:    doc.file_id    || null,
+      signed_url: doc.signed_url || null,
     }));
 
     res.json({ data, page: Number(page), page_size: Number(page_size) });
@@ -745,7 +753,7 @@ app.get("/api/public/pdf", async (req, res) => {
  */
 app.get("/api/public/qr/:qr_id", async (req, res) => {
   try {
-    const { qr_id }     = req.params;
+    const { qr_id } = req.params;
     const { client_name } = req.query;
 
     if (!client_name) {
@@ -753,11 +761,11 @@ app.get("/api/public/qr/:qr_id", async (req, res) => {
     }
 
     const params = new URLSearchParams({
-      database_id:     DB_ID,             // your main metadata DATABASE_ID
+      database_id: DB_ID,             // your main metadata DATABASE_ID
       collection_name: client_name,
-      filters:         JSON.stringify({ qr_id }),
-      page:            1,
-      page_size:       1
+      filters: JSON.stringify({ qr_id }),
+      page: 1,
+      page_size: 1
     });
 
     const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, {
@@ -768,8 +776,8 @@ app.get("/api/public/qr/:qr_id", async (req, res) => {
 
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data
-               : Array.isArray(json)      ? json
-               : [];
+      : Array.isArray(json) ? json
+        : [];
 
     if (!docs.length) {
       return res.status(404).json({ error: "QR code not found" });
@@ -778,15 +786,15 @@ app.get("/api/public/qr/:qr_id", async (req, res) => {
     const doc = docs[0];
 
     res.json({
-      qr_id:     doc.qr_id,
-      qr_name:   doc.qr_name,
-      qr_url:    doc.qr_url,
-      qr_alias:  doc.qr_alias,
+      qr_id: doc.qr_id,
+      qr_name: doc.qr_name,
+      qr_url: doc.qr_url,
+      qr_alias: doc.qr_alias,
       qr_status: doc.qr_status,
       qr_pdf_id: doc.qr_pdf_id || null,
-      db_id:     doc.db_id,
-      date:      doc.date,
-      time:      doc.time
+      db_id: doc.db_id,
+      date: doc.date,
+      time: doc.time
     });
 
   } catch (err) {
@@ -830,11 +838,11 @@ app.get("/api/public/qr", async (req, res) => {
     if (pdf_id) filters.qr_pdf_id = pdf_id;
 
     const params = new URLSearchParams({
-      database_id:     DB_ID,
+      database_id: DB_ID,
       collection_name: client_name,
-      filters:         JSON.stringify(filters),
-      page:            Number(page),
-      page_size:       Math.min(Number(page_size), 200)
+      filters: JSON.stringify(filters),
+      page: Number(page),
+      page_size: Math.min(Number(page_size), 200)
     });
 
     const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, {
@@ -845,21 +853,21 @@ app.get("/api/public/qr", async (req, res) => {
 
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data
-               : Array.isArray(json)      ? json
-               : [];
+      : Array.isArray(json) ? json
+        : [];
 
     const data = docs
       .filter(d => d.qr_id !== 0)   // exclude metadata row
       .map(doc => ({
-        qr_id:     doc.qr_id,
-        qr_name:   doc.qr_name,
-        qr_url:    doc.qr_url,
-        qr_alias:  doc.qr_alias,
+        qr_id: doc.qr_id,
+        qr_name: doc.qr_name,
+        qr_url: doc.qr_url,
+        qr_alias: doc.qr_alias,
         qr_status: doc.qr_status,
         qr_pdf_id: doc.qr_pdf_id || null,
-        db_id:     doc.db_id,
-        date:      doc.date,
-        time:      doc.time
+        db_id: doc.db_id,
+        date: doc.date,
+        time: doc.time
       }));
 
     res.json({ data, page: Number(page), page_size: Number(page_size) });
@@ -870,6 +878,60 @@ app.get("/api/public/qr", async (req, res) => {
   }
 });
 
+
+// ADD this before the app.listen() at the bottom
+
+app.post("/api/upload_pdf", async (req, res) => {
+  try {
+    const { pdf_base64, filename } = req.body || {};
+
+    if (!pdf_base64 || !filename) {
+      return res.status(400).json({ error: "Missing pdf_base64 or filename" });
+    }
+
+    // Strip data URI prefix if present
+    const base64Data = pdf_base64.includes(",")
+      ? pdf_base64.split(",")[1]
+      : pdf_base64;
+
+    const pdfBuffer = Buffer.from(base64Data, "base64");
+
+    // Build multipart form for DataCube /files/ endpoint
+    const form = new FormData();
+    form.append("file", pdfBuffer, {
+      filename: filename,
+      contentType: "application/pdf"
+    });
+    form.append("filename", filename);
+    form.append("content_type", "application/pdf");
+
+    const r = await fetch(`${DATACUBE_BASE}/files/`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Api-Key ${DATACUBE_API_KEY}`,
+        ...form.getHeaders()
+      },
+      body: form
+    });
+
+    if (!r.ok) {
+      const text = await r.text();
+      throw new Error(`DataCube upload failed: ${text}`);
+    }
+
+    const data = await r.json();
+
+    res.json({
+      success: true,
+      file_id: data.file_id,
+      signed_url: data.signed_url
+    });
+
+  } catch (err) {
+    console.error("PDF upload error:", err.message);
+    res.status(500).json({ error: "Failed to upload PDF: " + err.message });
+  }
+});
 
 // ===== START SERVER =====
 app.listen(PORT, () => {
