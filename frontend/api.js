@@ -406,36 +406,36 @@ async function addDbId(dbId, name, date, time) {
   }
 }
 
-async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo, qrImage, qrAlias) {
+// async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo, qrImage, qrAlias) {
 
-  //const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
+//   //const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
 
-  const payload = {
-    database_id: DATABASE_ID,
-    collection_name: clientName,
-    documents: [{
-      qr_id: qrId,
-      db_id: dbId,
-      date, time,
-      qr_name: qrName,
-      qr_url: qrUrl,
-      qr_alias: qrAlias,
-      qr_logo: qrLogo || null,
-      qr_image: qrImage,
-      qr_status: 1
-    }]
-  };
+//   const payload = {
+//     database_id: DATABASE_ID,
+//     collection_name: clientName,
+//     documents: [{
+//       qr_id: qrId,
+//       db_id: dbId,
+//       date, time,
+//       qr_name: qrName,
+//       qr_url: qrUrl,
+//       qr_alias: qrAlias,
+//       qr_logo: qrLogo || null,
+//       qr_image: qrImage,
+//       qr_status: 1
+//     }]
+//   };
 
-  try {
-    await fetch(`${PROXY_BASE}/crud`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    console.error("Failed to save QR Code", err);
-  }
-}
+//   try {
+//     await fetch(`${PROXY_BASE}/crud`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(payload)
+//     });
+//   } catch (err) {
+//     console.error("Failed to save QR Code", err);
+//   }
+// }
 
 // =====================================================================
 // REPLACE your existing createQrCode function in api.js with this.
@@ -458,10 +458,10 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
  * @param {string} qrAlias     - 8-char alias
  * @param {string|null} pdfId  - bulk PDF batch ID (null for individually created QRs)
  */
-async function createBulkQrCode(
+async function createQrCode(
   clientId, qrId, qrName, qrUrl, clientName,
   date, time, dbId, qrLogo, qrImage, qrAlias,
-  pdfId = null   // ← new optional param
+  pdfId = null
 ) {
   const payload = {
     database_id: DATABASE_ID,
@@ -477,7 +477,7 @@ async function createBulkQrCode(
       qr_logo: qrLogo || null,
       qr_image: qrImage,
       qr_status: 1,
-      qr_pdf_id: pdfId    // null for manual QRs, set for bulk batches
+      qr_pdf_id: pdfId 
     }]
   };
 
