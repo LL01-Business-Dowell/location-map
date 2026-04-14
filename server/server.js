@@ -572,7 +572,7 @@ app.post("/api/send_pdf_email", async (req, res) => {
 
     console.log("  [send_pdf_email] fetching PDF from signed_url:", signed_url.slice(0, 80) + "...");
 
-    url_signed = "https://datacube.uxlivinglab.online" + signed_url;
+    let url_signed = "https://datacube.uxlivinglab.online" + signed_url;
     console.log("Actual signed url foe fetching: " + url_signed);
 
     if (!signed_url.startsWith("http")) {
