@@ -2,7 +2,7 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import "dotenv/config";
-import crypto from "crypto";
+import crypto, { sign } from "crypto";
 import nodemailer from "nodemailer";
 import FormData from "form-data";
 import multer from "multer";
@@ -572,11 +572,14 @@ app.post("/api/send_pdf_email", async (req, res) => {
 
     console.log("  [send_pdf_email] fetching PDF from signed_url:", signed_url.slice(0, 80) + "...");
 
+    url_signed = "https://datacube.uxlivinglab.online" + signed_url;
+    console.log("Actual signed url foe fetching: " + url_signed);
+
     if (!signed_url.startsWith("http")) {
       throw new Error("Invalid signed_url — does not start with http: " + signed_url);
     }
 
-    const fileRes = await fetch(signed_url);
+    const fileRes = await fetch(url_signed);
     console.log("  [send_pdf_email] signed_url fetch status:", fileRes.status);
 
     if (!fileRes.ok) {
