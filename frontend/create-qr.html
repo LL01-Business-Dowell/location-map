@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Bulk QR Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface2: #1c1c27;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --accent: #7c6af7;
+            --accent2: #5eead4;
+            --text: #f0f0f5;
+            --muted: #6b6b80;
+            --danger: #f87171;
+            --success: #4ade80;
+            --radius: 14px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 80px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(124, 106, 247, 0.12);
+            border: 1px solid rgba(124, 106, 247, 0.3);
+            border-radius: 100px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-family: 'DM Mono', monospace;
+            color: var(--accent);
+            margin-bottom: 20px;
+            letter-spacing: 0.04em;
+        }
+
+        .header h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #f0f0f5 30%, #7c6af7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 15px;
+            max-width: 440px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px;
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .field {
+            margin-bottom: 22px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 13px 16px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+        }
+
+        .field input::placeholder {
+            color: var(--muted);
+        }
+
+        .qty-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 8px 8px 16px;
+        }
+
+        .qty-display {
+            flex: 1;
+            font-size: 15px;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .qty-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .qty-btn:active {
+            transform: scale(0.94);
+        }
+
+        .qty-manual {
+            width: 70px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            flex-shrink: 0;
+        }
+
+        .qty-max {
+            font-size: 12px;
+            color: var(--muted);
+            margin-left: 4px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .submit-btn:hover {
+            background: #6b5ce7;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            background: var(--muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #progressSection {
+            display: none;
+            margin-top: 28px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .progress-track {
+            height: 4px;
+            background: var(--surface2);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 100px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-steps {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--muted);
+            transition: color 0.2s;
+        }
+
+        .step-item.active {
+            color: var(--text);
+        }
+
+        .step-item.done {
+            color: var(--success);
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .step-item.active .step-dot {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .step-item.done .step-dot {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        #resultSection {
+            display: none;
+            margin-top: 28px;
+            background: rgba(74, 222, 128, 0.06);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+            margin-bottom: 4px;
+        }
+
+        .result-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .result-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .result-btn:hover {
+            border-color: var(--border-hover);
+        }
+
+        .result-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .result-btn.primary:hover {
+            background: #6b5ce7;
+        }
+
+        #errorMsg {
+            display: none;
+            margin-top: 16px;
+            background: rgba(248, 113, 113, 0.08);
+            border: 1px solid rgba(248, 113, 113, 0.25);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--danger);
+        }
+
+        .btn-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pdf-meta {
+            margin-top: 14px;
+            background: var(--surface2);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 12px;
+            font-family: 'DM Mono', monospace;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        .pdf-meta span {
+            color: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-badge">⚡ Bulk Generator</div>
+        <h1>Generate QR Codes<br>in Bulk</h1>
+        <p>Enter your email and how many QR codes you need. We'll generate, package as PDF, and send it to you.</p>
+    </div>
+
+    <div class="card">
+        <div class="field">
+            <label>Email address</label>
+            <input type="email" id="emailInput" placeholder="you@company.com" />
+        </div>
+
+        <div class="field">
+            <label>Target URL</label>
+            <input type="url" id="targetUrlInput" placeholder="https://your-destination.com" />
+        </div>
+
+        <div class="field">
+            <label>Number of QR codes</label>
+            <div class="qty-row">
+                <button class="qty-btn" id="qtyDown">&#8722;</button>
+                <span class="qty-display" id="qtyDisplay">10</span>
+                <button class="qty-btn" id="qtyUp">+</button>
+                <!-- <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="500" /> -->
+                <span class="qty-max">max 500</span>
+            </div>
+        </div>
+
+        <button class="submit-btn" id="generateBtn">Generate &amp; Send PDF</button>
+
+        <div id="progressSection">
+            <div class="progress-label">
+                <span id="progressText">Starting...</span>
+                <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-steps">
+                <div class="step-item" id="step1">
+                    <div class="step-dot"></div> Generating unique IDs
+                </div>
+                <div class="step-item" id="step2">
+                    <div class="step-dot"></div> Creating aliases &amp; QR codes
+                </div>
+                <div class="step-item" id="step3">
+                    <div class="step-dot"></div> Building PDF
+                </div>
+                <div class="step-item" id="step4">
+                    <div class="step-dot"></div> Saving to database
+                </div>
+                <div class="step-item" id="step5">
+                    <div class="step-dot"></div> Sending email
+                </div>
+            </div>
+        </div>
+
+        <div id="resultSection">
+            <div class="result-title">&#10003; Done!</div>
+            <div class="result-sub" id="resultSub">PDF sent to your email.</div>
+            <div class="pdf-meta" id="pdfMeta"></div>
+            <div class="result-actions">
+                <button class="result-btn primary" id="downloadBtn">Download PDF</button>
+                <button class="result-btn" id="resetBtn">Generate more</button>
+            </div>
+        </div>
+
+        <div id="errorMsg"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // ── HARDCODED CONFIG ────────────────────────────────────────────────
+        // 1. Create a client in qr-manager.html first, then copy the db_id
+        //    from the qr_id:0 record in that client's metadata collection.
+        const QR_CLIENT_NAME = "smartlabel";   // e.g. "AcmeCorp"
+        const QR_CLIENT_ID = "smartlabel";   // same as client name
+        const QR_DB_ID = "699fe155c8c70686924129d8";  // db_id from metadata
+
+        // 2. Manually create a database in DataCube for PDF records,
+        //    then paste its ID here.
+        const PDF_DB_ID = "69ddc4a7d429a8ea72581ba4";
+
+        // 3. Verify page — change when needed
+        const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
+        // ───────────────────────────────────────────────────────────────────
+        // ─────────────────────────────────────────────────
+
+        let qty = 10;
+        let generatedPdfBlob = null;
+        let generatedPdfId = null;
+
+        function setQty(n) {
+            qty = Math.max(1, Math.min(500, n));
+            document.getElementById("qtyDisplay").textContent = qty;
+            document.getElementById("qtyInput").value = qty;
+        }
+        document.getElementById("qtyDown").onclick = () => setQty(qty - 1);
+        document.getElementById("qtyUp").onclick = () => setQty(qty + 1);
+        document.getElementById("qtyInput").oninput = (e) => setQty(Number(e.target.value) || 1);
+
+        function setProgress(pct, text) {
+            document.getElementById("progressFill").style.width = pct + "%";
+            document.getElementById("progressPct").textContent = pct + "%";
+            document.getElementById("progressText").textContent = text;
+        }
+        function setStep(id, state) {
+            const el = document.getElementById(id);
+            el.classList.remove("active", "done");
+            el.classList.add(state);
+        }
+        function showError(msg) {
+            const el = document.getElementById("errorMsg");
+            el.textContent = msg;
+            el.style.display = "block";
+        }
+
+        function generateIds(n) {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            const digits = "0123456789";
+            const ids = new Set();
+            while (ids.size < n) {
+                let first = "";
+                for (let i = 0; i < 4; i++) first += chars[Math.floor(Math.random() * chars.length)];
+                let last = "";
+                for (let i = 0; i < 4; i++) last += digits[Math.floor(Math.random() * digits.length)];
+                ids.add(first + last);
+            }
+            return [...ids];
+        }
+
+        async function buildPdf(qrItems, paper) {
+            paper = paper || "A4";
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: "portrait", unit: "cm", format: paper });
+            const pageWidth = paper === "A4" ? 21 : 29.7;
+            const pageHeight = paper === "A4" ? 29.7 : 42;
+            const qrSize = 2.2, padding = 0.2, labelHeight = 0.3;
+            const cellWidth = qrSize + padding * 2;
+            const cellHeight = qrSize + padding * 2 + labelHeight;
+            const gap = 0.2, margin = 0.5;
+            const cols = Math.floor((pageWidth - margin * 2 + gap) / (cellWidth + gap));
+            const rows = Math.floor((pageHeight - margin * 2 + gap) / (cellHeight + gap));
+            const gridWidth = cols * cellWidth + (cols - 1) * gap;
+            const gridHeight = rows * cellHeight + (rows - 1) * gap;
+            let index = 0;
+            while (index < qrItems.length) {
+                pdf.setDrawColor(180); pdf.setLineWidth(0.02); pdf.setLineDash([0.05, 0.05]);
+                for (let c = 0; c <= cols; c++) {
+                    const x = margin + c * (cellWidth + gap) - gap / 2;
+                    pdf.line(x, margin - gap / 2, x, margin + gridHeight + gap / 2);
+                }
+                for (let r = 0; r <= rows; r++) {
+                    const y = margin + r * (cellHeight + gap) - gap / 2;
+                    pdf.line(margin - gap / 2, y, margin + gridWidth + gap / 2, y);
+                }
+                pdf.setLineDash([]);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        if (index >= qrItems.length) break;
+                        const item = qrItems[index];
+                        const x = margin + c * (cellWidth + gap);
+                        const y = margin + r * (cellHeight + gap);
+                        pdf.setDrawColor(200, 200, 200); pdf.setLineWidth(0.03);
+                        pdf.rect(x, y, cellWidth, cellHeight);
+                        pdf.addImage(item.img, "PNG", x + padding, y + padding, qrSize, qrSize, undefined, "NONE");
+                        pdf.setTextColor(0); pdf.setFontSize(6);
+                        pdf.text(item.name, x + cellWidth / 2, y + cellHeight - 0.1, { align: "center" });
+                        index++;
+                    }
+                }
+                if (index < qrItems.length) pdf.addPage();
+            }
+            return pdf;
+        }
+
+        document.getElementById("generateBtn").onclick = async () => {
+            const email = document.getElementById("emailInput").value.trim();
+            const targetUrl = normalizeUrl(document.getElementById("targetUrlInput").value.trim());
+
+            document.getElementById("errorMsg").style.display = "none";
+            if (!email) return showError("Please enter an email address.");
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Invalid email address.");
+            if (!targetUrl) return showError("Please enter a target URL.");
+
+            document.getElementById("resultSection").style.display = "none";
+            document.getElementById("progressSection").style.display = "block";
+            ["step1", "step2", "step3", "step4", "step5"].forEach(s => {
+                document.getElementById(s).classList.remove("active", "done");
+            });
+
+            const btn = document.getElementById("generateBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-spinner"></span> Working...';
+
+            setProgress(0, "Starting...");
+
+            try {
+                setStep("step1", "active");
+                setProgress(5, "Generating unique IDs...");
+
+                const dbId = HARDCODED_DB_ID;
+                const qrIds = generateIds(qty);
+                const pdfId = generateIds(1)[0];
+                const timestamp = new Date().toISOString();
+                const [date, tp] = timestamp.split("T");
+                const time = tp.replace("Z", "").split(".")[0];
+
+                setStep("step1", "done");
+                setProgress(15, "IDs generated");
+
+                // ── STEP 2: create alias + QR image per code ──────────────────────
+                setStep("step2", "active");
+                setProgress(20, "Creating QR codes...");
+
+                const qrItems = [];
+
+                for (let i = 0; i < qrIds.length; i++) {
+                    const qrId = qrIds[i];
+                    // Proper name: QR-0001-xK9m1234, QR-0002-pL3r5678 ...
+                    const qrName = "QR-" + String(i + 1).padStart(4, "0") + "-" + qrId;
+
+                    const { url: qrUrl, alias } = await buildEncryptedQrUrl(
+                        VERIFY_PAGE, targetUrl, QR_DB_ID, qrId
+                    );
+
+                    const blob = await generateCustomQrImage(qrUrl, "#000000", null);
+                    const imgB64 = await blobToBase64(blob);
+
+                    qrItems.push({ id: qrId, name: qrName, img: imgB64, alias, qrUrl });
+
+                    setProgress(20 + Math.round(((i + 1) / qrIds.length) * 40),
+                        "Creating QR " + (i + 1) + " of " + qrIds.length + "...");
+                }
+
+                setStep("step2", "done");
+                setProgress(60, "All QR codes created");
+
+                setStep("step3", "active");
+                setProgress(62, "Building PDF...");
+                const pdf = await buildPdf(qrItems);
+                const pdfBlob = pdf.output("blob");
+                generatedPdfBlob = pdfBlob;
+                generatedPdfId = pdfId;
+                setStep("step3", "done");
+                setProgress(75, "PDF ready");
+
+                // ── STEP 4: save to DataCube ───────────────────────────────────────
+                setStep("step4", "active");
+                setProgress(78, "Saving to database...");
+
+                for (let i = 0; i < qrItems.length; i++) {
+                    const item = qrItems[i];
+                    await createQrCode(
+                        QR_CLIENT_ID,
+                        item.id,
+                        item.name,        // ← proper name like "QR-0001-xK9m1234"
+                        item.qrUrl,
+                        QR_CLIENT_NAME,
+                        date,
+                        time,
+                        QR_DB_ID,
+                        null,             // no logo for bulk
+                        item.img,
+                        item.alias,
+                        pdfId
+                    );
+                }
+
+                // Save PDF record into the dedicated PDF database
+                await savePdfRecord({
+                    pdfId,
+                    pdfDbId: PDF_DB_ID,           // ← dedicated PDF database
+                    clientName: QR_CLIENT_NAME,
+                    qrDbId: QR_DB_ID,
+                    email,
+                    qrCount: qty,
+                    qrIds: qrItems.map(i => i.id),
+                    qrNames: qrItems.map(i => i.name),   // ← save names too
+                    date,
+                    time
+                });
+
+                setStep("step4", "done");
+                setProgress(90, "Saved to database");
+
+                setStep("step5", "active");
+                setProgress(92, "Sending email...");
+                const pdfBase64 = await blobToBase64(pdfBlob);
+                await sendPdfByEmail({ email, pdfBase64, pdfId, qrCount: qty, clientName: HARDCODED_CLIENT_NAME });
+                setStep("step5", "done");
+                setProgress(100, "Complete!");
+
+                document.getElementById("resultSection").style.display = "block";
+                document.getElementById("resultSub").textContent = "PDF with " + qty + " QR codes sent to " + email;
+                document.getElementById("pdfMeta").innerHTML =
+                    "PDF ID: <span>" + pdfId + "</span><br>" +
+                    "QR codes: <span>" + qty + "</span><br>" +
+                    "Created: <span>" + date + " " + time + "</span>";
+
+            } catch (err) {
+                console.error("Bulk generate failed:", err);
+                showError("Something went wrong: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "Generate &amp; Send PDF";
+            }
+        };
+
+        document.getElementById("downloadBtn").onclick = () => {
+            if (!generatedPdfBlob) return;
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(generatedPdfBlob);
+            a.download = "qr-bulk-" + generatedPdfId + ".pdf";
+            a.click();
+        };
+
+        document.getElementById("resetBtn").onclick = () => {
+            document.getElementById("resultSection").style.display = "none";
+            document.getElementById("progressSection").style.display = "none";
+            document.getElementById("errorMsg").style.display = "none";
+            ["step1", "step2", "step3", "step4", "step5"].forEach(s => {
+                document.getElementById(s).classList.remove("active", "done");
+            });
+            setProgress(0, "");
+            generatedPdfBlob = null;
+            generatedPdfId = null;
+        };
+    </script>
+</body>
+
+</html>

@@ -702,6 +702,7 @@
                 const [date, t] = timestamp.split("T");
                 const time = t.replace("Z", "").split(".")[0];
                 const dbId = await fetchDbId(clientName);
+                console.log(dbId);
 
                 const VERIFY_PAGE = "https://location-map-1.onrender.com/survey.html";
 

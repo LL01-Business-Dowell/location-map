@@ -437,6 +437,61 @@ async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, tim
   }
 }
 
+// =====================================================================
+// REPLACE your existing createQrCode function in api.js with this.
+// The only change is the added pdfId parameter and qr_pdf_id field.
+// =====================================================================
+
+/**
+ * Creates a QR code record in DataCube.
+ *
+ * @param {string} clientId
+ * @param {string} qrId
+ * @param {string} qrName
+ * @param {string} qrUrl       - alias-based URL embedded in the QR
+ * @param {string} clientName
+ * @param {string} date        - YYYY-MM-DD
+ * @param {string} time        - HH:MM:SS
+ * @param {string} dbId        - client DataCube DB ID
+ * @param {string|null} qrLogo - base64 logo or null
+ * @param {string} qrImage     - base64 QR image
+ * @param {string} qrAlias     - 8-char alias
+ * @param {string|null} pdfId  - bulk PDF batch ID (null for individually created QRs)
+ */
+async function createBulkQrCode(
+  clientId, qrId, qrName, qrUrl, clientName,
+  date, time, dbId, qrLogo, qrImage, qrAlias,
+  pdfId = null   // ← new optional param
+) {
+  const payload = {
+    database_id: DATABASE_ID,
+    collection_name: clientName,
+    documents: [{
+      qr_id:     qrId,
+      db_id:     dbId,
+      date,
+      time,
+      qr_name:   qrName,
+      qr_url:    qrUrl,
+      qr_alias:  qrAlias,
+      qr_logo:   qrLogo || null,
+      qr_image:  qrImage,
+      qr_status: 1,
+      qr_pdf_id: pdfId    // null for manual QRs, set for bulk batches
+    }]
+  };
+
+  try {
+    await fetch(`${PROXY_BASE}/crud`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Failed to save QR Code", err);
+  }
+}
+
 async function updateQrCode({
   old_qr_id,
   new_qr_id,
@@ -663,3 +718,47 @@ async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
     });
 }
 
+
+// ── savePdfRecord ─────────────────────────────────────────────────────
+async function savePdfRecord({ pdfId, pdfDbId, clientName, qrDbId, email, qrCount, qrIds, qrNames, date, time }) {
+  const res = await fetch(`${PROXY_BASE}/save_pdf_record`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      pdf_db_id:   pdfDbId,
+      pdf_id:      pdfId,
+      client_name: clientName,
+      qr_db_id:    String(qrDbId),
+      email,
+      qr_count:    qrCount,
+      qr_ids:      qrIds,
+      qr_names:    qrNames,
+      date,
+      time
+    })
+  });
+
+  if (!res.ok) throw new Error(`Failed to save PDF record: ${await res.text()}`);
+  return res.json();
+}
+
+// ── sendPdfByEmail ────────────────────────────────────────────────────
+async function sendPdfByEmail({ email, pdfBase64, pdfId, qrCount, clientName }) {
+  const res = await fetch(`${PROXY_BASE}/send_pdf_email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      pdf_base64:  pdfBase64,
+      pdf_id:      pdfId,
+      qr_count:    qrCount,
+      client_name: clientName
+    })
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || "Failed to send email");
+  }
+  return res.json();
+}
