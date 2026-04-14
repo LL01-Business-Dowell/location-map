@@ -417,7 +417,7 @@
                 <button class="qty-btn" id="qtyDown">&#8722;</button>
                 <span class="qty-display" id="qtyDisplay">10</span>
                 <button class="qty-btn" id="qtyUp">+</button>
-                <!-- <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="500" /> -->
+                <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="500" />
                 <span class="qty-max">max 500</span>
             </div>
         </div>
@@ -492,6 +492,7 @@
         function setQty(n) {
             qty = Math.max(1, Math.min(500, n));
             document.getElementById("qtyDisplay").textContent = qty;
+            document.getElementById("qtyInput").value = qty;
         }
         document.getElementById("qtyDown").onclick = () => setQty(qty - 1);
         document.getElementById("qtyUp").onclick = () => setQty(qty + 1);
@@ -650,6 +651,7 @@
                 // Server handles the upload so the API key stays server-side
                 const filename = "qr-bulk-" + pdfId + ".pdf";
                 const { file_id, signed_url } = await uploadPdf(pdfBlob, filename);
+                console.log("uploadPdf response:", { file_id, signed_url });
 
                 setProgress(75, "PDF uploaded");
 

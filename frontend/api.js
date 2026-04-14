@@ -787,5 +787,8 @@ async function uploadPdf(pdfBlob, filename) {
     throw new Error(json.error || "Failed to upload PDF");
   }
 
-  return res.json(); 
+  // return res.json(); 
+  const data = await res.json();
+  console.log("upload_pdf server response:", data); // ADD THIS
+  return data;
 }
