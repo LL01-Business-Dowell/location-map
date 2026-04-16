@@ -351,7 +351,11 @@
             </div>
         </div>
 
-        <button class="submit-btn" id="generateBtn">Generate PDF</button>
+        <!-- <button class="submit-btn" id="generateBtn">Generate PDF</button> -->
+         <button class="submit-btn" id="generateBtn">Get QR Codes</button>
+        <button class="submit-btn" id="scannerBtn" style="margin-top: 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--text);">
+            Download Scanner
+        </button>
 
         <div id="progressSection">
             <div class="progress-label">
@@ -407,6 +411,7 @@
         let qty = 10;
         let generatedPdfBlob = null;
         let generatedPdfId   = null;
+        let pdfDownloaded = false;
 
         // ── qty controls ───────────────────────────────────────────────
         function setQty(n) {
@@ -507,6 +512,13 @@
 
             document.getElementById("resultSection").style.display  = "none";
             document.getElementById("progressSection").style.display = "block";
+
+            pdfDownloaded = false;
+            const resetBtn = document.getElementById("resetBtn");
+            resetBtn.disabled = true;
+            resetBtn.style.opacity = "0.4";
+            resetBtn.style.cursor  = "not-allowed";
+
             ["step2", "step3", "step4"].forEach(s => {
                 const el = document.getElementById(s);
                 if (el) el.classList.remove("active", "done");
@@ -619,6 +631,13 @@
             }
         };
 
+        document.getElementById("scannerBtn").onclick = () => {
+            const a = document.createElement("a");
+            a.href     = "scanner-qr.png";   // path relative to your HTML file
+            a.download = "scanner-qr.png";
+            a.click();
+        };
+
         // ── download PDF ───────────────────────────────────────────────
         document.getElementById("downloadBtn").onclick = () => {
             if (!generatedPdfBlob) return;
@@ -626,6 +645,11 @@
             a.href     = URL.createObjectURL(generatedPdfBlob);
             a.download = "qr-bulk-" + generatedPdfId + ".pdf";
             a.click();
+
+            pdfDownloaded = true;
+            document.getElementById("resetBtn").disabled = false;
+            document.getElementById("resetBtn").style.opacity = "1";
+            document.getElementById("resetBtn").style.cursor  = "pointer";
         };
 
         // ── reset ──────────────────────────────────────────────────────
@@ -640,6 +664,12 @@
             setProgress(0, "");
             generatedPdfBlob = null;
             generatedPdfId   = null;
+            pdfDownloaded    = false;
+
+            // Re-lock for next generation
+            document.getElementById("resetBtn").disabled = true;
+            document.getElementById("resetBtn").style.opacity = "0.4";
+            document.getElementById("resetBtn").style.cursor  = "not-allowed";
         };
     </script>
 </body>
