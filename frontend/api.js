@@ -1,4 +1,3 @@
-// ===== DATACUBE API PROXY INTEGRATION =====
 
 const PROXY_BASE = "https://location-map-a89a.onrender.com/api";
 
@@ -406,58 +405,7 @@ async function addDbId(dbId, name, date, time) {
   }
 }
 
-// async function createQrCode(clientId, qrId, qrName, qrUrl, clientName, date, time, dbId, qrLogo, qrImage, qrAlias) {
 
-//   //const url = `${qrUrl}?dbId=${encodeURIComponent(dbId)}&qrId=${encodeURIComponent(qrId)}`;
-
-//   const payload = {
-//     database_id: DATABASE_ID,
-//     collection_name: clientName,
-//     documents: [{
-//       qr_id: qrId,
-//       db_id: dbId,
-//       date, time,
-//       qr_name: qrName,
-//       qr_url: qrUrl,
-//       qr_alias: qrAlias,
-//       qr_logo: qrLogo || null,
-//       qr_image: qrImage,
-//       qr_status: 1
-//     }]
-//   };
-
-//   try {
-//     await fetch(`${PROXY_BASE}/crud`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(payload)
-//     });
-//   } catch (err) {
-//     console.error("Failed to save QR Code", err);
-//   }
-// }
-
-// =====================================================================
-// REPLACE your existing createQrCode function in api.js with this.
-// The only change is the added pdfId parameter and qr_pdf_id field.
-// =====================================================================
-
-/**
- * Creates a QR code record in DataCube.
- *
- * @param {string} clientId
- * @param {string} qrId
- * @param {string} qrName
- * @param {string} qrUrl       - alias-based URL embedded in the QR
- * @param {string} clientName
- * @param {string} date        - YYYY-MM-DD
- * @param {string} time        - HH:MM:SS
- * @param {string} dbId        - client DataCube DB ID
- * @param {string|null} qrLogo - base64 logo or null
- * @param {string} qrImage     - base64 QR image
- * @param {string} qrAlias     - 8-char alias
- * @param {string|null} pdfId  - bulk PDF batch ID (null for individually created QRs)
- */
 async function createQrCode(
   clientId, qrId, qrName, qrUrl, clientName,
   date, time, dbId, qrLogo, qrImage, qrAlias,
@@ -504,7 +452,6 @@ async function updateQrCode({
   date,
   time
 }) {
-  //const finalQrUrl = `${qr_url}?dbId=${encodeURIComponent(db_id)}&qrId=${encodeURIComponent(new_qr_id)}`;
 
   const payload = {
     database_id: DATABASE_ID,
@@ -720,12 +667,11 @@ async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
 
 
 // ── savePdfRecord ─────────────────────────────────────────────────────
-// REPLACE the existing savePdfRecord with this:
 
 async function savePdfRecord({
   pdfId, pdfDbId, clientName, qrDbId, email,
   qrCount, qrIds, qrNames, date, time,
-  fileId, signedUrl    // ← new
+  fileId, signedUrl  
 }) {
   const res = await fetch(`${PROXY_BASE}/save_pdf_record`, {
     method: "POST",
@@ -750,6 +696,7 @@ async function savePdfRecord({
   return res.json();
 }
 
+
 // ── sendPdfByEmail ────────────────────────────────────────────────────
 
 async function sendPdfByEmail({ email, signedUrl, pdfId, qrCount, clientName }) {
@@ -758,7 +705,7 @@ async function sendPdfByEmail({ email, signedUrl, pdfId, qrCount, clientName }) 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email,
-      signed_url:  signedUrl,   // ← server fetches file from here
+      signed_url:  signedUrl,
       pdf_id:      pdfId,
       qr_count:    qrCount,
       client_name: clientName
@@ -774,11 +721,6 @@ async function sendPdfByEmail({ email, signedUrl, pdfId, qrCount, clientName }) 
 
 
 // ── uploadPdf ─────────────────────────────────────────────────────────
-// REPLACE your existing uploadPdf function with this.
-//
-// DataCube's /files/ endpoint returns a signed_url that may be a
-// relative path or partial URL. This function normalises it so the
-// server can fetch the file correctly when sending the email.
 
 async function uploadPdf(pdfBlob, filename) {
     const base64 = await blobToBase64(pdfBlob);
@@ -795,23 +737,16 @@ async function uploadPdf(pdfBlob, filename) {
     }
 
     const data = await res.json();
-    console.log("upload_pdf server response:", data);
+
 
     // ── SIGNED URL NORMALISATION ──────────────────────────────────────
-    // DataCube sometimes returns just the path portion of the signed URL,
-    // e.g. "/api/v2/files/stream/69d3ba...?expires=...&sig=..."
-    // We need the full URL for the server to be able to fetch it.
-    //
-    // If DataCube returns a full https:// URL already, this is a no-op.
-    // If it returns a path, we prepend the DataCube base URL.
+
     const DATACUBE_BASE = "https://datacube.uxlivinglab.online";
 
     let signedUrl = data.signed_url || data.signedUrl || null;
 
     if (signedUrl && !signedUrl.startsWith("http")) {
-        // Path like "/api/v2/files/stream/..." → prepend base
         signedUrl = DATACUBE_BASE + (signedUrl.startsWith("/") ? "" : "/") + signedUrl;
-        console.log("upload_pdf: normalised signed_url →", signedUrl.slice(0, 80) + "...");
     }
 
     if (!data.file_id && !data.fileId) {
