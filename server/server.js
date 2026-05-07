@@ -12,9 +12,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ===== CONFIG =====
-const DATACUBE_BASE    = "https://datacube.uxlivinglab.online/api/v2";
+const DATACUBE_BASE = "https://datacube.uxlivinglab.online/api/v2";
 const DATACUBE_API_KEY = process.env.DATACUBE_API_KEY;
-const DB_ID            = "69985c0844ca8a1af7fd639e";
+const DB_ID = "69985c0844ca8a1af7fd639e";
 
 // ===== STARTUP CHECKS =====
 console.log("========================================");
@@ -23,18 +23,44 @@ console.log("========================================");
 console.log(`  PORT            : ${PORT}`);
 console.log(`  DATACUBE_BASE   : ${DATACUBE_BASE}`);
 console.log(`  DB_ID           : ${DB_ID}`);
-console.log(`  DATACUBE_API_KEY: ${DATACUBE_API_KEY ? "SET (" + DATACUBE_API_KEY.slice(0,6) + "...)" : "NOT SET ⚠️"}`);
-console.log(`  SMTP_HOST       : ${process.env.SMTP_HOST       || "NOT SET ⚠️"}`);
-console.log(`  SMTP_PORT       : ${process.env.SMTP_PORT       || "NOT SET ⚠️"}`);
-console.log(`  SMTP_USER       : ${process.env.SMTP_USER       || "NOT SET ⚠️"}`);
+console.log(`  DATACUBE_API_KEY: ${DATACUBE_API_KEY ? "SET (" + DATACUBE_API_KEY.slice(0, 6) + "...)" : "NOT SET ⚠️"}`);
+console.log(`  SMTP_HOST       : ${process.env.SMTP_HOST || "NOT SET ⚠️"}`);
+console.log(`  SMTP_PORT       : ${process.env.SMTP_PORT || "NOT SET ⚠️"}`);
+console.log(`  SMTP_USER       : ${process.env.SMTP_USER || "NOT SET ⚠️"}`);
 console.log(`  SMTP_PASS       : ${process.env.SMTP_PASS ? "SET" : "NOT SET ⚠️"}`);
 console.log("========================================");
 
+// // ===== MAILER =====
+// const mailer = nodemailer.createTransport({
+//   host:   process.env.SMTP_HOST,
+//   port:   Number(process.env.SMTP_PORT) || 587,
+//   secure: false,
+//   auth: {
+//     user: process.env.SMTP_USER,
+//     pass: process.env.SMTP_PASS
+//   }
+// });
+
+// // Verify SMTP connection at startup
+// mailer.verify((err, success) => {
+//   if (err) {
+//     console.error("SMTP connection FAILED:", err.message);
+//   } else {
+//     console.log("SMTP connection OK ✓");
+//   }
+// });
+
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 // ===== MAILER =====
 const mailer = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST,
-  port:   Number(process.env.SMTP_PORT) || 587,
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 587,
   secure: false,
+
+  family: 4, // force IPv4
+
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
@@ -44,7 +70,7 @@ const mailer = nodemailer.createTransport({
 // Verify SMTP connection at startup
 mailer.verify((err, success) => {
   if (err) {
-    console.error("SMTP connection FAILED:", err.message);
+    console.error("SMTP connection FAILED:", err);
   } else {
     console.log("SMTP connection OK ✓");
   }
@@ -52,8 +78,8 @@ mailer.verify((err, success) => {
 
 // ===== MIDDLEWARE =====
 app.use(cors({
-  origin:         "*",
-  methods:        ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json({ limit: "50mb" }));  // PDF base64 can be large
@@ -67,7 +93,7 @@ app.use((req, res, next) => {
 // ===== HELPERS =====
 function authHeaders() {
   return {
-    "Content-Type":  "application/json",
+    "Content-Type": "application/json",
     "Authorization": `Api-Key ${DATACUBE_API_KEY}`
   };
 }
@@ -111,13 +137,13 @@ async function storeQrToken({ alias, target_url, db_id, qr_id }) {
   console.log(`  [storeQrToken] alias=${alias} qr_id=${qr_id} db_id=${db_id}`);
 
   const payload = {
-    database_id:     DB_ID,
+    database_id: DB_ID,
     collection_name: "qr_tokens",
     documents: [{
       alias,
       target_url,
-      db_id:      String(db_id),
-      qr_id:      String(qr_id),
+      db_id: String(db_id),
+      qr_id: String(qr_id),
       created_at: new Date().toISOString()
     }]
   };
@@ -132,11 +158,11 @@ async function fetchQrTokenByAlias(alias) {
   console.log(`  [fetchQrTokenByAlias] alias=${alias}`);
 
   const params = new URLSearchParams({
-    database_id:     DB_ID,
+    database_id: DB_ID,
     collection_name: "qr_tokens",
-    filters:         JSON.stringify({ alias }),
-    page:            1,
-    page_size:       1
+    filters: JSON.stringify({ alias }),
+    page: 1,
+    page_size: 1
   });
 
   const res = await fetch(`${DATACUBE_BASE}/crud?${params}`, {
@@ -160,9 +186,9 @@ app.post("/api/add_collection", async (req, res) => {
   console.log("  [add_collection] database_id:", req.body?.database_id, "| collections:", req.body?.collections?.map(c => c.name));
   try {
     const r = await fetch(`${DATACUBE_BASE}/add_collection`, {
-      method:  "POST",
+      method: "POST",
       headers: authHeaders(),
-      body:    JSON.stringify(req.body)
+      body: JSON.stringify(req.body)
     });
     const data = await r.json();
     console.log(`  [add_collection] result: ${r.status} — ${JSON.stringify(data)}`);
@@ -178,9 +204,9 @@ app.post("/api/crud", async (req, res) => {
   console.log("  [crud POST] collection:", req.body?.collection_name, "| docs:", req.body?.documents?.length);
   try {
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
-      method:  "POST",
+      method: "POST",
       headers: authHeaders(),
-      body:    JSON.stringify(req.body)
+      body: JSON.stringify(req.body)
     });
     const data = await r.json();
     console.log(`  [crud POST] result: ${r.status} | inserted_ids:`, data?.inserted_ids);
@@ -196,9 +222,9 @@ app.put("/api/crud", async (req, res) => {
   console.log("  [crud PUT] collection:", req.body?.collection_name, "| filters:", req.body?.filters);
   try {
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
-      method:  "PUT",
+      method: "PUT",
       headers: authHeaders(),
-      body:    JSON.stringify(req.body)
+      body: JSON.stringify(req.body)
     });
     const data = await r.json();
     console.log(`  [crud PUT] result: ${r.status}`);
@@ -214,7 +240,7 @@ app.get("/api/crud", async (req, res) => {
   console.log("  [crud GET] collection:", req.query?.collection_name, "| filters:", req.query?.filters);
   try {
     const qs = new URLSearchParams(req.query).toString();
-    const r  = await fetch(`${DATACUBE_BASE}/crud?${qs}`, {
+    const r = await fetch(`${DATACUBE_BASE}/crud?${qs}`, {
       headers: authHeaders()
     });
     const data = await r.json();
@@ -232,7 +258,7 @@ app.get("/api/list_collections", async (req, res) => {
   console.log("  [list_collections] database_id:", req.query?.database_id);
   try {
     const qs = new URLSearchParams(req.query).toString();
-    const r  = await fetch(`${DATACUBE_BASE}/list_collections?${qs}`, {
+    const r = await fetch(`${DATACUBE_BASE}/list_collections?${qs}`, {
       headers: authHeaders()
     });
     const data = await r.json();
@@ -249,9 +275,9 @@ app.post("/api/create_database", async (req, res) => {
   console.log("  [create_database] db_name:", req.body?.db_name);
   try {
     const r = await fetch(`${DATACUBE_BASE}/create_database`, {
-      method:  "POST",
+      method: "POST",
       headers: authHeaders(),
-      body:    JSON.stringify(req.body)
+      body: JSON.stringify(req.body)
     });
     const data = await r.json();
     console.log(`  [create_database] result: ${r.status} | new db_id: ${data?.database?.id}`);
@@ -274,7 +300,7 @@ app.post("/api/build_qr_url", async (req, res) => {
     }
 
     const cleanBase = base_url.endsWith("/") ? base_url.slice(0, -1) : base_url;
-    const alias     = generateAlias(8);
+    const alias = generateAlias(8);
     console.log("  [build_qr_url] generated alias:", alias);
 
     await storeQrToken({ alias, target_url, db_id, qr_id });
@@ -300,11 +326,11 @@ app.post("/api/generate_qr", upload.single("logo"), async (req, res) => {
     }
 
     const formData = new FormData();
-    formData.append("link",  link);
+    formData.append("link", link);
     formData.append("color", color);
     if (req.file) {
       formData.append("logo", req.file.buffer, {
-        filename:    req.file.originalname,
+        filename: req.file.originalname,
         contentType: req.file.mimetype
       });
     }
@@ -345,10 +371,10 @@ app.get("/api/resolve/:alias", async (req, res) => {
 
     console.log("  [resolve] found → qr_id:", record.qr_id, "| db_id:", record.db_id);
     res.json({
-      alias:      record.alias,
+      alias: record.alias,
       target_url: record.target_url,
-      db_id:      record.db_id,
-      qr_id:      record.qr_id,
+      db_id: record.db_id,
+      qr_id: record.qr_id,
       created_at: record.created_at
     });
 
@@ -369,21 +395,21 @@ app.put("/api/update_qr_token", async (req, res) => {
     }
 
     const payload = {
-      database_id:     DB_ID,
+      database_id: DB_ID,
       collection_name: "qr_tokens",
-      filters:         { alias },
+      filters: { alias },
       update_data: {
         target_url,
-        db_id:      String(db_id),
-        qr_id:      String(qr_id),
+        db_id: String(db_id),
+        qr_id: String(qr_id),
         updated_at: new Date().toISOString()
       }
     };
 
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
-      method:  "PUT",
+      method: "PUT",
       headers: authHeaders(),
-      body:    JSON.stringify(payload)
+      body: JSON.stringify(payload)
     });
 
     const data = await r.json();
@@ -410,26 +436,26 @@ app.post("/api/setup_pdf_collection", async (req, res) => {
       collections: [{
         name: "pdf_records",
         fields: [
-          { name: "pdf_id",      type: "string" },
+          { name: "pdf_id", type: "string" },
           { name: "client_name", type: "string" },
-          { name: "qr_db_id",    type: "string" },
-          { name: "email",       type: "string" },
-          { name: "qr_count",    type: "number" },
-          { name: "qr_ids",      type: "string" },
-          { name: "qr_names",    type: "string" },
-          { name: "date",        type: "string" },
-          { name: "time",        type: "string" },
-          { name: "created_at",  type: "string" },
-          { name: "file_id",     type: "string" },
-          { name: "signed_url",  type: "string" }
+          { name: "qr_db_id", type: "string" },
+          { name: "email", type: "string" },
+          { name: "qr_count", type: "number" },
+          { name: "qr_ids", type: "string" },
+          { name: "qr_names", type: "string" },
+          { name: "date", type: "string" },
+          { name: "time", type: "string" },
+          { name: "created_at", type: "string" },
+          { name: "file_id", type: "string" },
+          { name: "signed_url", type: "string" }
         ]
       }]
     };
 
     const r = await fetch(`${DATACUBE_BASE}/add_collection`, {
-      method:  "POST",
+      method: "POST",
       headers: authHeaders(),
-      body:    JSON.stringify(payload)
+      body: JSON.stringify(payload)
     });
 
     const data = await r.json();
@@ -461,7 +487,7 @@ app.post("/api/save_pdf_record", async (req, res) => {
     console.log("  [save_pdf_record] file_id:", file_id, "| signed_url:", signed_url ? signed_url.slice(0, 60) + "..." : "NULL ⚠️");
 
     const payload = {
-      database_id:     pdf_db_id,
+      database_id: pdf_db_id,
       collection_name: "pdf_records",
       documents: [{
         pdf_id,
@@ -469,20 +495,20 @@ app.post("/api/save_pdf_record", async (req, res) => {
         qr_db_id,
         email,
         qr_count,
-        qr_ids:     JSON.stringify(qr_ids),
-        qr_names:   JSON.stringify(qr_names || []),
+        qr_ids: JSON.stringify(qr_ids),
+        qr_names: JSON.stringify(qr_names || []),
         date,
         time,
         created_at: new Date().toISOString(),
-        file_id:    file_id    || null,
+        file_id: file_id || null,
         signed_url: signed_url || null
       }]
     };
 
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
-      method:  "POST",
+      method: "POST",
       headers: authHeaders(),
-      body:    JSON.stringify(payload)
+      body: JSON.stringify(payload)
     });
 
     const data = await r.json();
@@ -517,15 +543,15 @@ app.post("/api/upload_pdf", async (req, res) => {
 
     const form = new FormData();
     form.append("file", pdfBuffer, {
-      filename:    filename,
+      filename: filename,
       contentType: "application/pdf"
     });
-    form.append("filename",     filename);
+    form.append("filename", filename);
     form.append("content_type", "application/pdf");
 
     console.log("  [upload_pdf] uploading to DataCube...");
     const r = await fetch(`${DATACUBE_BASE}/files/`, {
-      method:  "POST",
+      method: "POST",
       headers: {
         "Authorization": `Api-Key ${DATACUBE_API_KEY}`,
         ...form.getHeaders()
@@ -541,7 +567,7 @@ app.post("/api/upload_pdf", async (req, res) => {
     }
 
     // Handle different possible field names from DataCube
-    const fileId    = data.file_id    || data.fileId    || null;
+    const fileId = data.file_id || data.fileId || null;
     const signedUrl = data.signed_url || data.signedUrl || data.url || null;
 
     console.log("  [upload_pdf] file_id:", fileId, "| signed_url:", signedUrl ? signedUrl.slice(0, 60) + "..." : "NULL ⚠️");
@@ -587,13 +613,13 @@ app.post("/api/send_pdf_email", async (req, res) => {
     }
 
     const arrayBuffer = await fileRes.arrayBuffer();
-    const pdfBuffer   = Buffer.from(arrayBuffer);
+    const pdfBuffer = Buffer.from(arrayBuffer);
     console.log("  [send_pdf_email] PDF buffer size:", pdfBuffer.length, "bytes");
 
     console.log("  [send_pdf_email] sending via SMTP...");
     const info = await mailer.sendMail({
-      from:    `"Dowell QR Code" <${process.env.SMTP_USER}>`,
-      to:      email,
+      from: `"Dowell QR Code" <${process.env.SMTP_USER}>`,
+      to: email,
       subject: `Your QR Codes are Ready`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
@@ -613,8 +639,8 @@ app.post("/api/send_pdf_email", async (req, res) => {
         </div>
       `,
       attachments: [{
-        filename:    `qr-bulk-${pdf_id}.pdf`,
-        content:     pdfBuffer,
+        filename: `qr-bulk-${pdf_id}.pdf`,
+        content: pdfBuffer,
         contentType: "application/pdf"
       }]
     });
@@ -637,20 +663,20 @@ app.post("/api/send_pdf_email", async (req, res) => {
 app.get("/api/public/pdf/:pdf_id", async (req, res) => {
   console.log("  [public/pdf] pdf_id:", req.params.pdf_id, "| pdf_db_id:", req.query.pdf_db_id);
   try {
-    const { pdf_id }    = req.params;
+    const { pdf_id } = req.params;
     const { pdf_db_id } = req.query;
 
     if (!pdf_db_id) return res.status(400).json({ error: "Missing query param: pdf_db_id" });
 
     const params = new URLSearchParams({
-      database_id:     pdf_db_id,
+      database_id: pdf_db_id,
       collection_name: "pdf_records",
-      filters:         JSON.stringify({ pdf_id }),
-      page:            1,
-      page_size:       1
+      filters: JSON.stringify({ pdf_id }),
+      page: 1,
+      page_size: 1
     });
 
-    const r    = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
+    const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
 
@@ -659,18 +685,18 @@ app.get("/api/public/pdf/:pdf_id", async (req, res) => {
 
     const doc = docs[0];
     res.json({
-      pdf_id:      doc.pdf_id,
+      pdf_id: doc.pdf_id,
       client_name: doc.client_name,
-      qr_db_id:    doc.qr_db_id,
-      email:       doc.email,
-      qr_count:    doc.qr_count,
-      qr_ids:      JSON.parse(doc.qr_ids   || "[]"),
-      qr_names:    JSON.parse(doc.qr_names || "[]"),
-      date:        doc.date,
-      time:        doc.time,
-      created_at:  doc.created_at,
-      file_id:     doc.file_id    || null,
-      signed_url:  doc.signed_url || null
+      qr_db_id: doc.qr_db_id,
+      email: doc.email,
+      qr_count: doc.qr_count,
+      qr_ids: JSON.parse(doc.qr_ids || "[]"),
+      qr_names: JSON.parse(doc.qr_names || "[]"),
+      date: doc.date,
+      time: doc.time,
+      created_at: doc.created_at,
+      file_id: doc.file_id || null,
+      signed_url: doc.signed_url || null
     });
 
   } catch (err) {
@@ -687,33 +713,33 @@ app.get("/api/public/pdf", async (req, res) => {
     if (!pdf_db_id) return res.status(400).json({ error: "Missing query param: pdf_db_id" });
 
     const filters = client_name ? { client_name } : {};
-    const params  = new URLSearchParams({
-      database_id:     pdf_db_id,
+    const params = new URLSearchParams({
+      database_id: pdf_db_id,
       collection_name: "pdf_records",
-      filters:         JSON.stringify(filters),
-      page:            Number(page),
-      page_size:       Math.min(Number(page_size), 200)
+      filters: JSON.stringify(filters),
+      page: Number(page),
+      page_size: Math.min(Number(page_size), 200)
     });
 
-    const r    = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
+    const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
 
     console.log("  [public/pdf list] returned:", docs.length, "records");
 
     const data = docs.map(doc => ({
-      pdf_id:      doc.pdf_id,
+      pdf_id: doc.pdf_id,
       client_name: doc.client_name,
-      qr_db_id:    doc.qr_db_id,
-      email:       doc.email,
-      qr_count:    doc.qr_count,
-      qr_ids:      JSON.parse(doc.qr_ids   || "[]"),
-      qr_names:    JSON.parse(doc.qr_names || "[]"),
-      date:        doc.date,
-      time:        doc.time,
-      created_at:  doc.created_at,
-      file_id:     doc.file_id    || null,
-      signed_url:  doc.signed_url || null
+      qr_db_id: doc.qr_db_id,
+      email: doc.email,
+      qr_count: doc.qr_count,
+      qr_ids: JSON.parse(doc.qr_ids || "[]"),
+      qr_names: JSON.parse(doc.qr_names || "[]"),
+      date: doc.date,
+      time: doc.time,
+      created_at: doc.created_at,
+      file_id: doc.file_id || null,
+      signed_url: doc.signed_url || null
     }));
 
     res.json({ data, page: Number(page), page_size: Number(page_size) });
@@ -728,20 +754,20 @@ app.get("/api/public/pdf", async (req, res) => {
 app.get("/api/public/qr/:qr_id", async (req, res) => {
   console.log("  [public/qr] qr_id:", req.params.qr_id, "| client:", req.query.client_name);
   try {
-    const { qr_id }       = req.params;
+    const { qr_id } = req.params;
     const { client_name } = req.query;
 
     if (!client_name) return res.status(400).json({ error: "Missing query param: client_name" });
 
     const params = new URLSearchParams({
-      database_id:     DB_ID,
+      database_id: DB_ID,
       collection_name: client_name,
-      filters:         JSON.stringify({ qr_id }),
-      page:            1,
-      page_size:       1
+      filters: JSON.stringify({ qr_id }),
+      page: 1,
+      page_size: 1
     });
 
-    const r    = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
+    const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
 
@@ -750,15 +776,15 @@ app.get("/api/public/qr/:qr_id", async (req, res) => {
 
     const doc = docs[0];
     res.json({
-      qr_id:     doc.qr_id,
-      qr_name:   doc.qr_name,
-      qr_url:    doc.qr_url,
-      qr_alias:  doc.qr_alias,
+      qr_id: doc.qr_id,
+      qr_name: doc.qr_name,
+      qr_url: doc.qr_url,
+      qr_alias: doc.qr_alias,
       qr_status: doc.qr_status,
       qr_pdf_id: doc.qr_pdf_id || null,
-      db_id:     doc.db_id,
-      date:      doc.date,
-      time:      doc.time
+      db_id: doc.db_id,
+      date: doc.date,
+      time: doc.time
     });
 
   } catch (err) {
@@ -778,14 +804,14 @@ app.get("/api/public/qr", async (req, res) => {
     if (pdf_id) filters.qr_pdf_id = pdf_id;
 
     const params = new URLSearchParams({
-      database_id:     DB_ID,
+      database_id: DB_ID,
       collection_name: client_name,
-      filters:         JSON.stringify(filters),
-      page:            Number(page),
-      page_size:       Math.min(Number(page_size), 200)
+      filters: JSON.stringify(filters),
+      page: Number(page),
+      page_size: Math.min(Number(page_size), 200)
     });
 
-    const r    = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
+    const r = await fetch(`${DATACUBE_BASE}/crud?${params}`, { headers: authHeaders() });
     const json = await r.json();
     const docs = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
 
@@ -794,15 +820,15 @@ app.get("/api/public/qr", async (req, res) => {
     const data = docs
       .filter(d => d.qr_id !== 0)
       .map(doc => ({
-        qr_id:     doc.qr_id,
-        qr_name:   doc.qr_name,
-        qr_url:    doc.qr_url,
-        qr_alias:  doc.qr_alias,
+        qr_id: doc.qr_id,
+        qr_name: doc.qr_name,
+        qr_url: doc.qr_url,
+        qr_alias: doc.qr_alias,
         qr_status: doc.qr_status,
         qr_pdf_id: doc.qr_pdf_id || null,
-        db_id:     doc.db_id,
-        date:      doc.date,
-        time:      doc.time
+        db_id: doc.db_id,
+        date: doc.date,
+        time: doc.time
       }));
 
     res.json({ data, page: Number(page), page_size: Number(page_size) });
