@@ -247,33 +247,38 @@
         let qrId = null;
         let targetUrl = null;
         let insertedId = null;
+        let currentAlias = null;
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
-            const token = params.get("token");
+            const alias = params.get("id");
+            const token = params.get("token"); // backward compat with old printed QRs
 
-            if (!token) {
+            if (!alias && !token) {
                 statusEl.textContent = "Invalid link.";
                 statusEl.classList.remove("loading");
                 return;
             }
 
             try {
-                const data = await decryptToken(token);
-                console.log("FULL decrypt response:", data);
+                let data;
+
+                if (alias) {
+                    // New flow — resolve alias directly
+                    data = await resolveAlias(alias);
+                    currentAlias = alias;
+                } else {
+                    // Old flow — decrypt token
+                    data = await decryptToken(token);
+                    currentAlias = null;
+                }
 
                 dbId = data.db_id;
                 qrId = data.qr_id;
                 targetUrl = data.target_url;
 
-                console.log("Parsed values →", {
-                    dbId,
-                    qrId,
-                    targetUrl
-                });
-
                 if (!dbId || !qrId || !targetUrl) {
-                    throw new Error("Invalid decrypted payload");
+                    throw new Error("Incomplete QR payload");
                 }
 
                 captureLocationOnLoad();
@@ -359,22 +364,11 @@
             }, 300);
         };
 
-        btn.onclick = async () => {
-            if (!targetUrl || !insertedId) return;
+        btn.onclick = () => {
+            if (!targetUrl) return;
 
-            try {
-                const { token: newToken } = await encryptParams({
-                    db_id: dbId,
-                    qr_id: qrId,
-                    scan_id: insertedId
-                });
-
-                window.location.href =
-                    `${targetUrl}?token=${encodeURIComponent(newToken)}`;
-
-            } catch (err) {
-                console.error("Redirect encryption failed:", err);
-            }
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            window.location.href = `${targetUrl}${separator}id=${currentAlias}`;
         };
 
         init();
