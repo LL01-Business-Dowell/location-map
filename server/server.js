@@ -133,8 +133,8 @@ async function datacubeRequest(method, path, body = null, label = "") {
 }
 
 // ===== STORE QR TOKEN =====
-async function storeQrToken({ alias, target_url, db_id, qr_id }) {
-  console.log(`  [storeQrToken] alias=${alias} qr_id=${qr_id} db_id=${db_id}`);
+async function storeQrToken({ alias, target_url, db_id, qr_id, target_app = null }) {
+  console.log(`  [storeQrToken] alias=${alias} qr_id=${qr_id} db_id=${db_id} target_app=${target_app}`);
 
   const payload = {
     database_id: DB_ID,
@@ -142,9 +142,10 @@ async function storeQrToken({ alias, target_url, db_id, qr_id }) {
     documents: [{
       alias,
       target_url,
-      db_id: String(db_id),
-      qr_id: String(qr_id),
-      created_at: new Date().toISOString()
+      db_id:       String(db_id),
+      qr_id:       String(qr_id),
+      target_app:  target_app || null,
+      created_at:  new Date().toISOString()
     }]
   };
 
@@ -290,9 +291,9 @@ app.post("/api/create_database", async (req, res) => {
 
 // ---------- BUILD QR URL ----------
 app.post("/api/build_qr_url", async (req, res) => {
-  console.log("  [build_qr_url] qr_id:", req.body?.qr_id, "| db_id:", req.body?.db_id);
+  console.log("  [build_qr_url] qr_id:", req.body?.qr_id, "| db_id:", req.body?.db_id, "| target_app:", req.body?.target_app);
   try {
-    const { base_url, target_url, db_id, qr_id } = req.body || {};
+    const { base_url, target_url, db_id, qr_id, target_app = null } = req.body || {};
 
     if (!base_url || !target_url || !db_id || !qr_id) {
       console.warn("  [build_qr_url] Missing fields:", { base_url: !!base_url, target_url: !!target_url, db_id: !!db_id, qr_id: !!qr_id });
@@ -303,7 +304,7 @@ app.post("/api/build_qr_url", async (req, res) => {
     const alias = generateAlias(8);
     console.log("  [build_qr_url] generated alias:", alias);
 
-    await storeQrToken({ alias, target_url, db_id, qr_id });
+    await storeQrToken({ alias, target_url, db_id, qr_id, target_app });
 
     const finalUrl = `${cleanBase}?id=${alias}`;
     console.log("  [build_qr_url] final URL:", finalUrl);
@@ -371,10 +372,11 @@ app.get("/api/resolve/:alias", async (req, res) => {
 
     console.log("  [resolve] found → qr_id:", record.qr_id, "| db_id:", record.db_id);
     res.json({
-      alias: record.alias,
+      alias:      record.alias,
       target_url: record.target_url,
-      db_id: record.db_id,
-      qr_id: record.qr_id,
+      db_id:      record.db_id,
+      qr_id:      record.qr_id,
+      target_app: record.target_app || null,
       created_at: record.created_at
     });
 

@@ -409,7 +409,7 @@ async function addDbId(dbId, name, date, time) {
 async function createQrCode(
   clientId, qrId, qrName, qrUrl, clientName,
   date, time, dbId, qrLogo, qrImage, qrAlias,
-  pdfId = null
+  pdfId = null, targetApp = null
 ) {
   const payload = {
     database_id: DATABASE_ID,
@@ -425,7 +425,8 @@ async function createQrCode(
       qr_logo: qrLogo || null,
       qr_image: qrImage,
       qr_status: 1,
-      qr_pdf_id: pdfId 
+      qr_pdf_id: pdfId ,
+      target_app: targetApp || null
     }]
   };
 
@@ -536,12 +537,13 @@ async function checkQrIdExists(clientName, qrId) {
   }
 }
 
-async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId) {
+async function buildEncryptedQrUrl(verifyBaseUrl, targetUrl, dbId, qrId, targetApp = null) {
   const payload = {
     base_url: verifyBaseUrl,
     target_url: targetUrl,
     db_id: String(dbId),
-    qr_id: String(qrId)
+    qr_id: String(qrId),
+    target_app: targetApp || null
   };
 
   const res = await fetch(`${PROXY_BASE}/build_qr_url`, {
