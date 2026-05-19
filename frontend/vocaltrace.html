@@ -365,10 +365,35 @@
         };
 
         btn.onclick = () => {
-            if (!targetUrl) return;
+            console.log("BUTTON CLICK");
+            console.log("targetUrl:", targetUrl);
+            console.log("currentAlias:", currentAlias);
+
+            if (!targetUrl) {
+                console.error("Missing targetUrl");
+                return;
+            }
 
             const separator = targetUrl.includes("?") ? "&" : "?";
-            window.location.href = `${targetUrl}${separator}id=${currentAlias}`;
+
+            // fallback: read directly from URL if currentAlias is null
+            const aliasFromPage =
+                currentAlias ||
+                new URLSearchParams(window.location.search).get("id");
+
+            console.log("aliasFromPage:", aliasFromPage);
+
+            if (!aliasFromPage) {
+                console.error("No alias found");
+                window.location.href = targetUrl;
+                return;
+            }
+
+            const finalUrl = `${targetUrl}${separator}id=${encodeURIComponent(aliasFromPage)}`;
+
+            console.log("FINAL URL:", finalUrl);
+
+            window.location.href = finalUrl;
         };
 
         init();
