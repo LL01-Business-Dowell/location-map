@@ -182,6 +182,10 @@ async function fetchQrTokenByAlias(alias) {
 // ROUTES
 // ===================================================
 
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // ---------- ADD COLLECTION ----------
 app.post("/api/add_collection", async (req, res) => {
   console.log("  [add_collection] database_id:", req.body?.database_id, "| collections:", req.body?.collections?.map(c => c.name));
@@ -844,5 +848,20 @@ app.get("/api/public/qr", async (req, res) => {
 
 // ===== START SERVER =====
 app.listen(PORT, () => {
-  console.log(`\nServer listening on port ${PORT} ✓\n`);
+  console.log(`\nServer listening on port ${PORT}\n`);
+
+  const PING_URL      = "https://location-map-a89a.onrender.com/api/health";
+  const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
+
+  setInterval(async () => {
+    try {
+      const res  = await fetch(PING_URL);
+      const data = await res.json();
+      console.log(`  [keepalive] ping OK — ${data.timestamp}`);
+    } catch (err) {
+      console.warn("  [keepalive] ping failed:", err.message);
+    }
+  }, PING_INTERVAL);
+
+  console.log(`Keepalive ping scheduled every 10 minutes`);
 });
