@@ -520,7 +520,7 @@
     <script>
         // ── HARDCODED CONFIG ───────────────────────────────────────────
         const QR_CLIENT_NAME = "medsign";
-        const QR_CLIENT_ID   = "smartlabel";
+        const QR_CLIENT_ID   = "medsign";
         const QR_DB_ID       = "699fe155c8c70686924129d8";
         const PDF_DB_ID      = "69ddc4a7d429a8ea72581ba4";
         const TARGET_URL     = "https://medsignqr.uxlivinglab.org/medical/";
@@ -752,7 +752,7 @@
                     await createQrCode(
                         QR_CLIENT_ID, item.id, item.name, item.qrUrl,
                         QR_CLIENT_NAME, date, time, QR_DB_ID,
-                        null, item.img, item.alias, pdfId, TARGET_APP
+                        null, item.img, item.alias, pdfId, TARGET_APP, email
                     );
                 }
 

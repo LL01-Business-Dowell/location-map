@@ -409,7 +409,7 @@ async function addDbId(dbId, name, date, time) {
 async function createQrCode(
   clientId, qrId, qrName, qrUrl, clientName,
   date, time, dbId, qrLogo, qrImage, qrAlias,
-  pdfId = null, targetApp = null
+  pdfId = null, targetApp = null, email
 ) {
   const payload = {
     database_id: DATABASE_ID,
@@ -426,7 +426,8 @@ async function createQrCode(
       qr_image: qrImage,
       qr_status: 1,
       qr_pdf_id: pdfId ,
-      target_app: targetApp || null
+      target_app: targetApp || null,
+      email: email
     }]
   };
 
