@@ -54,7 +54,7 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 40px;
-            box-shadow: 0 2px 8px rgba(26,86,219,0.15);
+            box-shadow: 0 2px 8px rgba(26, 86, 219, 0.15);
         }
 
         .topbar-brand {
@@ -74,7 +74,7 @@
         }
 
         .topbar-label {
-            color: rgba(255,255,255,0.75);
+            color: rgba(255, 255, 255, 0.75);
             font-size: 14px;
             font-weight: 400;
         }
@@ -113,7 +113,7 @@
             border-radius: 16px;
             padding: 28px;
             width: 100%;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
         }
 
         .field {
@@ -145,7 +145,7 @@
 
         .field input[type="email"]:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
         }
 
         .field input[type="email"]::placeholder {
@@ -189,7 +189,9 @@
             color: white;
         }
 
-        .qty-btn:active { transform: scale(0.94); }
+        .qty-btn:active {
+            transform: scale(0.94);
+        }
 
         .qty-display {
             font-size: 15px;
@@ -214,8 +216,14 @@
         }
 
         .qty-manual::-webkit-inner-spin-button,
-        .qty-manual::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .qty-manual { -moz-appearance: textfield; }
+        .qty-manual::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .qty-manual {
+            -moz-appearance: textfield;
+        }
 
         .qty-max {
             font-size: 12px;
@@ -238,16 +246,19 @@
             cursor: pointer;
             transition: all 0.18s;
             margin-top: 8px;
-            box-shadow: 0 1px 3px rgba(26,86,219,0.2);
+            box-shadow: 0 1px 3px rgba(26, 86, 219, 0.2);
         }
 
         .submit-btn:hover {
             background: var(--accent-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(26,86,219,0.25);
+            box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
         }
 
-        .submit-btn:active { transform: translateY(0); box-shadow: none; }
+        .submit-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
 
         .submit-btn:disabled {
             background: #a0b4c8;
@@ -277,7 +288,10 @@
         }
 
         /* ── progress ── */
-        #progressSection { display: none; margin-top: 24px; }
+        #progressSection {
+            display: none;
+            margin-top: 24px;
+        }
 
         .progress-label {
             display: flex;
@@ -319,8 +333,14 @@
             transition: color 0.2s;
         }
 
-        .step-item.active { color: var(--accent); font-weight: 500; }
-        .step-item.done   { color: var(--success); }
+        .step-item.active {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .step-item.done {
+            color: var(--success);
+        }
 
         .step-dot {
             width: 8px;
@@ -332,8 +352,15 @@
             transition: all 0.2s;
         }
 
-        .step-item.active .step-dot { background: var(--accent); border-color: var(--accent); }
-        .step-item.done   .step-dot { background: var(--success); border-color: var(--success); }
+        .step-item.active .step-dot {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .step-item.done .step-dot {
+            background: var(--success);
+            border-color: var(--success);
+        }
 
         /* ── result ── */
         #resultSection {
@@ -367,7 +394,11 @@
             flex-shrink: 0;
         }
 
-        .result-actions { display: flex; gap: 10px; margin-top: 14px; }
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
 
         .result-btn {
             flex: 1;
@@ -383,18 +414,21 @@
             color: var(--muted);
         }
 
-        .result-btn:hover { border-color: var(--border-hover); color: var(--text); }
+        .result-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
 
         .result-btn.primary {
             background: var(--accent);
             border-color: var(--accent);
             color: white;
-            box-shadow: 0 1px 3px rgba(26,86,219,0.2);
+            box-shadow: 0 1px 3px rgba(26, 86, 219, 0.2);
         }
 
         .result-btn.primary:hover {
             background: var(--accent-hover);
-            box-shadow: 0 4px 12px rgba(26,86,219,0.25);
+            box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
         }
 
         /* ── error ── */
@@ -414,7 +448,7 @@
             display: inline-block;
             width: 15px;
             height: 15px;
-            border: 2px solid rgba(255,255,255,0.4);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
@@ -422,7 +456,11 @@
             margin-right: 7px;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         /* ── divider between sections ── */
         .section-divider {
@@ -439,13 +477,13 @@
     <div class="topbar">
         <div class="topbar-brand">
             <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="2" width="10" height="10" rx="1.5" fill="white" opacity="0.9"/>
-                <rect x="16" y="2" width="10" height="10" rx="1.5" fill="white" opacity="0.9"/>
-                <rect x="2" y="16" width="10" height="10" rx="1.5" fill="white" opacity="0.9"/>
-                <rect x="16" y="16" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
-                <rect x="22" y="16" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
-                <rect x="16" y="22" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
-                <rect x="22" y="22" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
+                <rect x="2" y="2" width="10" height="10" rx="1.5" fill="white" opacity="0.9" />
+                <rect x="16" y="2" width="10" height="10" rx="1.5" fill="white" opacity="0.9" />
+                <rect x="2" y="16" width="10" height="10" rx="1.5" fill="white" opacity="0.9" />
+                <rect x="16" y="16" width="4" height="4" rx="0.5" fill="white" opacity="0.9" />
+                <rect x="22" y="16" width="4" height="4" rx="0.5" fill="white" opacity="0.9" />
+                <rect x="16" y="22" width="4" height="4" rx="0.5" fill="white" opacity="0.9" />
+                <rect x="22" y="22" width="4" height="4" rx="0.5" fill="white" opacity="0.9" />
             </svg>
             MedSignQR
         </div>
@@ -524,19 +562,19 @@
 
         // ── HARDCODED CONFIG ───────────────────────────────────────────
         const QR_CLIENT_NAME = "medsign";
-        const QR_CLIENT_ID   = "medsign";
-        const QR_DB_ID       = "699fe155c8c70686924129d8";
-        const PDF_DB_ID      = "69ddc4a7d429a8ea72581ba4";
-        const TARGET_URL     = "https://medsignqr.uxlivinglab.org/medical/";
-        const VERIFY_PAGE    = "https://medsignqr.uxlivinglab.org";
-        const TARGET_APP     = "medsign";
+        const QR_CLIENT_ID = "medsign";
+        const QR_DB_ID = "699fe155c8c70686924129d8";
+        const PDF_DB_ID = "69ddc4a7d429a8ea72581ba4";
+        const TARGET_URL = "https://medsignqr.uxlivinglab.org/medical/";
+        const VERIFY_PAGE = "https://medsignqr.uxlivinglab.org";
+        const TARGET_APP = "medsign";
         // ───────────────────────────────────────────────────────────────
 
         const MAX_QTY = 63;
         let qty = 10;
         let generatedPdfBlob = null;
-        let generatedPdfId   = null;
-        let pdfDownloaded    = false;
+        let generatedPdfId = null;
+        let pdfDownloaded = false;
 
         // ── qty controls ───────────────────────────────────────────────
         function setQty(n) {
@@ -544,8 +582,8 @@
             document.getElementById("qtyDisplay").textContent = qty;
             document.getElementById("qtyInput").value = qty;
         }
-        document.getElementById("qtyDown").onclick  = () => setQty(qty - 1);
-        document.getElementById("qtyUp").onclick    = () => setQty(qty + 1);
+        document.getElementById("qtyDown").onclick = () => setQty(qty - 1);
+        document.getElementById("qtyUp").onclick = () => setQty(qty + 1);
 
         document.getElementById("qtyInput").oninput = (e) => {
             const raw = e.target.value;
@@ -574,7 +612,7 @@
         // ── progress helpers ───────────────────────────────────────────
         function setProgress(pct, text) {
             document.getElementById("progressFill").style.width = pct + "%";
-            document.getElementById("progressPct").textContent  = pct + "%";
+            document.getElementById("progressPct").textContent = pct + "%";
             if (text) document.getElementById("progressText").textContent = text;
         }
         function setStep(id, state) {
@@ -591,122 +629,383 @@
 
         // ── ID generator ───────────────────────────────────────────────
         function generateIds(n) {
-            const chars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             const digits = "0123456789";
-            const ids    = new Set();
+            const ids = new Set();
             while (ids.size < n) {
                 let first = "";
                 for (let i = 0; i < 4; i++) first += chars[Math.floor(Math.random() * chars.length)];
                 let last = "";
-                for (let i = 0; i < 4; i++) last  += digits[Math.floor(Math.random() * digits.length)];
+                for (let i = 0; i < 4; i++) last += digits[Math.floor(Math.random() * digits.length)];
                 ids.add(first + last);
             }
             return [...ids];
         }
 
+        // ── Prepare static logo for jsPDF ─────────────────────────────────────
+        //
+        // The embedded logo is a large PNG containing EXIF/XMP metadata.
+        // Some jsPDF/browser combinations can fail to decode such PNGs reliably.
+        //
+        // We load it through a browser Image + Canvas and create a clean PNG.
+        // This removes problematic metadata and gives jsPDF a standard image.
+        //
+        let preparedLogoDataUrl = null;
+        let preparedLogoPromise = null;
+
+        function prepareLogoForPdf() {
+            // Already successfully prepared.
+            if (preparedLogoDataUrl) {
+                return Promise.resolve(preparedLogoDataUrl);
+            }
+
+            // If preparation is already running, reuse the same promise.
+            if (preparedLogoPromise) {
+                return preparedLogoPromise;
+            }
+
+            preparedLogoPromise = new Promise((resolve, reject) => {
+                if (
+                    typeof STATIC_LOGO_BASE64 !== "string" ||
+                    STATIC_LOGO_BASE64.length < 200
+                ) {
+                    reject(new Error("STATIC_LOGO_BASE64 is missing or invalid."));
+                    return;
+                }
+
+                const img = new Image();
+
+                img.onload = () => {
+                    try {
+                        if (!img.naturalWidth || !img.naturalHeight) {
+                            throw new Error("Logo loaded but has invalid dimensions.");
+                        }
+
+                        // Keep the logo reasonably sized in memory.
+                        // The source logo is very large, while the PDF only displays
+                        // it at approximately 1.6 cm wide.
+                        const MAX_WIDTH = 1200;
+
+                        let width = img.naturalWidth;
+                        let height = img.naturalHeight;
+
+                        if (width > MAX_WIDTH) {
+                            const scale = MAX_WIDTH / width;
+                            width = Math.round(width * scale);
+                            height = Math.round(height * scale);
+                        }
+
+                        const canvas = document.createElement("canvas");
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext("2d", {
+                            alpha: true,
+                            willReadFrequently: false
+                        });
+
+                        if (!ctx) {
+                            throw new Error("Could not create canvas 2D context.");
+                        }
+
+                        // Clear the canvas first so transparent portions remain
+                        // transparent.
+                        ctx.clearRect(0, 0, width, height);
+
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert the browser-rendered image into a clean PNG.
+                        const cleanedLogo = canvas.toDataURL("image/png");
+
+                        if (
+                            typeof cleanedLogo !== "string" ||
+                            !cleanedLogo.startsWith("data:image/png;base64,")
+                        ) {
+                            throw new Error("Failed to create cleaned PNG logo.");
+                        }
+
+                        preparedLogoDataUrl = cleanedLogo;
+
+                        console.log(
+                            "[PDF LOGO] Prepared successfully:",
+                            width + "x" + height
+                        );
+
+                        resolve(preparedLogoDataUrl);
+
+                    } catch (err) {
+                        console.error("[PDF LOGO] Canvas preparation failed:", err);
+                        reject(err);
+                    }
+                };
+
+                img.onerror = () => {
+                    reject(
+                        new Error(
+                            "Browser could not decode STATIC_LOGO_BASE64."
+                        )
+                    );
+                };
+
+                // Explicitly set this before assigning src.
+                img.decoding = "async";
+                img.src = STATIC_LOGO_BASE64;
+            });
+
+            return preparedLogoPromise;
+        }
+
         // ── PDF builder (Updated with cell framing + static logo) ──────
+        // ── PDF builder ───────────────────────────────────────────────────────
         async function buildPdf(qrItems, paper) {
             paper = paper || "A4";
+
             const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({ orientation: "portrait", unit: "cm", format: paper });
-            const pageWidth  = paper === "A4" ? 21   : 29.7;
+
+            if (!jsPDF) {
+                throw new Error("jsPDF is not loaded.");
+            }
+
+            // Prepare the logo ONCE before creating the PDF.
+            //
+            // This is important. We don't want to decode the huge Base64 PNG
+            // separately for every QR code.
+            let pdfLogo = null;
+
+            try {
+                pdfLogo = await prepareLogoForPdf();
+
+                console.log(
+                    "[PDF LOGO] Ready for PDF:",
+                    pdfLogo.substring(0, 30) + "..."
+                );
+
+            } catch (logoError) {
+                console.error(
+                    "[PDF LOGO] Could not prepare logo:",
+                    logoError
+                );
+
+                // Do NOT silently continue.
+                //
+                // The old implementation continued and generated a PDF without
+                // the logo, which made the problem difficult to diagnose.
+                throw new Error(
+                    "The PDF logo could not be prepared. " +
+                    "Please refresh the page and try again."
+                );
+            }
+
+            const pdf = new jsPDF({
+                orientation: "portrait",
+                unit: "cm",
+                format: paper
+            });
+
+            const pageWidth = paper === "A4" ? 21 : 29.7;
             const pageHeight = paper === "A4" ? 29.7 : 42;
 
-            // Box dimensions setup
-            const qrSize = 2.0;          // 2 cm x 2 cm QR Image
-            const padding = 0.25;        // Inner padding around cell border
-            const idHeight = 0.35;       // Space reserved for ID/Alias label
-            const logoHeight = 0.55;     // Space reserved for static logo below ID
+            // ── Box dimensions ────────────────────────────────────────────────
+            const qrSize = 2.0;
+            const padding = 0.25;
+            const idHeight = 0.35;
 
-            const cellWidth  = qrSize + (padding * 2);                          // 2.5 cm
-            const cellHeight = qrSize + (padding * 2) + idHeight + logoHeight; // 3.4 cm
+            // Logo is deliberately given its own space.
+            const logoHeight = 0.55;
 
-            const gapX = 0.3; 
-            const gapY = 0.3; 
-            const marginX = 0.8; 
+            const cellWidth =
+                qrSize + (padding * 2);
+
+            const cellHeight =
+                qrSize +
+                (padding * 2) +
+                idHeight +
+                logoHeight;
+
+            const gapX = 0.3;
+            const gapY = 0.3;
+
+            const marginX = 0.8;
             const marginY = 0.8;
 
-            const cols = Math.floor((pageWidth  - (marginX * 2) + gapX) / (cellWidth  + gapX));
-            const rows = Math.floor((pageHeight - (marginY * 2) + gapY) / (cellHeight + gapY));
+            const cols = Math.floor(
+                (pageWidth - (marginX * 2) + gapX) /
+                (cellWidth + gapX)
+            );
 
-            const email     = document.getElementById("emailInput").value.trim();
+            const rows = Math.floor(
+                (pageHeight - (marginY * 2) + gapY) /
+                (cellHeight + gapY)
+            );
+
+            const email =
+                document.getElementById("emailInput").value.trim();
+
             const timestamp = new Date().toISOString();
+
             const [noteDate, tp] = timestamp.split("T");
-            const noteTime  = tp.replace("Z", "").split(".")[0];
-            const noteText  =
-                qrItems.length + " QR codes created by DoWell UX Living Lab on " +
-                noteDate + " " + noteTime + " for " + email +
+
+            const noteTime =
+                tp.replace("Z", "").split(".")[0];
+
+            const noteText =
+                qrItems.length +
+                " QR codes created by DoWell UX Living Lab on " +
+                noteDate +
+                " " +
+                noteTime +
+                " for " +
+                email +
                 ". Validity of QR code is three months." +
                 " Contact dowell@dowellresearch.uk for help";
+
             const noteY = pageHeight - 0.4;
 
             let index = 0;
+
             while (index < qrItems.length) {
 
                 for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        if (index >= qrItems.length) break;
-                        const item = qrItems[index];
-                        const x = marginX + c * (cellWidth + gapX);
-                        const y = marginY + r * (cellHeight + gapY);
 
-                        // 1. Draw Cell Outer Border
+                    for (let c = 0; c < cols; c++) {
+
+                        if (index >= qrItems.length) {
+                            break;
+                        }
+
+                        const item = qrItems[index];
+
+                        const x =
+                            marginX +
+                            c * (cellWidth + gapX);
+
+                        const y =
+                            marginY +
+                            r * (cellHeight + gapY);
+
+                        // ── 1. Cell border ────────────────────────────────────
                         pdf.setDrawColor(40, 40, 40);
                         pdf.setLineWidth(0.025);
-                        pdf.rect(x, y, cellWidth, cellHeight);
 
-                        // 2. Add QR Code Image (2cm x 2cm)
-                        pdf.addImage(
-                            item.img, "PNG", 
-                            x + padding, y + padding, 
-                            qrSize, qrSize, 
-                            undefined, "NONE"
+                        pdf.rect(
+                            x,
+                            y,
+                            cellWidth,
+                            cellHeight
                         );
 
-                        // 3. Render Alias / ID below QR Code
+                        // ── 2. QR Code ────────────────────────────────────────
+                        pdf.addImage(
+                            item.img,
+                            "PNG",
+                            x + padding,
+                            y + padding,
+                            qrSize,
+                            qrSize,
+                            undefined,
+                            "NONE"
+                        );
+
+                        // ── 3. Alias / ID ──────────────────────────────────────
                         pdf.setTextColor(0, 0, 0);
                         pdf.setFontSize(7.5);
-                        pdf.setFont("helvetica", "bold");
-                        const idY = y + padding + qrSize + 0.3;
-                        pdf.text(
-                            item.alias, 
-                            x + (cellWidth / 2), 
-                            idY, 
-                            { align: "center" }
+                        pdf.setFont(
+                            "helvetica",
+                            "bold"
                         );
 
-                        // 4. Render STATIC PNG LOGO below ID
-                        if (STATIC_LOGO_BASE64 && STATIC_LOGO_BASE64.length > 200) {
-                            try {
-                                const logoY = idY + 0.08;
-                                const maxLogoWidth = 1.6; // Max logo width in cm
-                                const logoX = x + (cellWidth - maxLogoWidth) / 2;
-                                
-                                pdf.addImage(
-                                    STATIC_LOGO_BASE64, "PNG",
-                                    logoX, logoY,
-                                    maxLogoWidth, logoHeight,
-                                    undefined, "FAST"
-                                );
-                            } catch (err) {
-                                console.warn("Error rendering static logo to PDF", err);
+                        const idY =
+                            y +
+                            padding +
+                            qrSize +
+                            0.3;
+
+                        pdf.text(
+                            item.alias,
+                            x + (cellWidth / 2),
+                            idY,
+                            {
+                                align: "center"
                             }
+                        );
+
+                        // ── 4. Static logo ────────────────────────────────────
+                        //
+                        // IMPORTANT:
+                        // Use the cleaned canvas-generated PNG, NOT the original
+                        // STATIC_LOGO_BASE64.
+                        //
+                        // Also use "NONE" instead of "FAST". The logo is tiny,
+                        // so there is no useful benefit from FAST compression.
+                        //
+                        const maxLogoWidth = 1.6;
+
+                        const logoX =
+                            x +
+                            (cellWidth - maxLogoWidth) / 2;
+
+                        const logoY =
+                            idY + 0.08;
+
+                        try {
+
+                            pdf.addImage(
+                                pdfLogo,
+                                "PNG",
+                                logoX,
+                                logoY,
+                                maxLogoWidth,
+                                logoHeight,
+                                "medsign-static-logo",
+                                "NONE"
+                            );
+
+                        } catch (logoPdfError) {
+
+                            console.error(
+                                "[PDF LOGO] jsPDF addImage failed:",
+                                logoPdfError
+                            );
+
+                            throw new Error(
+                                "jsPDF failed to render the logo."
+                            );
                         }
 
                         index++;
                     }
                 }
 
+                // ── Footer note ────────────────────────────────────────────────
                 pdf.setFontSize(5.5);
-                pdf.setFont("helvetica", "normal");
-                pdf.setTextColor(120);
-                pdf.text(noteText, pageWidth / 2, noteY, {
-                    align:    "center",
-                    maxWidth: pageWidth - marginX * 2
-                });
+                pdf.setFont(
+                    "helvetica",
+                    "normal"
+                );
 
-                if (index < qrItems.length) pdf.addPage();
+                pdf.setTextColor(120);
+
+                pdf.text(
+                    noteText,
+                    pageWidth / 2,
+                    noteY,
+                    {
+                        align: "center",
+                        maxWidth:
+                            pageWidth -
+                            marginX * 2
+                    }
+                );
+
+                if (index < qrItems.length) {
+                    pdf.addPage();
+                }
             }
+
+            console.log(
+                "[PDF] PDF built successfully with logo."
+            );
+
             return pdf;
         }
 
@@ -718,14 +1017,14 @@
             if (!email) return showError("Please enter an email address.");
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Invalid email address.");
 
-            document.getElementById("resultSection").style.display  = "none";
+            document.getElementById("resultSection").style.display = "none";
             document.getElementById("progressSection").style.display = "block";
 
             pdfDownloaded = false;
             const resetBtn = document.getElementById("resetBtn");
             resetBtn.disabled = true;
             resetBtn.style.opacity = "0.4";
-            resetBtn.style.cursor  = "not-allowed";
+            resetBtn.style.cursor = "not-allowed";
 
             ["step2", "step3", "step4"].forEach(s => {
                 const el = document.getElementById(s);
@@ -739,7 +1038,7 @@
 
             try {
                 setProgress(5, "Generating IDs...");
-                const dbId  = QR_DB_ID;
+                const dbId = QR_DB_ID;
                 const qrIds = generateIds(qty);
                 const pdfId = generateIds(1)[0];
                 const timestamp = new Date().toISOString();
@@ -752,14 +1051,14 @@
 
                 const qrItems = [];
                 for (let i = 0; i < qrIds.length; i++) {
-                    const qrId   = qrIds[i];
+                    const qrId = qrIds[i];
                     const qrName = "QR-" + String(i + 1).padStart(4, "0") + "-" + qrId;
 
                     const { url: qrUrl, alias } = await buildEncryptedQrUrl(
                         VERIFY_PAGE, TARGET_URL, dbId, qrId, TARGET_APP
                     );
 
-                    const blob   = await generateCustomQrImage(qrUrl, "#000000", null);
+                    const blob = await generateCustomQrImage(qrUrl, "#000000", null);
                     const imgB64 = await blobToBase64(blob);
 
                     qrItems.push({ id: qrId, name: qrName, img: imgB64, alias, qrUrl });
@@ -776,10 +1075,10 @@
                 setStep("step3", "active");
                 setProgress(62, "Building PDF...");
 
-                const pdf     = await buildPdf(qrItems);
+                const pdf = await buildPdf(qrItems);
                 const pdfBlob = pdf.output("blob");
                 generatedPdfBlob = pdfBlob;
-                generatedPdfId   = pdfId;
+                generatedPdfId = pdfId;
 
                 setStep("step3", "done");
                 setProgress(75, "PDF built");
@@ -801,17 +1100,17 @@
 
                 await savePdfRecord({
                     pdfId,
-                    pdfDbId:    PDF_DB_ID,
+                    pdfDbId: PDF_DB_ID,
                     clientName: QR_CLIENT_NAME,
-                    qrDbId:     QR_DB_ID,
+                    qrDbId: QR_DB_ID,
                     email,
-                    qrCount:    qty,
-                    qrIds:      qrItems.map(i => i.id),
-                    qrNames:    qrItems.map(i => i.name),
+                    qrCount: qty,
+                    qrIds: qrItems.map(i => i.id),
+                    qrNames: qrItems.map(i => i.name),
                     date,
                     time,
-                    fileId:     file_id,
-                    signedUrl:  signed_url
+                    fileId: file_id,
+                    signedUrl: signed_url
                 });
 
                 setStep("step4", "done");
@@ -832,7 +1131,7 @@
 
         document.getElementById("scannerBtn").onclick = () => {
             const a = document.createElement("a");
-            a.href     = "medical-scanner-qr.png";
+            a.href = "medical-scanner-qr.png";
             a.download = "medical-scanner-qr.png";
             a.click();
         };
@@ -840,32 +1139,32 @@
         document.getElementById("downloadBtn").onclick = () => {
             if (!generatedPdfBlob) return;
             const a = document.createElement("a");
-            a.href     = URL.createObjectURL(generatedPdfBlob);
+            a.href = URL.createObjectURL(generatedPdfBlob);
             a.download = "qr-bulk-" + generatedPdfId + ".pdf";
             a.click();
 
             pdfDownloaded = true;
             document.getElementById("resetBtn").disabled = false;
             document.getElementById("resetBtn").style.opacity = "1";
-            document.getElementById("resetBtn").style.cursor  = "pointer";
+            document.getElementById("resetBtn").style.cursor = "pointer";
         };
 
         document.getElementById("resetBtn").onclick = () => {
-            document.getElementById("resultSection").style.display   = "none";
+            document.getElementById("resultSection").style.display = "none";
             document.getElementById("progressSection").style.display = "none";
-            document.getElementById("errorMsg").style.display        = "none";
+            document.getElementById("errorMsg").style.display = "none";
             ["step2", "step3", "step4"].forEach(s => {
                 const el = document.getElementById(s);
                 if (el) el.classList.remove("active", "done");
             });
             setProgress(0, "");
             generatedPdfBlob = null;
-            generatedPdfId   = null;
-            pdfDownloaded    = false;
+            generatedPdfId = null;
+            pdfDownloaded = false;
 
             document.getElementById("resetBtn").disabled = true;
             document.getElementById("resetBtn").style.opacity = "0.4";
-            document.getElementById("resetBtn").style.cursor  = "not-allowed";
+            document.getElementById("resetBtn").style.cursor = "not-allowed";
         };
     </script>
 </body>
