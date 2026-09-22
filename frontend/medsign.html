@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- KEEPING YOUR ORIGINAL STYLES UNCHANGED --- */
         * {
             margin: 0;
             padding: 0;
@@ -124,7 +123,6 @@
         .logo-container img {
             width: 100%;
             max-height: 120px;
-            /* adjust if needed */
             object-fit: contain;
         }
 
@@ -212,12 +210,9 @@
 
             <div class="clinical-buttons">
                 <button class="confirm-btn" id="viewMapBtn" disabled>Confirm and Hear</button>
-                <!-- <button class="exit-btn" onclick="window.close()">Exit</button> -->
                 <button class="exit-btn" id="exitBtn">Exit</button>
             </div>
         </div>
-
-        <!-- <button id="viewMapBtn" disabled>Continue</button> -->
 
         <div id="feedbackBox" style="margin: 16px 0;">
             <p style="margin-bottom: 10px; font-weight: 600;">
@@ -246,8 +241,6 @@
         let dbId = null;
         let qrId = null;
         let targetUrl = null;
-        let insertedId = null;
-        let currentAlias = null;
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
@@ -266,75 +259,26 @@
                 if (alias) {
                     // New flow — resolve alias directly
                     data = await resolveAlias(alias);
-                    currentAlias = alias;
                 } else {
                     // Old flow — decrypt token
                     data = await decryptToken(token);
-                    currentAlias = null;
                 }
 
                 dbId = data.db_id;
                 qrId = data.qr_id;
                 targetUrl = data.target_url;
 
-                if (!dbId || !qrId || !targetUrl) {
-                    throw new Error("Incomplete QR payload");
+                if (!targetUrl || !qrId) {
+                    throw new Error("Missing target URL or QR ID");
                 }
 
-                captureLocationOnLoad();
+                btn.disabled = false;
 
             } catch (err) {
                 console.error(err);
                 statusEl.textContent = "Invalid or expired link.";
                 statusEl.classList.remove("loading");
             }
-        }
-
-        async function captureLocationOnLoad() {
-            if (!navigator.geolocation) {
-                statusEl.textContent = "Geolocation not supported.";
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                async (pos) => {
-                    const lat = Number(pos.coords.latitude.toFixed(5));
-                    const lng = Number(pos.coords.longitude.toFixed(5));
-                    const timestamp = new Date().toISOString();
-                    const [date, t] = timestamp.split("T");
-                    const time = t.replace("Z", "").split(".")[0];
-
-                    try {
-                        insertedId = await recordQrScan({
-                            document: {
-                                qr_id: qrId,
-                                latitude: lat,
-                                longitude: lng,
-                                scanned_at: timestamp
-                            }
-                        });
-
-                    } catch (err) {
-                        console.error("Scan record failed:", err);
-                        statusEl.textContent = "Scan recording failed. Please try again.";
-                        return;
-                    }
-
-                    try {
-                        await saveLocation(dbId, lat, lng, date, time, qrId, timestamp);
-                        //statusEl.textContent = "Location captured.";
-                    } catch (e) {
-                        console.warn(e);
-                    }
-
-                    btn.disabled = false;
-                },
-                () => {
-                    statusEl.textContent = "Location permission denied.";
-                    btn.disabled = false;
-                },
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
         }
 
         document.querySelectorAll(".feedback-btn").forEach(button => {
@@ -365,10 +309,11 @@
         };
 
         btn.onclick = () => {
-            if (!targetUrl) return;
+            if (!targetUrl || !qrId) return;
 
-            const separator = targetUrl.includes("?") ? "&" : "?";
-            window.location.href = `${targetUrl}${separator}id=${currentAlias}`;
+            // Ensures targetUrl ends with '/' before appending qrId
+            const baseUrl = targetUrl.endsWith('/') ? targetUrl : `${targetUrl}/`;
+            window.location.href = `${baseUrl}${qrId}`;
         };
 
         init();
