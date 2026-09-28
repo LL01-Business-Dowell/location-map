@@ -1,4 +1,3 @@
-
 const PROXY_BASE = "https://location-map-a89a.onrender.com/api";
 
 async function ensureDailyCollection(dbId) {
@@ -766,4 +765,76 @@ async function uploadPdf(pdfBlob, filename) {
         file_id:    data.file_id || data.fileId,
         signed_url: signedUrl
     };
+}
+
+
+async function createMedSignLink({
+  email,
+  uniqueId,
+  batchId = "",
+  clientName = "",
+  clientNo = ""
+}) {
+  // Construct the target URL using puretrace.html and the unique ID parameter
+  const constructedLinkUrl = `https://location-map-1.onrender.com/puretrace.html?id=${uniqueId}`;
+
+  const payload = {
+    database_id: DATABASE_ID,
+    collection_name: "medsign_links",
+    documents: [{
+      link_id: uniqueId,
+      email: email,
+      link_url: constructedLinkUrl,
+      batch_id: String(batchId),
+      client_name: String(clientName),
+      client_no: Array.isArray(clientNo) ? clientNo : (clientNo ? [clientNo] : []),
+      created_at: new Date().toISOString(),
+      status: "active"
+    }]
+  };
+
+  try {
+    const res = await fetch(`${PROXY_BASE}/crud`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!res.ok) throw new Error("Failed to save link document");
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to save MedSign Link", err);
+    throw err;
+  }
+}
+
+async function registerMedSignLinksCollection() {
+  const payload = {
+    database_id: DATABASE_ID,
+    collections: [
+      {
+        name: "medsign_links",
+        fields: [
+          { name: "link_id", type: "string" },
+          { name: "email", type: "string" },
+          { name: "link_url", type: "string" },
+          { name: "batch_id", type: "string" },
+          { name: "client_name", type: "string" },
+          { name: "client_no", type: "array" },
+          { name: "created_at", type: "string" },
+          { name: "status", type: "string" }
+        ]
+      }
+    ]
+  };
+
+  try {
+    await fetch(`${PROXY_BASE}/add_collection`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn("Collection setup failed or already exists", err);
+  }
 }

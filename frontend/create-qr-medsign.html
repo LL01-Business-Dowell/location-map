@@ -508,8 +508,8 @@
                     <button class="qty-btn" id="qtyDown">&#8722;</button>
                     <span class="qty-display" id="qtyDisplay">10</span>
                     <button class="qty-btn" id="qtyUp">+</button>
-                    <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="63" />
-                    <span class="qty-max">max 63</span>
+                    <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="140" />
+                    <span class="qty-max">max 140</span>
                 </div>
             </div>
 
@@ -568,7 +568,7 @@
         const TARGET_APP = "medsign";
         // ───────────────────────────────────────────────────────────────
 
-        const MAX_QTY = 63;
+        const MAX_QTY = 140;
         let qty = 10;
         let generatedPdfBlob = null;
         let generatedPdfId = null;
@@ -748,7 +748,7 @@
         // ── PDF builder (Updated with cell framing + static logo) ──────
         // ── PDF builder ───────────────────────────────────────────────────────
         async function buildPdf(qrItems, paper) {
-            paper = paper || "A4";
+            paper = paper || "A3";
 
             const { jsPDF } = window.jspdf;
 
@@ -756,79 +756,39 @@
                 throw new Error("jsPDF is not loaded.");
             }
 
-            let pdfLogo = null;
-
-            try {
-                pdfLogo = await prepareLogoForPdf();
-
-                console.log(
-                    "[PDF LOGO] Ready for PDF:",
-                    pdfLogo.substring(0, 30) + "..."
-                );
-
-            } catch (logoError) {
-                console.error(
-                    "[PDF LOGO] Could not prepare logo:",
-                    logoError
-                );
-
-                throw new Error(
-                    "The PDF logo could not be prepared. " +
-                    "Please refresh the page and try again."
-                );
-            }
-
             const pdf = new jsPDF({
                 orientation: "portrait",
                 unit: "cm",
-                format: paper
+                format: "a3"
             });
 
-            const pageWidth = paper === "A4" ? 21 : 29.7;
-            const pageHeight = paper === "A4" ? 29.7 : 42;
+            const pageWidth = 29.7;
+            const pageHeight = 42;
 
-            // ── Box dimensions ────────────────────────────────────────────────
-            const qrSize = 2.0;
-            const padding = 0.25;
-            const idHeight = 0.35;
+            // ── Cell & Grid Dimensions ──────────────────────────────────────────────
+            const qrSize = 2.0;       // QR code size remains 2.0 x 2.0 cm
+            const cellWidth = 2.7;    // Grid cell width remains 2.7 cm
+            const cellHeight = 2.9;   // Grid cell height remains 2.9 cm
 
-            // Logo is deliberately given its own space.
-            const logoHeight = 0.55;
+            // ── Padding Settings (in cm) ─────────────────────────────────────────────
+            const boxPadding = 0.1;   // Internal padding inside black box
 
-            const cellWidth =
-                qrSize + (padding * 2);
+            // ── Auto-Centered Margins ────────────────────────────────────────────────
+            const cols = 10;          // 10 columns across
+            const rows = 14;          // 14 rows (Fits 140 QR codes per A3 page)
 
-            const cellHeight =
-                qrSize +
-                (padding * 2) +
-                idHeight +
-                logoHeight;
+            // Calculate left/right margins to dynamically center the grid
+            const totalGridWidth = cols * cellWidth;
+            const marginX = (pageWidth - totalGridWidth) / 2;
 
-            const gapX = 0.3;
-            const gapY = 0.3;
+            // Calculate top margin to fit 14 rows + footer
+            const totalGridHeight = rows * cellHeight; // 40.6 cm
+            const marginY = 0.5;                       // Leaves room at bottom for footer note
 
-            const marginX = 0.8;
-            const marginY = 0.8;
-
-            const cols = Math.floor(
-                (pageWidth - (marginX * 2) + gapX) /
-                (cellWidth + gapX)
-            );
-
-            const rows = Math.floor(
-                (pageHeight - (marginY * 2) + gapY) /
-                (cellHeight + gapY)
-            );
-
-            const email =
-                document.getElementById("emailInput").value.trim();
-
+            const email = document.getElementById("emailInput") ? document.getElementById("emailInput").value.trim() : "";
             const timestamp = new Date().toISOString();
-
             const [noteDate, tp] = timestamp.split("T");
-
-            const noteTime =
-                tp.replace("Z", "").split(".")[0];
+            const noteTime = tp.replace("Z", "").split(".")[0];
 
             const noteText =
                 qrItems.length +
@@ -841,14 +801,31 @@
                 ". Validity of QR code is three months." +
                 " Contact dowell@dowellresearch.uk for help";
 
-            const noteY = pageHeight - 0.4;
+            const noteY = pageHeight - 0.3;
 
             let index = 0;
 
             while (index < qrItems.length) {
 
-                for (let r = 0; r < rows; r++) {
+                // ── 1. Full Page Continuous Dotted Cutting Grid ─────────────────────
+                pdf.setLineDashPattern([0.1, 0.1], 0);
+                pdf.setDrawColor(160, 160, 160);
+                pdf.setLineWidth(0.015);
 
+                // Vertical dotted lines
+                for (let c = 0; c <= cols; c++) {
+                    const gridX = marginX + (c * cellWidth);
+                    pdf.line(gridX, marginY, gridX, marginY + totalGridHeight);
+                }
+
+                // Horizontal dotted lines
+                for (let r = 0; r <= rows; r++) {
+                    const gridY = marginY + (r * cellHeight);
+                    pdf.line(marginX, gridY, marginX + totalGridWidth, gridY);
+                }
+
+                // ── 2. Render Individual Content Inside Cells ──────────────────────────────
+                for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
 
                         if (index >= qrItems.length) {
@@ -857,106 +834,59 @@
 
                         const item = qrItems[index];
 
-                        const x =
-                            marginX +
-                            c * (cellWidth + gapX);
+                        const cellX = marginX + (c * cellWidth);
+                        const cellY = marginY + (r * cellHeight);
 
-                        const y =
-                            marginY +
-                            r * (cellHeight + gapY);
+                        // Solid Black Box Dimensions
+                        const boxWidth = cellWidth - (boxPadding * 2);
+                        const boxHeight = cellHeight - (boxPadding * 2);
+                        const boxX = cellX + boxPadding;
+                        const boxY = cellY + boxPadding;
 
-                        // ── 1. Cell border ────────────────────────────────────
+                        // Draw Solid Black Box
+                        pdf.setLineDashPattern([], 0); // Solid line
                         pdf.setDrawColor(40, 40, 40);
-                        pdf.setLineWidth(0.025);
+                        pdf.setLineWidth(0.02);
+                        pdf.rect(boxX, boxY, boxWidth, boxHeight);
 
-                        pdf.rect(
-                            x,
-                            y,
-                            cellWidth,
-                            cellHeight
-                        );
+                        // QR Code Position inside black box
+                        const qrX = boxX + (boxWidth - qrSize) / 2;
+                        const qrY = boxY + 0.15;
 
-                        // ── 2. QR Code ────────────────────────────────────────
-                        pdf.addImage(
-                            item.img,
-                            "PNG",
-                            x + padding,
-                            y + padding,
-                            qrSize,
-                            qrSize,
-                            undefined,
-                            "NONE"
-                        );
+                        // Render QR Code
+                        if (item.img) {
+                            try {
+                                const imgData = item.img.startsWith("data:") ? item.img : `data:image/png;base64,${item.img}`;
+                                pdf.addImage(imgData, "PNG", qrX, qrY, qrSize, qrSize);
+                            } catch (e) {
+                                console.error("[PDF] Image rendering failed for item index " + index, e);
+                            }
+                        }
 
-                        // ── 3. Alias / ID ──────────────────────────────────────
+                        // Render Label Text INSIDE the black box
                         pdf.setTextColor(0, 0, 0);
-                        pdf.setFontSize(7.5);
-                        pdf.setFont(
-                            "helvetica",
-                            "bold"
-                        );
+                        pdf.setFontSize(6.0);
+                        pdf.setFont("helvetica", "normal");
 
-                        const idY =
-                            y +
-                            padding +
-                            qrSize +
-                            0.3;
+                        const textY = qrY + qrSize + 0.3;
+                        const combinedLabel = `MedSignQR - ${item.alias}`;
 
                         pdf.text(
-                            item.alias,
-                            x + (cellWidth / 2),
-                            idY,
+                            combinedLabel,
+                            boxX + (boxWidth / 2),
+                            textY,
                             {
                                 align: "center"
                             }
                         );
 
-                        // ── 4. Static logo ────────────────────────────────────
-                        const maxLogoWidth = 1.6;
-
-                        const logoX =
-                            x +
-                            (cellWidth - maxLogoWidth) / 2;
-
-                        const logoY =
-                            idY + 0.08;
-
-                        try {
-
-                            pdf.addImage(
-                                pdfLogo,
-                                "PNG",
-                                logoX,
-                                logoY,
-                                maxLogoWidth,
-                                logoHeight,
-                                "medsign-static-logo",
-                                "NONE"
-                            );
-
-                        } catch (logoPdfError) {
-
-                            console.error(
-                                "[PDF LOGO] jsPDF addImage failed:",
-                                logoPdfError
-                            );
-
-                            throw new Error(
-                                "jsPDF failed to render the logo."
-                            );
-                        }
-
                         index++;
                     }
                 }
 
-                // ── Footer note ────────────────────────────────────────────────
+                // ── Footer Note ──────────────────────────────────────────────────────
                 pdf.setFontSize(5.5);
-                pdf.setFont(
-                    "helvetica",
-                    "normal"
-                );
-
+                pdf.setFont("helvetica", "normal");
                 pdf.setTextColor(120);
 
                 pdf.text(
@@ -965,9 +895,7 @@
                     noteY,
                     {
                         align: "center",
-                        maxWidth:
-                            pageWidth -
-                            marginX * 2
+                        maxWidth: pageWidth - (marginX * 2)
                     }
                 );
 
@@ -976,10 +904,7 @@
                 }
             }
 
-            console.log(
-                "[PDF] PDF built successfully with logo."
-            );
-
+            console.log("[PDF] PDF built with 140 centered QR items per page.");
             return pdf;
         }
 

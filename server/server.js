@@ -2,10 +2,13 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import "dotenv/config";
-import crypto, { sign } from "crypto";
+import crypto from "crypto";
 import nodemailer from "nodemailer";
 import FormData from "form-data";
 import multer from "multer";
+import dns from "dns";
+
+dns.setDefaultResultOrder("ipv4first");
 
 const upload = multer();
 const app = express();
@@ -30,37 +33,12 @@ console.log(`  SMTP_USER       : ${process.env.SMTP_USER || "NOT SET ⚠️"}`);
 console.log(`  SMTP_PASS       : ${process.env.SMTP_PASS ? "SET" : "NOT SET ⚠️"}`);
 console.log("========================================");
 
-// // ===== MAILER =====
-// const mailer = nodemailer.createTransport({
-//   host:   process.env.SMTP_HOST,
-//   port:   Number(process.env.SMTP_PORT) || 587,
-//   secure: false,
-//   auth: {
-//     user: process.env.SMTP_USER,
-//     pass: process.env.SMTP_PASS
-//   }
-// });
-
-// // Verify SMTP connection at startup
-// mailer.verify((err, success) => {
-//   if (err) {
-//     console.error("SMTP connection FAILED:", err.message);
-//   } else {
-//     console.log("SMTP connection OK ✓");
-//   }
-// });
-
-import dns from "dns";
-dns.setDefaultResultOrder("ipv4first");
-
 // ===== MAILER =====
 const mailer = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 587,
   secure: false,
-
   family: 4, // force IPv4
-
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
@@ -105,6 +83,38 @@ function generateAlias(length = 8) {
 function makeQrName(index, qrId) {
   const padded = String(index + 1).padStart(4, "0");
   return `QR-${padded}-${qrId}`;
+}
+
+// Ensure the medsign_links collection exists
+async function ensureLinksCollection() {
+  const payload = {
+    database_id: DB_ID,
+    collections: [{
+      name: "medsign_links",
+      fields: [
+        { name: "link_id", type: "string" },
+        { name: "email", type: "string" },
+        { name: "link_url", type: "string" },
+        { name: "batch_id", type: "string" },
+        { name: "client_name", type: "string" },
+        { name: "client_no", type: "array" },
+        { name: "created_at", type: "string" },
+        { name: "status", type: "string" }
+      ]
+    }]
+  };
+
+  try {
+    const res = await fetch(`${DATACUBE_BASE}/add_collection`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    console.log("  [ensureLinksCollection] status:", res.status, "| response:", JSON.stringify(data));
+  } catch (err) {
+    console.warn("  [ensureLinksCollection] setup skipped or already exists:", err.message);
+  }
 }
 
 // ===== DB HELPER: log all DataCube calls =====
@@ -607,10 +617,6 @@ app.post("/api/send_pdf_email", async (req, res) => {
     let url_signed = "https://datacube.uxlivinglab.online" + signed_url;
     console.log("Actual signed url for fetching: " + url_signed);
 
-    // if (!signed_url.startsWith("http")) {
-    //   throw new Error("Invalid signed_url — does not start with http: " + signed_url);
-    // }
-
     const fileRes = await fetch(url_signed);
     console.log("  [send_pdf_email] signed_url fetch status:", fileRes.status);
 
@@ -842,6 +848,59 @@ app.get("/api/public/qr", async (req, res) => {
   } catch (err) {
     console.error("  [public/qr list] ERROR:", err.message);
     res.status(500).json({ error: "Failed to fetch QR codes" });
+  }
+});
+
+// ---------- STORE MEDSIGN LINK ----------
+app.post("/api/save_medsign_link", async (req, res) => {
+  console.log("  [save_medsign_link] email:", req.body?.email, "| link_id:", req.body?.link_id);
+  try {
+    const {
+      email,
+      link_id,
+      batch_id = "",
+      client_name = "",
+      client_no = []
+    } = req.body || {};
+
+    if (!email || !link_id) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Auto-generate the link_url with puretrace.html and the link_id parameter
+    const link_url = `https://location-map-1.onrender.com/puretrace.html?id=${link_id}`;
+
+    await ensureLinksCollection();
+
+    const payload = {
+      database_id: DB_ID,
+      collection_name: "medsign_links",
+      documents: [{
+        link_id,
+        email,
+        link_url,
+        batch_id: String(batch_id),
+        client_name: String(client_name),
+        client_no: Array.isArray(client_no) ? client_no : (client_no ? [client_no] : []),
+        status: "active",
+        created_at: new Date().toISOString()
+      }]
+    };
+
+    const r = await fetch(`${DATACUBE_BASE}/crud`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await r.json();
+    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+
+    res.json({ success: true, link_id, link_url });
+
+  } catch (err) {
+    console.error("  [save_medsign_link] ERROR:", err.message);
+    res.status(500).json({ error: "Failed to save link record" });
   }
 });
 

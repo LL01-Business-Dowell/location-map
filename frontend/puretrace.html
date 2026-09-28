@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PureTrace</title>
+  <style>
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #000000;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    /* Main Content Wrapper */
+    main {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    /* Prominent Title */
+    h1 {
+      font-size: 3.25rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #ffffff;
+      margin-bottom: 3rem;
+    }
+
+    /* Side-by-Side Action Buttons Container */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Prominent Emerald Green Buttons */
+    .btn-primary {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.25rem 1rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      border-radius: 14px;
+      border: none;
+      background-color: #10b981;
+      color: #000000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #059669;
+      color: #ffffff;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.96);
+    }
+
+    /* Smaller, Subtle Close Button */
+    .btn-close {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 8px;
+      border: 1px solid #27272a;
+      background-color: transparent;
+      color: #71717a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close:hover {
+      background-color: #18181b;
+      color: #a1a1aa;
+      border-color: #3f3f46;
+    }
+
+    .btn-close:active {
+      transform: scale(0.96);
+    }
+
+    /* Mobile Responsive Stacking */
+    @media (max-width: 360px) {
+      h1 {
+        font-size: 2.75rem;
+      }
+
+      .action-buttons {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <h1>PureTrace</h1>
+
+    <div class="action-buttons">
+      <button type="button" class="btn-primary" onclick="alert('Specifications clicked')">
+        Specifications
+      </button>
+      <button type="button" class="btn-primary" onclick="alert('Feedback clicked')">
+        Feedback
+      </button>
+    </div>
+
+    <button type="button" class="btn-close" onclick="window.close()">
+      Close
+    </button>
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>MedSign Links</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f0f4f8;
+            --surface: #ffffff;
+            --surface2: #f0f4f8;
+            --border: #d1dce8;
+            --border-hover: #a0b4c8;
+            --accent: #1a56db;
+            --accent-hover: #1446b8;
+            --accent2: #0e9f6e;
+            --text: #1a2b3c;
+            --muted: #5a7184;
+            --danger: #e02424;
+            --success: #0e9f6e;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 0 80px;
+        }
+
+        /* ── Top Header Bar ── */
+        .topbar {
+            width: 100%;
+            background: var(--accent);
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 8px rgba(26, 86, 219, 0.15);
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 17px;
+            letter-spacing: -0.01em;
+        }
+
+        .topbar-brand svg {
+            width: 28px;
+            height: 28px;
+            opacity: 0.95;
+        }
+
+        /* ── Page Content ── */
+        .page-content {
+            width: 100%;
+            max-width: 580px;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: clamp(22px, 4vw, 30px);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 14px;
+            max-width: 420px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 7px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .field input[type="email"] {
+            width: 100%;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 11px 14px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input[type="email"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+
+        /* ── Quantity Input Controls ── */
+        .qty-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 6px 10px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .qty-btn {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--accent);
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .qty-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .qty-manual {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .qty-manual::-webkit-inner-spin-button,
+        .qty-manual::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .qty-manual {
+            -moz-appearance: textfield;
+        }
+
+        .qty-max {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ── Action Button ── */
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.18s;
+            margin-top: 8px;
+            box-shadow: 0 1px 3px rgba(26, 86, 219, 0.2);
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled {
+            background: #a0b4c8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Link Results Area ── */
+        #resultSection {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .links-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .links-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .links-container {
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface2);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .link-text {
+            font-family: 'DM Mono', monospace;
+            color: var(--accent);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+        }
+
+        .action-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
+
+        .action-btn.primary {
+            background: var(--accent2);
+            border-color: var(--accent2);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #098158;
+        }
+
+        /* ── Error Box ── */
+        #errorMsg {
+            display: none;
+            margin-top: 14px;
+            background: #fef2f2;
+            border: 1.5px solid #fca5a5;
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13px;
+            color: var(--danger);
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="topbar-brand">
+            <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 14A4 4 0 0 1 14 10H18A4 4 0 0 1 18 18H14" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M18 14A4 4 0 0 1 14 18H10A4 4 0 0 1 10 10H14" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            MedSign Links
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="header">
+            <h1>Generate MedSign Links</h1>
+            <p>Enter your email and specify how many unique links you need to create.</p>
+        </div>
+
+        <div class="card">
+            <div class="field">
+                <label for="emailInput">Email address</label>
+                <input type="email" id="emailInput" placeholder="you@company.com" />
+            </div>
+
+            <div class="field">
+                <label for="qtyInput">Number of Links</label>
+                <div class="qty-row">
+                    <button class="qty-btn" id="qtyDown">&#8722;</button>
+                    <input type="number" class="qty-manual" id="qtyInput" value="10" min="1" max="500" />
+                    <button class="qty-btn" id="qtyUp">+</button>
+                    <span class="qty-max">max 500</span>
+                </div>
+            </div>
+
+            <button class="submit-btn" id="generateBtn">Generate Links</button>
+
+            <div id="resultSection">
+                <div class="section-divider"></div>
+                <div class="links-header">
+                    <span class="links-title">Generated Links (<span id="linksCount">0</span>)</span>
+                </div>
+                
+                <div class="links-container" id="linksContainer"></div>
+
+                <div class="actions-row">
+                    <button class="action-btn primary" id="downloadTxtBtn">Download (.TXT)</button>
+                    <button class="action-btn" id="resetBtn">Clear & New</button>
+                </div>
+            </div>
+
+            <div id="errorMsg"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="state.js"></script>
+    <script src="utils.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // Quantity Controls Logic
+        const qtyInput = document.getElementById('qtyInput');
+        const qtyUp = document.getElementById('qtyUp');
+        const qtyDown = document.getElementById('qtyDown');
+
+        qtyUp.addEventListener('click', () => {
+            let val = parseInt(qtyInput.value) || 1;
+            if (val < 500) qtyInput.value = val + 1;
+        });
+
+        qtyDown.addEventListener('click', () => {
+            let val = parseInt(qtyInput.value) || 1;
+            if (val > 1) qtyInput.value = val - 1;
+        });
+
+        // Main Generation Logic
+        const generateBtn = document.getElementById('generateBtn');
+        const emailInput = document.getElementById('emailInput');
+        const resultSection = document.getElementById('resultSection');
+        const linksContainer = document.getElementById('linksContainer');
+        const linksCount = document.getElementById('linksCount');
+        const errorMsg = document.getElementById('errorMsg');
+        const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let generatedLinks = [];
+
+        generateBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const count = parseInt(qtyInput.value);
+
+            errorMsg.style.display = 'none';
+
+            if (!email || !email.includes('@')) {
+                showError("Please enter a valid email address.");
+                return;
+            }
+
+            if (!count || count < 1 || count > 500) {
+                showError("Please enter a valid quantity between 1 and 500.");
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Generating...";
+
+            try {
+                // API Call to your backend logic/Firebase endpoint
+                const response = await createMedSignLinks(email, count);
+
+                if (response && response.success && response.links) {
+                    generatedLinks = response.links;
+                    renderLinks(generatedLinks);
+                    resultSection.style.display = 'block';
+                } else {
+                    showError(response.message || "Failed to generate links.");
+                }
+            } catch (err) {
+                showError("An unexpected error occurred. Please try again.");
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = "Generate Links";
+            }
+        });
+
+        function renderLinks(links) {
+            linksContainer.innerHTML = '';
+            linksCount.textContent = links.length;
+
+            links.forEach((linkObj) => {
+                const item = document.createElement('div');
+                item.className = 'link-item';
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'link-text';
+                textSpan.textContent = linkObj.url;
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.textContent = 'Copy';
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(linkObj.url);
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+                });
+
+                item.appendChild(textSpan);
+                item.appendChild(copyBtn);
+                linksContainer.appendChild(item);
+            });
+        }
+
+        downloadTxtBtn.addEventListener('click', () => {
+            if (!generatedLinks.length) return;
+            const content = generatedLinks.map(l => l.url).join('\n');
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `medsign_links_${Date.now()}.txt`;
+            a.click();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            resultSection.style.display = 'none';
+            generatedLinks = [];
+            linksContainer.innerHTML = '';
+        });
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
