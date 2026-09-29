@@ -24,11 +24,19 @@
       padding: 1.5rem;
     }
 
-    /* Main Content Wrapper */
+    /* Main Content Wrapper - Hidden by default to prevent visual flash */
     main {
       width: 100%;
       max-width: 400px;
       text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    main.visible {
+      opacity: 1;
+      visibility: visible;
     }
 
     /* Prominent Title */
@@ -108,8 +116,8 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(6px);
       z-index: 1000;
       justify-content: center;
       align-items: center;
@@ -159,7 +167,6 @@
       width: 100%;
     }
 
-    /* Mobile Responsive Stacking */
     @media (max-width: 360px) {
       h1 {
         font-size: 2.75rem;
@@ -174,7 +181,8 @@
 </head>
 <body>
 
-  <main>
+  <!-- Main Page Content (Hidden until batch check passes) -->
+  <main id="mainContent">
     <h1>PureTrace</h1>
 
     <div class="action-buttons">
@@ -204,23 +212,32 @@
   <script>
     const API_BASE = "https://location-map-a89a.onrender.com/api";
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    (async function initBatchCheck() {
       const urlParams = new URLSearchParams(window.location.search);
       const linkId = urlParams.get("id");
+      const mainContent = document.getElementById("mainContent");
+      const modal = document.getElementById("batchModal");
 
-      if (!linkId) return;
+      // If no ID is present, expose content immediately
+      if (!linkId) {
+        mainContent.classList.add("visible");
+        return;
+      }
 
       try {
-        // 1. Fetch link details by ID
+        // Fetch record details before displaying content
         const res = await fetch(`${API_BASE}/get_medsign_link/${linkId}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          mainContent.classList.add("visible");
+          return;
+        }
 
         const data = await res.json();
         const record = data?.record;
 
-        // 2. Check if batch_id is empty or missing
+        // Check if batch_id is empty or missing
         if (record && (!record.batch_id || record.batch_id.trim() === "")) {
-          const modal = document.getElementById("batchModal");
+          // Keep mainContent hidden and display modal
           modal.style.display = "flex";
 
           document.getElementById("submitBatchBtn").addEventListener("click", async () => {
@@ -230,7 +247,6 @@
               return;
             }
 
-            // 3. Update batch_id via backend API
             const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -244,11 +260,15 @@
               alert("Failed to update Batch ID. Please try again.");
             }
           });
+        } else {
+          // Batch ID exists; reveal main page content
+          mainContent.classList.add("visible");
         }
       } catch (err) {
-        console.error("Error checking batch_id:", err);
+        console.error("Error verifying batch_id:", err);
+        mainContent.classList.add("visible");
       }
-    });
+    })();
   </script>
 
 </body>
