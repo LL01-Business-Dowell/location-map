@@ -811,5 +811,5 @@ async function createMedSignLinks(email, count = 1) {
     throw new Error(`Failed to generate links: ${errText}`);
   }
 
-  return await res.json(); // returns { success: true, links: [...] }
+  return await res.json(); // returns { success: true, links: [...], inserted_ids: [...] }
 }

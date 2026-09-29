@@ -867,7 +867,6 @@ app.post("/api/save_medsign_link", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Auto-generate the link_url with puretrace.html and the link_id parameter
     const link_url = `https://location-map-1.onrender.com/puretrace.html?id=${link_id}`;
 
     await ensureLinksCollection();
@@ -904,33 +903,14 @@ app.post("/api/save_medsign_link", async (req, res) => {
   }
 });
 
-
-// ===== START SERVER =====
-app.listen(PORT, () => {
-  console.log(`\nServer listening on port ${PORT}\n`);
-
-  const PING_URL      = "https://location-map-a89a.onrender.com/api/health";
-  const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
-
-  setInterval(async () => {
-    try {
-      const res  = await fetch(PING_URL);
-      const data = await res.json();
-      console.log(`  [keepalive] ping OK — ${data.timestamp}`);
-    } catch (err) {
-      console.warn("  [keepalive] ping failed:", err.message);
-    }
-  }, PING_INTERVAL);
-
-  console.log(`Keepalive ping scheduled every 10 minutes`);
-});
-
 // Helper to generate a random 8-digit numeric ID string
 function generate8DigitId() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
 
+// ---------- BATCH GENERATE MEDSIGN LINKS ----------
 app.post("/api/generate_medsign_links", async (req, res) => {
+  console.log("  [generate_medsign_links] email:", req.body?.email, "| count:", req.body?.count);
   try {
     const { email, count = 1 } = req.body || {};
     if (!email || count < 1) {
@@ -964,8 +944,10 @@ app.post("/api/generate_medsign_links", async (req, res) => {
     const payload = {
       database_id: DB_ID,
       collection_name: "medsign_links",
-      documents: documents // DataCube saves each array item as a separate document
+      documents: documents
     };
+
+    console.log(`  [generate_medsign_links] Sending ${documents.length} document(s) to DataCube /crud...`);
 
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
       method: "POST",
@@ -974,15 +956,38 @@ app.post("/api/generate_medsign_links", async (req, res) => {
     });
 
     const data = await r.json();
+    console.log("  [generate_medsign_links] DataCube result:", r.status, JSON.stringify(data));
+
     if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
 
     res.json({
       success: true,
-      links: generatedUrls
+      links: generatedUrls,
+      inserted_ids: data?.inserted_ids || []
     });
 
   } catch (err) {
     console.error("  [generate_medsign_links] ERROR:", err.message);
-    res.status(500).json({ error: "Failed to generate links" });
+    res.status(500).json({ error: "Failed to generate links", details: err.message });
   }
+});
+
+// ===== START SERVER =====
+app.listen(PORT, () => {
+  console.log(`\nServer listening on port ${PORT}\n`);
+
+  const PING_URL      = "https://location-map-a89a.onrender.com/api/health";
+  const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
+
+  setInterval(async () => {
+    try {
+      const res  = await fetch(PING_URL);
+      const data = await res.json();
+      console.log(`  [keepalive] ping OK — ${data.timestamp}`);
+    } catch (err) {
+      console.warn("  [keepalive] ping failed:", err.message);
+    }
+  }, PING_INTERVAL);
+
+  console.log(`Keepalive ping scheduled every 10 minutes`);
 });
