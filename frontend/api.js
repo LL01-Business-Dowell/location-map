@@ -768,46 +768,6 @@ async function uploadPdf(pdfBlob, filename) {
 }
 
 
-async function createMedSignLink({
-  email,
-  uniqueId,
-  batchId = "",
-  clientName = "",
-  clientNo = ""
-}) {
-  // Construct the target URL using puretrace.html and the unique ID parameter
-  const constructedLinkUrl = `https://location-map-1.onrender.com/puretrace.html?id=${uniqueId}`;
-
-  const payload = {
-    database_id: DATABASE_ID,
-    collection_name: "medsign_links",
-    documents: [{
-      link_id: uniqueId,
-      email: email,
-      link_url: constructedLinkUrl,
-      batch_id: String(batchId),
-      client_name: String(clientName),
-      client_no: Array.isArray(clientNo) ? clientNo : (clientNo ? [clientNo] : []),
-      created_at: new Date().toISOString(),
-      status: "active"
-    }]
-  };
-
-  try {
-    const res = await fetch(`${PROXY_BASE}/crud`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!res.ok) throw new Error("Failed to save link document");
-    return await res.json();
-  } catch (err) {
-    console.error("Failed to save MedSign Link", err);
-    throw err;
-  }
-}
-
 async function registerMedSignLinksCollection() {
   const payload = {
     database_id: DATABASE_ID,
@@ -837,4 +797,19 @@ async function registerMedSignLinksCollection() {
   } catch (err) {
     console.warn("Collection setup failed or already exists", err);
   }
+}
+
+async function createMedSignLinks(email, count = 1) {
+  const res = await fetch(`${PROXY_BASE}/generate_medsign_links`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, count })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to generate links: ${errText}`);
+  }
+
+  return await res.json(); // returns { success: true, links: [...] }
 }

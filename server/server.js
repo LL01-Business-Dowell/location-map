@@ -924,3 +924,65 @@ app.listen(PORT, () => {
 
   console.log(`Keepalive ping scheduled every 10 minutes`);
 });
+
+// Helper to generate a random 8-digit numeric ID string
+function generate8DigitId() {
+  return Math.floor(10000000 + Math.random() * 90000000).toString();
+}
+
+app.post("/api/generate_medsign_links", async (req, res) => {
+  try {
+    const { email, count = 1 } = req.body || {};
+    if (!email || count < 1) {
+      return res.status(400).json({ error: "Email and valid count are required" });
+    }
+
+    await ensureLinksCollection();
+
+    const batchId = `batch_${Date.now()}`;
+    const documents = [];
+    const generatedUrls = [];
+
+    for (let i = 0; i < count; i++) {
+      const unique8DigitId = generate8DigitId();
+      const linkUrl = `https://location-map-1.onrender.com/puretrace.html?id=${unique8DigitId}`;
+
+      documents.push({
+        link_id: unique8DigitId,
+        email: String(email),
+        link_url: linkUrl,
+        batch_id: batchId,
+        client_name: "",
+        client_no: [],
+        created_at: new Date().toISOString(),
+        status: "active"
+      });
+
+      generatedUrls.push(linkUrl);
+    }
+
+    const payload = {
+      database_id: DB_ID,
+      collection_name: "medsign_links",
+      documents: documents // DataCube saves each array item as a separate document
+    };
+
+    const r = await fetch(`${DATACUBE_BASE}/crud`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await r.json();
+    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+
+    res.json({
+      success: true,
+      links: generatedUrls
+    });
+
+  } catch (err) {
+    console.error("  [generate_medsign_links] ERROR:", err.message);
+    res.status(500).json({ error: "Failed to generate links" });
+  }
+});

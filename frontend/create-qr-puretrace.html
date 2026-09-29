@@ -348,6 +348,7 @@
             padding: 11px 14px;
             font-size: 13px;
             color: var(--danger);
+            word-break: break-word;
         }
 
         .section-divider {
@@ -463,19 +464,30 @@
             generateBtn.disabled = true;
             generateBtn.textContent = "Generating...";
 
-            try {
-                // API Call to your backend logic/Firebase endpoint
-                const response = await createMedSignLinks(email, count);
+            console.log(`[MedSign Link Gen] Starting generation: Email=${email}, Count=${count}`);
 
-                if (response && response.success && response.links) {
+            try {
+                // Verify that the target API function exists
+                if (typeof createMedSignLinks !== 'function') {
+                    throw new ReferenceError("The function 'createMedSignLinks' is not defined in scope. Please check api.js.");
+                }
+
+                const response = await createMedSignLinks(email, count);
+                console.log("[MedSign Link Gen] Received API response:", response);
+
+                if (response && response.success && Array.isArray(response.links) && response.links.length > 0) {
                     generatedLinks = response.links;
                     renderLinks(generatedLinks);
                     resultSection.style.display = 'block';
+                } else if (response && response.message) {
+                    showError(response.message);
                 } else {
-                    showError(response.message || "Failed to generate links.");
+                    console.warn("[MedSign Link Gen] API call returned unexpected output format:", response);
+                    showError("Received an invalid response format from the server.");
                 }
             } catch (err) {
-                showError("An unexpected error occurred. Please try again.");
+                console.error("[MedSign Link Gen] Execution failed with exception:", err);
+                showError(`Error: ${err.message || 'An unexpected error occurred. Please check console logs.'}`);
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.textContent = "Generate Links";
@@ -490,15 +502,17 @@
                 const item = document.createElement('div');
                 item.className = 'link-item';
 
+                const urlText = typeof linkObj === 'string' ? linkObj : (linkObj.url || linkObj.link_url || '');
+
                 const textSpan = document.createElement('span');
                 textSpan.className = 'link-text';
-                textSpan.textContent = linkObj.url;
+                textSpan.textContent = urlText;
 
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'copy-btn';
                 copyBtn.textContent = 'Copy';
                 copyBtn.addEventListener('click', () => {
-                    navigator.clipboard.writeText(linkObj.url);
+                    navigator.clipboard.writeText(urlText);
                     copyBtn.textContent = 'Copied!';
                     setTimeout(() => copyBtn.textContent = 'Copy', 1500);
                 });
@@ -511,7 +525,7 @@
 
         downloadTxtBtn.addEventListener('click', () => {
             if (!generatedLinks.length) return;
-            const content = generatedLinks.map(l => l.url).join('\n');
+            const content = generatedLinks.map(l => typeof l === 'string' ? l : (l.url || l.link_url || '')).join('\n');
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
