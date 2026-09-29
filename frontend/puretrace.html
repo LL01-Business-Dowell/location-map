@@ -265,9 +265,9 @@
       <button type="button" class="btn-primary" onclick="alert('Specifications clicked')">
         Specifications
       </button>
-      <button type="button" class="btn-primary" onclick="alert('Feedback clicked')">
+      <a id="feedbackBtn" href="#" target="_blank" class="btn-primary">
         Feedback
-      </button>
+      </a>
     </div>
 
     <button type="button" class="btn-close" onclick="window.close()">
@@ -279,7 +279,7 @@
   <div id="batchModal" class="modal-overlay">
     <div class="modal-card">
       <h2>Enter Batch ID</h2>
-      <!-- <p>Please enter the Batch ID associated with this document link to continue.</p> -->
+      <p>Please enter the Batch ID associated with this document link to continue.</p>
       <input type="text" id="batchIdInput" placeholder="e.g. BATCH12345" />
       <button type="button" class="btn-primary" id="submitBatchBtn">
         <span id="btnText">Submit</span>
@@ -309,7 +309,11 @@
 
     (async function initBatchCheck() {
       const urlParams = new URLSearchParams(window.location.search);
-      const linkId = urlParams.get("id");
+      const linkId = urlParams.get("id") || "";
+
+      // Dynamically attach current URL ID to feedback link
+      const feedbackBtn = document.getElementById("feedbackBtn");
+      feedbackBtn.href = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
 
       // No ID passed -> display page directly
       if (!linkId) {
