@@ -919,7 +919,7 @@ app.post("/api/generate_medsign_links", async (req, res) => {
 
     await ensureLinksCollection();
 
-    const batchId = `batch_${Date.now()}`;
+    const batchId = "";
     const documents = [];
     const generatedUrls = [];
 
@@ -969,6 +969,74 @@ app.post("/api/generate_medsign_links", async (req, res) => {
   } catch (err) {
     console.error("  [generate_medsign_links] ERROR:", err.message);
     res.status(500).json({ error: "Failed to generate links", details: err.message });
+  }
+});
+
+
+// ---------- GET LINK DETAILS BY LINK_ID ----------
+app.get("/api/get_medsign_link/:link_id", async (req, res) => {
+  try {
+    const { link_id } = req.params;
+    if (!link_id) {
+      return res.status(400).json({ error: "link_id is required" });
+    }
+
+    // DataCube GET /api/v2/crud/ uses query params and 'filters' as a JSON string
+    const filters = JSON.stringify({ link_id: String(link_id) });
+    const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_links&filters=${encodeURIComponent(filters)}&page=1&page_size=1`;
+
+    const r = await fetch(queryUrl, {
+      method: "GET",
+      headers: authHeaders()
+    });
+
+    const data = await r.json();
+    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+
+    const records = data?.data || [];
+    if (records.length === 0) {
+      return res.status(404).json({ error: "Link record not found" });
+    }
+
+    res.json({ success: true, record: records[0] });
+  } catch (err) {
+    console.error("  [get_medsign_link] ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch link details" });
+  }
+});
+
+// ---------- UPDATE BATCH_ID ----------
+app.post("/api/update_batch_id", async (req, res) => {
+  try {
+    const { link_id, batch_id } = req.body || {};
+    if (!link_id || !batch_id) {
+      return res.status(400).json({ error: "link_id and batch_id are required" });
+    }
+
+    // DataCube PUT /api/v2/crud/ payload structure
+    const payload = {
+      database_id: DB_ID,
+      collection_name: "medsign_links",
+      filters: { link_id: String(link_id) },
+      update_data: { batch_id: String(batch_id) },
+      update_all_fields: false,
+      update_many: false,
+      upsert: false
+    };
+
+    const r = await fetch(`${DATACUBE_BASE}/crud/`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await r.json();
+    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+
+    res.json({ success: true, updated: data });
+  } catch (err) {
+    console.error("  [update_batch_id] ERROR:", err.message);
+    res.status(500).json({ error: "Failed to update batch_id" });
   }
 });
 
