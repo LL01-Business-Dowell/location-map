@@ -1020,7 +1020,7 @@ app.post("/api/update_batch_id", async (req, res) => {
       filters: { link_id: String(link_id) },
       update_data: { batch_id: String(batch_id) },
       update_all_fields: false,
-      update_many: false,
+      update_many: true,
       upsert: false
     };
 
