@@ -1,384 +1,1054 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PureTrace</title>
-  <style>
-    /* Reset & Base Styles */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PureTrace</title>
+    <style>
+        /* Reset & Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #000000;
-      color: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 1.5rem;
-      overflow-x: hidden;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            overflow-x: hidden;
+        }
 
-    /* Page Initial Spinner */
-    #pageSpinner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: #000000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
+        /* Page Initial Spinner */
+        #pageSpinner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
 
-    #pageSpinner.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
+        #pageSpinner.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
-    /* Main Content Animations */
-    main {
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-    }
+        /* Main Content Animations */
+        main {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
 
-    main.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+        main.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-    /* Prominent Title */
-    h1 {
-      font-size: 3.25rem;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      color: #ffffff;
-      margin-bottom: 3rem;
-    }
+        /* Prominent Title */
+        h1 {
+            font-size: 3.25rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+            margin-bottom: 3rem;
+        }
 
-    /* Side-by-Side Action Buttons Container */
-    .action-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
+        /* Side-by-Side Action Buttons Container */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
 
-    /* Prominent Emerald Green Buttons */
-    .btn-primary {
-      position: relative;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1.25rem 1rem;
-      font-size: 1.15rem;
-      font-weight: 700;
-      border-radius: 14px;
-      border: none;
-      background-color: #10b981;
-      color: #000000;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-    }
+        /* Prominent Emerald Green Buttons */
+        .btn-primary {
+            position: relative;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem 1rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 14px;
+            border: none;
+            background-color: #10b981;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
 
-    .btn-primary:hover {
-      background-color: #059669;
-      color: #ffffff;
-    }
+        .btn-primary:hover {
+            background-color: #059669;
+            color: #ffffff;
+        }
 
-    .btn-primary:active {
-      transform: scale(0.96);
-    }
+        .btn-primary:active {
+            transform: scale(0.96);
+        }
 
-    .btn-primary:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-    /* Smaller, Subtle Close Button */
-    .btn-close {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
-      font-weight: 500;
-      border-radius: 8px;
-      border: 1px solid #27272a;
-      background-color: transparent;
-      color: #71717a;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+        .btn-secondary {
+            background-color: #27272a;
+            color: #ffffff;
+            border: 1px solid #3f3f46;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-    .btn-close:hover {
-      background-color: #18181b;
-      color: #a1a1aa;
-      border-color: #3f3f46;
-    }
+        .btn-secondary:hover {
+            background-color: #3f3f46;
+        }
 
-    .btn-close:active {
-      transform: scale(0.96);
-    }
+        .btn-danger {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-    /* Modal Overlay Styles */
-    .modal-overlay {
-      display: flex;
-      opacity: 0;
-      visibility: hidden;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.88);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
+        .btn-danger:hover {
+            background-color: #ef4444;
+            color: #ffffff;
+        }
 
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
+        /* Smaller Close Button */
+        .btn-close {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid #27272a;
+            background-color: transparent;
+            color: #71717a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-    .modal-card {
-      background-color: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 16px;
-      padding: 2rem;
-      width: 90%;
-      max-width: 360px;
-      text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-      transform: scale(0.95);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+        .btn-close:hover {
+            background-color: #18181b;
+            color: #a1a1aa;
+            border-color: #3f3f46;
+        }
 
-    .modal-overlay.active .modal-card {
-      transform: scale(1);
-    }
+        .btn-close:active {
+            transform: scale(0.96);
+        }
 
-    .modal-card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.75rem;
-      color: #ffffff;
-    }
+        /* Modal Overlay Styles */
+        .modal-overlay {
+            display: flex;
+            opacity: 0;
+            visibility: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 1rem;
+        }
 
-    .modal-card p {
-      font-size: 0.9rem;
-      color: #a1a1aa;
-      margin-bottom: 1.25rem;
-    }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
 
-    .modal-card input {
-      width: 100%;
-      padding: 0.8rem;
-      font-size: 1rem;
-      background-color: #09090b;
-      border: 1px solid #3f3f46;
-      border-radius: 8px;
-      color: #ffffff;
-      outline: none;
-      margin-bottom: 1.25rem;
-      text-align: center;
-      transition: border-color 0.2s ease;
-    }
+        .modal-card {
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 850px;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-    .modal-card input:focus {
-      border-color: #10b981;
-    }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
 
-    .modal-card button {
-      width: 100%;
-    }
+        .modal-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            text-align: center;
+        }
 
-    /* CSS Spinner Component */
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      border-top-color: #10b981;
-      animation: spin 0.8s linear infinite;
-    }
+        .modal-card p.subtitle {
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
 
-    .spinner-btn {
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(0, 0, 0, 0.25);
-      border-radius: 50%;
-      border-top-color: #000000;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-      margin-right: 8px;
-    }
+        .section-title {
+            font-size: 1.15rem;
+            color: #10b981;
+            border-bottom: 1px solid #27272a;
+            padding-bottom: 0.5rem;
+            margin: 1.5rem 0 1rem 0;
+            font-weight: 700;
+        }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
 
-    @media (max-width: 360px) {
-      h1 {
-        font-size: 2.75rem;
-      }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
 
-      .action-buttons {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-    }
-  </style>
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.825rem;
+            color: #d4d4d8;
+            font-weight: 600;
+        }
+
+        .form-group label span.req {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group input[type="email"],
+        .form-group input[type="url"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.7rem;
+            font-size: 0.9rem;
+            background-color: #09090b;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .form-group input[type="file"] {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            background: #09090b;
+            padding: 0.5rem;
+            border: 1px dashed #3f3f46;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #10b981;
+        }
+
+        .nested-card {
+            background-color: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .nested-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Modal Form Action Buttons Grid */
+        .modal-actions-grid {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        /* CSS Spinner Component */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: #10b981;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .spinner-btn {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.25);
+            border-radius: 50%;
+            border-top-color: #000000;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* PREVIEW POPUP STYLES */
+        .preview-grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .preview-item {
+            background-color: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .preview-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .preview-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .preview-val {
+            font-size: 0.95rem;
+            color: #f4f4f5;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .preview-cert-card, .preview-img-card {
+            background-color: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .preview-img-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #27272a;
+        }
+
+        .preview-file-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem 0.85rem;
+            background-color: #18181b;
+            border: 1px solid #3f3f46;
+            color: #10b981;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: fit-content;
+            transition: all 0.2s ease;
+        }
+
+        .preview-file-btn:hover {
+            background-color: #27272a;
+            border-color: #10b981;
+        }
+
+        @media (max-width: 640px) {
+            .modal-actions-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .preview-grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2.75rem;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .modal-card {
+                padding: 1.25rem;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-  <!-- Fullscreen Initial Loader -->
-  <div id="pageSpinner">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Main Page Content -->
-  <main id="mainContent">
-    <h1>PureTrace</h1>
-
-    <div class="action-buttons">
-      <button type="button" class="btn-primary" onclick="alert('Specifications clicked')">
-        Specifications
-      </button>
-      <a id="feedbackBtn" href="#" target="_blank" class="btn-primary">
-        Feedback
-      </a>
+    <!-- Fullscreen Initial Loader -->
+    <div id="pageSpinner">
+        <div class="spinner"></div>
     </div>
 
-    <button type="button" class="btn-close" onclick="window.close()">
-      Close
-    </button>
-  </main>
+    <!-- Main Page Content -->
+    <main id="mainContent">
+        <h1>PureTrace</h1>
 
-  <!-- Batch ID Prompt Modal -->
-  <div id="batchModal" class="modal-overlay">
-    <div class="modal-card">
-      <h2>Enter Batch ID</h2>
-      <p>Please enter the Batch ID associated with this document link to continue.</p>
-      <input type="text" id="batchIdInput" placeholder="e.g. BATCH12345" />
-      <button type="button" class="btn-primary" id="submitBatchBtn">
-        <span id="btnText">Submit</span>
-      </button>
+        <div class="action-buttons">
+            <button type="button" class="btn-primary" id="specificationsBtn" onclick="openSpecifications()">
+                Specifications
+            </button>
+            <a id="feedbackBtn" href="#" target="_blank" class="btn-primary">
+                Feedback
+            </a>
+        </div>
+
+        <button type="button" class="btn-close" onclick="window.close()">
+            Close
+        </button>
+    </main>
+
+    <!-- Complete Product Form Modal -->
+    <div id="batchModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2>Product Registration Details</h2>
+            <p class="subtitle">Fields marked with (<span style="color:#ef4444">*</span>) are mandatory.</p>
+
+            <form id="productDetailsForm">
+
+                <!-- SECTION 1: Product Specifications -->
+                <div class="section-title">1. Product Specifications</div>
+                <div class="form-grid">
+                    <!-- Mandatory Fields -->
+                    <div class="form-group">
+                        <label for="product_name">Product Name <span class="req">*</span></label>
+                        <input type="text" id="product_name" name="product_name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="batch_id">Batch Number <span class="req">*</span></label>
+                        <input type="text" id="batch_id" name="batch_id" required placeholder="e.g. BATCH12345" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="description">Description <span class="req">*</span></label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">Quantity <span class="req">*</span></label>
+                        <input type="number" id="quantity" name="quantity" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="mrp">MRP (inclusive of all taxes) <span class="req">*</span></label>
+                        <input type="number" step="0.01" id="mrp" name="mrp" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="mrp_currency">Currency of MRP <span class="req">*</span></label>
+                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc."
+                            required />
+                    </div>
+                    <div class="form-group">
+                        <label for="manufactured_by">Manufactured By <span class="req">*</span></label>
+                        <input type="text" id="manufactured_by" name="manufactured_by" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="marketed_by">Marketed By <span class="req">*</span></label>
+                        <input type="text" id="marketed_by" name="marketed_by" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="mfg_date">Month and Year of Manufacturing <span class="req">*</span></label>
+                        <input type="text" id="mfg_date" name="mfg_date" placeholder="MM/YYYY" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="country_of_origin">Country of Origin <span class="req">*</span></label>
+                        <input type="text" id="country_of_origin" name="country_of_origin" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_care_contact">Customer Care Contact <span class="req">*</span></label>
+                        <input type="text" id="customer_care_contact" name="customer_care_contact" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_care_phone">Customer Care Phone Number <span class="req">*</span></label>
+                        <input type="text" id="customer_care_phone" name="customer_care_phone" required />
+                    </div>
+
+                    <!-- Optional Fields -->
+                    <div class="form-group">
+                        <label for="serial_number">Serial Number</label>
+                        <input type="text" id="serial_number" name="serial_number" />
+                    </div>
+                    <div class="form-group">
+                        <label for="product_size">Product Size</label>
+                        <input type="text" id="product_size" name="product_size" />
+                    </div>
+                    <div class="form-group">
+                        <label for="unit_sales_price">Unit Sales Price</label>
+                        <input type="number" step="0.01" id="unit_sales_price" name="unit_sales_price" />
+                    </div>
+                    <div class="form-group">
+                        <label for="gst_number">GST Number</label>
+                        <input type="text" id="gst_number" name="gst_number" />
+                    </div>
+                    <div class="form-group">
+                        <label for="expiry_date">Expiry Date</label>
+                        <input type="date" id="expiry_date" name="expiry_date" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="expiry_details">Expiry Details</label>
+                        <input type="text" id="expiry_details" name="expiry_details" />
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_care_email">Customer Care Email ID</label>
+                        <input type="email" id="customer_care_email" name="customer_care_email" />
+                    </div>
+                    <div class="form-group">
+                        <label for="website">Website</label>
+                        <input type="url" id="website" name="website" placeholder="https://..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="storage_location_manufacturer">Storage Location by Manufacturer</label>
+                        <input type="text" id="storage_location_manufacturer" name="storage_location_manufacturer" />
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="storage_instructions_consumer">Storage Instructions for Consumer</label>
+                        <textarea id="storage_instructions_consumer" name="storage_instructions_consumer"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="package_recycling">Package Recycling</label>
+                        <input type="text" id="package_recycling" name="package_recycling" />
+                    </div>
+                    <div class="form-group">
+                        <label for="location_coordinates">Location Coordinates</label>
+                        <input type="text" id="location_coordinates" name="location_coordinates"
+                            placeholder="Lat, Lng" />
+                    </div>
+                    <div class="form-group">
+                        <label for="whatsapp_link">WhatsApp Link</label>
+                        <input type="url" id="whatsapp_link" name="whatsapp_link" placeholder="https://wa.me/..." />
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes"></textarea>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Certificates (1 - 10) -->
+                <div class="section-title">2. Certificates (Optional)</div>
+                <div id="certificatesContainer"></div>
+
+                <!-- SECTION 3: Product Images (1 - 6) -->
+                <div class="section-title">3. Product Images (Optional)</div>
+                <div id="productImagesContainer"></div>
+
+                <!-- Action Buttons: Exit, Preview, Save, Submit -->
+                <div class="modal-actions-grid">
+                    <button type="button" class="btn-danger" id="exitBtn" onclick="closeModal()">Exit</button>
+                    <button type="button" class="btn-secondary" id="previewBtn"
+                        onclick="generatePreview()">Preview</button>
+                    <button type="button" class="btn-secondary" id="saveBtn" onclick="saveLocally()">Save</button>
+                    <button type="submit" class="btn-primary" id="submitBatchBtn">
+                        <span id="btnText">Submit</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const API_BASE = "https://location-map-a89a.onrender.com/api";
+    <!-- PREVIEW POPUP MODAL OVERLAY -->
+    <div id="previewModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 id="previewModalTitle">Product Specification Preview</h2>
+            <p class="subtitle">Review the details entered before saving or submitting.</p>
 
-    function hidePageSpinner() {
-      const pageSpinner = document.getElementById("pageSpinner");
-      pageSpinner.classList.add("hidden");
-    }
+            <div id="previewModalBody"></div>
 
-    function showMainContent() {
-      hidePageSpinner();
-      const mainContent = document.getElementById("mainContent");
-      mainContent.classList.add("visible");
-    }
+            <div style="margin-top: 2rem; text-align: center;">
+                <button type="button" class="btn-secondary" onclick="closePreviewModal()" style="min-width: 140px;">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
 
-    function showModal() {
-      hidePageSpinner();
-      const modal = document.getElementById("batchModal");
-      modal.classList.add("active");
-    }
+    <script>
+        const API_BASE = "https://location-map-a89a.onrender.com/api";
+        let storedProductData = null;
 
-    (async function initBatchCheck() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const linkId = urlParams.get("id") || "";
+        const fieldLabels = {
+            product_name: "Product Name",
+            batch_id: "Batch Number",
+            description: "Description",
+            quantity: "Quantity",
+            mrp: "MRP",
+            mrp_currency: "Currency of MRP",
+            manufactured_by: "Manufactured By",
+            marketed_by: "Marketed By",
+            mfg_date: "Month & Year of Manufacturing",
+            country_of_origin: "Country of Origin",
+            customer_care_contact: "Customer Care Contact",
+            customer_care_phone: "Customer Care Phone",
+            serial_number: "Serial Number",
+            product_size: "Product Size",
+            unit_sales_price: "Unit Sales Price",
+            gst_number: "GST Number",
+            expiry_date: "Expiry Date",
+            expiry_details: "Expiry Details",
+            customer_care_email: "Customer Care Email",
+            website: "Website",
+            storage_location_manufacturer: "Storage Location (Manufacturer)",
+            storage_instructions_consumer: "Storage Instructions (Consumer)",
+            package_recycling: "Package Recycling",
+            location_coordinates: "Location Coordinates",
+            whatsapp_link: "WhatsApp Link",
+            notes: "Notes"
+        };
 
-      // Dynamically attach current URL ID to feedback link
-      const feedbackBtn = document.getElementById("feedbackBtn");
-      feedbackBtn.href = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
+        const imageLabels = [
+            "Product/Company Logo",
+            "Product Image 1",
+            "Product Image 2",
+            "Product Image 3",
+            "Product Image 4",
+            "Product Image 5"
+        ];
 
-      // No ID passed -> display page directly
-      if (!linkId) {
-        showMainContent();
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}/get_medsign_link/${linkId}`);
-        if (!res.ok) {
-          showMainContent();
-          return;
+        // Dynamic Certificates UI
+        const certContainer = document.getElementById("certificatesContainer");
+        for (let i = 1; i <= 10; i++) {
+            certContainer.innerHTML += `
+        <div class="nested-card">
+          <div class="nested-card-title">Certificate ${i}</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="cert_name_${i}" placeholder="Certificate Name" />
+            </div>
+            <div class="form-group">
+              <label>Upload Document</label>
+              <input type="file" id="cert_file_${i}" name="cert_file_${i}" />
+            </div>
+            <div class="form-group full-width">
+              <label>Description</label>
+              <input type="text" name="cert_desc_${i}" placeholder="Certificate Description" />
+            </div>
+          </div>
+        </div>
+      `;
         }
 
-        const data = await res.json();
-        const record = data?.record;
+        // Dynamic Product Images UI
+        const imgContainer = document.getElementById("productImagesContainer");
+        imageLabels.forEach((label, idx) => {
+            const num = idx + 1;
+            imgContainer.innerHTML += `
+        <div class="nested-card">
+          <div class="nested-card-title">${num}. ${label}</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Upload Image</label>
+              <input type="file" id="img_file_${num}" name="img_file_${num}" accept="image/*" />
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" name="img_desc_${num}" placeholder="Image Description" />
+            </div>
+          </div>
+        </div>
+      `;
+        });
 
-        // Check if batch_id is missing/empty
-        if (record && (!record.batch_id || record.batch_id.trim() === "")) {
-          showModal();
+        function hidePageSpinner() {
+            const pageSpinner = document.getElementById("pageSpinner");
+            if (pageSpinner) pageSpinner.classList.add("hidden");
+        }
 
-          const submitBtn = document.getElementById("submitBatchBtn");
-          const btnText = document.getElementById("btnText");
+        function showMainContent() {
+            hidePageSpinner();
+            document.getElementById("mainContent").classList.add("visible");
+        }
 
-          submitBtn.addEventListener("click", async () => {
-            const inputVal = document.getElementById("batchIdInput").value.trim();
-            if (!inputVal) {
-              alert("Please enter a valid Batch ID.");
-              return;
+        function showModal() {
+            hidePageSpinner();
+            document.getElementById("batchModal").classList.add("active");
+        }
+
+        function closeModal() {
+            document.getElementById("batchModal").classList.remove("active");
+            showMainContent();
+        }
+
+        function closePreviewModal() {
+            document.getElementById("previewModal").classList.remove("active");
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function collectFormData() {
+            const form = document.getElementById("productDetailsForm");
+            const formData = new FormData(form);
+            const payloadData = {};
+
+            for (let [key, val] of formData.entries()) {
+                if (!(val instanceof File)) {
+                    payloadData[key] = val.trim();
+                }
             }
 
-            // Set button loading state
-            submitBtn.disabled = true;
-            btnText.innerHTML = `<span class="spinner-btn"></span> Saving...`;
+            payloadData.certificates = [];
+            for (let i = 1; i <= 10; i++) {
+                const name = formData.get(`cert_name_${i}`);
+                const fileInput = document.getElementById(`cert_file_${i}`);
+                const file = fileInput ? fileInput.files[0] : null;
+                const desc = formData.get(`cert_desc_${i}`);
+
+                let fileData = null;
+                if (file && file.size > 0) {
+                    fileData = {
+                        filename: file.name,
+                        content_type: file.type,
+                        base64: await fileToBase64(file)
+                    };
+                } else if (storedProductData && storedProductData.certificates?.[i - 1]?.file) {
+                    fileData = storedProductData.certificates[i - 1].file;
+                }
+
+                if (name || desc || fileData) {
+                    payloadData.certificates.push({
+                        id: i,
+                        name: name || "",
+                        file: fileData,
+                        description: desc || ""
+                    });
+                }
+            }
+
+            payloadData.product_images = [];
+            for (let i = 1; i <= 6; i++) {
+                const fileInput = document.getElementById(`img_file_${i}`);
+                const file = fileInput ? fileInput.files[0] : null;
+                const desc = formData.get(`img_desc_${i}`);
+                const label = imageLabels[i - 1];
+
+                let fileData = null;
+                if (file && file.size > 0) {
+                    fileData = {
+                        filename: file.name,
+                        content_type: file.type,
+                        base64: await fileToBase64(file)
+                    };
+                } else if (storedProductData && storedProductData.product_images?.[i - 1]?.file) {
+                    fileData = storedProductData.product_images[i - 1].file;
+                }
+
+                if (desc || fileData) {
+                    payloadData.product_images.push({
+                        id: i,
+                        label: label,
+                        file: fileData,
+                        description: desc || ""
+                    });
+                }
+            }
+
+            return payloadData;
+        }
+
+        async function saveLocally() {
+            try {
+                const data = await collectFormData();
+                localStorage.setItem("puretrace_local_data", JSON.stringify(data));
+                storedProductData = data;
+                alert("Product information saved locally on browser!");
+            } catch (err) {
+                console.error("Save error:", err);
+                alert("Failed to save data locally.");
+            }
+        }
+
+        function restoreLocalData(data) {
+            if (!data) return;
+            const form = document.getElementById("productDetailsForm");
+            Object.keys(data).forEach((key) => {
+                if (form.elements[key] && typeof data[key] === "string") {
+                    form.elements[key].value = data[key];
+                }
+            });
+
+            if (data.certificates) {
+                data.certificates.forEach((cert) => {
+                    if (form.elements[`cert_name_${cert.id}`]) form.elements[`cert_name_${cert.id}`].value = cert.name || "";
+                    if (form.elements[`cert_desc_${cert.id}`]) form.elements[`cert_desc_${cert.id}`].value = cert.description || "";
+                });
+            }
+
+            if (data.product_images) {
+                data.product_images.forEach((img) => {
+                    if (form.elements[`img_desc_${img.id}`]) form.elements[`img_desc_${img.id}`].value = img.description || "";
+                });
+            }
+        }
+
+        async function generatePreview() {
+            const data = await collectFormData();
+
+            // Set title
+            document.getElementById("previewModalTitle").textContent = data.product_name ? `${data.product_name} - Details` : "Product Details Preview";
+
+            let previewHtml = "";
+
+            // Section 1: Specifications Grid
+            previewHtml += `<div class="section-title" style="margin-top:0;">1. Product Specifications</div>`;
+            previewHtml += `<div class="preview-grid-2col">`;
+            
+            let specsCount = 0;
+            Object.keys(fieldLabels).forEach((key) => {
+                const val = data[key];
+                if (val && val.toString().trim() !== "") {
+                    specsCount++;
+                    const isFullWidth = ["description", "notes", "storage_instructions_consumer", "expiry_details"].includes(key);
+                    previewHtml += `
+                        <div class="preview-item ${isFullWidth ? 'full-width' : ''}">
+                            <span class="preview-label">${fieldLabels[key]}</span>
+                            <span class="preview-val">${val}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            if (specsCount === 0) {
+                previewHtml += `<div class="preview-item full-width" style="color:#71717a;">No specifications entered yet.</div>`;
+            }
+            previewHtml += `</div>`;
+
+            // Section 2: Certificates
+            if (data.certificates && data.certificates.length > 0) {
+                const validCerts = data.certificates.filter(c => c.name || c.description || c.file);
+                if (validCerts.length > 0) {
+                    previewHtml += `<div class="section-title">2. Certificates</div>`;
+                    previewHtml += `<div class="form-grid">`;
+                    validCerts.forEach(c => {
+                        let fileLink = c.file ? `<a href="${c.file.base64}" download="${c.file.filename}" class="preview-file-btn">📄 Download ${c.file.filename}</a>` : "";
+                        previewHtml += `
+                            <div class="preview-cert-card">
+                                <div style="font-weight:700; color:#10b981;">${c.name || 'Certificate'}</div>
+                                ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa;">${c.description}</div>` : ''}
+                                ${fileLink}
+                            </div>
+                        `;
+                    });
+                    previewHtml += `</div>`;
+                }
+            }
+
+            // Section 3: Product Images
+            if (data.product_images && data.product_images.length > 0) {
+                const validImgs = data.product_images.filter(i => i.file || i.description);
+                if (validImgs.length > 0) {
+                    previewHtml += `<div class="section-title">3. Product Images</div>`;
+                    previewHtml += `<div class="form-grid">`;
+                    validImgs.forEach(img => {
+                        previewHtml += `
+                            <div class="preview-img-card">
+                                ${img.file ? `<img src="${img.file.base64}" alt="${img.label}" />` : ''}
+                                <div style="font-weight:700; color:#10b981; font-size:0.9rem;">${img.label}</div>
+                                ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa;">${img.description}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    previewHtml += `</div>`;
+                }
+            }
+
+            document.getElementById("previewModalBody").innerHTML = previewHtml;
+            document.getElementById("previewModal").classList.add("active");
+        }
+
+        function openSpecifications() {
+            if (storedProductData) {
+                generatePreview();
+            } else {
+                alert("No product specifications are entered yet. Please fill in and submit the details first.");
+            }
+        }
+
+        // Page Load Logic with Automatic Fallback Handling
+        (async function initBatchCheck() {
+            // 1. Restore local storage immediately if present
+            const savedLocal = localStorage.getItem("puretrace_local_data");
+            if (savedLocal) {
+                try {
+                    storedProductData = JSON.parse(savedLocal);
+                    restoreLocalData(storedProductData);
+                } catch (e) { }
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const linkId = urlParams.get("id") || "";
+
+            const feedbackBtn = document.getElementById("feedbackBtn");
+            feedbackBtn.href = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
+
+            if (!linkId) {
+                showMainContent();
+                return;
+            }
+
+            // Helper with maximum timeout (5s) for API call
+            const fetchWithTimeout = (url, options, timeout = 5000) => {
+                return Promise.race([
+                    fetch(url, options),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), timeout))
+                ]);
+            };
 
             try {
-              const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ link_id: linkId, batch_id: inputVal })
-              });
+                const res = await fetchWithTimeout(`${API_BASE}/get_medsign_link/${linkId}`);
+                if (!res.ok) {
+                    showMainContent();
+                    return;
+                }
 
-              if (updateRes.ok) {
-                window.location.reload();
-              } else {
-                alert("Failed to update Batch ID. Please try again.");
-                submitBtn.disabled = false;
-                btnText.textContent = "Submit";
-              }
+                const data = await res.json();
+                const record = data?.record;
+
+                if (record && record.product_details) {
+                    storedProductData = record.product_details;
+                }
+
+                if (record && (!record.batch_id || record.batch_id.trim() === "")) {
+                    showModal();
+                } else {
+                    showMainContent();
+                }
             } catch (err) {
-              console.error("Error submitting batch_id:", err);
-              alert("An error occurred. Please try again.");
-              submitBtn.disabled = false;
-              btnText.textContent = "Submit";
+                console.warn("API check bypassed or timed out:", err);
+                showMainContent();
+            } finally {
+                hidePageSpinner();
             }
-          });
-        } else {
-          showMainContent();
-        }
-      } catch (err) {
-        console.error("Error verifying batch_id:", err);
-        showMainContent();
-      }
-    })();
-  </script>
+
+            // Setup form submit action
+            const form = document.getElementById("productDetailsForm");
+            const submitBtn = document.getElementById("submitBatchBtn");
+            const btnText = document.getElementById("btnText");
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                submitBtn.disabled = true;
+                btnText.innerHTML = `<span class="spinner-btn"></span> Submitting...`;
+
+                try {
+                    const payloadData = await collectFormData();
+
+                    const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            link_id: linkId,
+                            batch_id: payloadData.batch_id,
+                            product_details: payloadData
+                        })
+                    });
+
+                    if (updateRes.ok) {
+                        storedProductData = payloadData;
+                        localStorage.removeItem("puretrace_local_data");
+                        alert("Product specification submitted successfully!");
+                        closeModal();
+                    } else {
+                        alert("Failed to submit details. Please try again.");
+                    }
+                } catch (err) {
+                    console.error("Error submitting details:", err);
+                    alert("An error occurred. Please try again.");
+                } finally {
+                    submitBtn.disabled = false;
+                    btnText.textContent = "Submit";
+                }
+            });
+        })();
+    </script>
 
 </body>
+
 </html>
