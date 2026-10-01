@@ -98,6 +98,7 @@ async function ensureLinksCollection() {
         { name: "batch_id", type: "string" },
         { name: "client_name", type: "string" },
         { name: "client_no", type: "array" },
+        { name: "product_details", type: "object" }, // <--- ADD THIS FIELD
         { name: "created_at", type: "string" },
         { name: "status", type: "string" }
       ]
@@ -1010,9 +1011,20 @@ app.get("/api/get_medsign_link/:link_id", async (req, res) => {
 // ---------- UPDATE BATCH_ID ----------
 app.post("/api/update_batch_id", async (req, res) => {
   try {
-    const { link_id, batch_id } = req.body || {};
+    const { link_id, batch_id, product_details } = req.body || {}; // <--- EXTRACT product_details
     if (!link_id || !batch_id) {
       return res.status(400).json({ error: "link_id and batch_id are required" });
+    }
+
+    // Construct update data
+    const updateData = { 
+      batch_id: String(batch_id),
+      updated_at: new Date().toISOString()
+    };
+
+    // If product details are passed, include them in the update payload
+    if (product_details) {
+      updateData.product_details = product_details;
     }
 
     // DataCube PUT /api/v2/crud/ payload structure
@@ -1020,7 +1032,7 @@ app.post("/api/update_batch_id", async (req, res) => {
       database_id: DB_ID,
       collection_name: "medsign_links",
       filters: { link_id: String(link_id) },
-      update_data: { batch_id: String(batch_id) },
+      update_data: updateData, // <--- SAVES product_details ALONGSIDE batch_id
       update_all_fields: false,
       update_many: true,
       upsert: false
@@ -1038,26 +1050,6 @@ app.post("/api/update_batch_id", async (req, res) => {
     res.json({ success: true, updated: data });
   } catch (err) {
     console.error("  [update_batch_id] ERROR:", err.message);
-    res.status(500).json({ error: "Failed to update batch_id" });
+    res.status(500).json({ error: "Failed to update batch_id and product details" });
   }
-});
-
-// ===== START SERVER =====
-app.listen(PORT, () => {
-  console.log(`\nServer listening on port ${PORT}\n`);
-
-  const PING_URL      = "https://location-map-a89a.onrender.com/api/health";
-  const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
-
-  setInterval(async () => {
-    try {
-      const res  = await fetch(PING_URL);
-      const data = await res.json();
-      console.log(`  [keepalive] ping OK — ${data.timestamp}`);
-    } catch (err) {
-      console.warn("  [keepalive] ping failed:", err.message);
-    }
-  }, PING_INTERVAL);
-
-  console.log(`Keepalive ping scheduled every 10 minutes`);
 });

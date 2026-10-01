@@ -50,11 +50,14 @@
         /* Main Content Animations */
         main {
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
             text-align: center;
             opacity: 0;
             transform: translateY(12px);
             transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         main.visible {
@@ -68,7 +71,40 @@
             font-weight: 800;
             letter-spacing: -0.04em;
             color: #ffffff;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Splash Screen Media Containers */
+        .splash-video-container {
+            width: 100%;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #18181b;
+            border: 1px solid #27272a;
+            aspect-ratio: 16 / 9;
+        }
+
+        .splash-video-container iframe,
+        .splash-video-container video {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .splash-logo-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .splash-logo-container img {
+            max-width: 180px;
+            max-height: 100px;
+            object-fit: contain;
         }
 
         /* Side-by-Side Action Buttons Container */
@@ -76,6 +112,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.25rem;
+            width: 100%;
             margin-bottom: 1.5rem;
         }
 
@@ -159,6 +196,7 @@
             color: #71717a;
             cursor: pointer;
             transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
         }
 
         .btn-close:hover {
@@ -169,6 +207,48 @@
 
         .btn-close:active {
             transform: scale(0.96);
+        }
+
+        /* Social Icons & URL ID Footer */
+        .social-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .social-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .social-icon:hover {
+            background-color: #27272a;
+            color: #10b981;
+            border-color: #10b981;
+        }
+
+        .social-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .url-id-footer {
+            font-size: 0.75rem;
+            color: #71717a;
+            letter-spacing: 0.05em;
         }
 
         /* Modal Overlay Styles */
@@ -389,7 +469,8 @@
             word-break: break-word;
         }
 
-        .preview-cert-card, .preview-img-card {
+        .preview-cert-card,
+        .preview-img-card {
             background-color: #09090b;
             border: 1px solid #27272a;
             border-radius: 12px;
@@ -465,8 +546,15 @@
 
     <!-- Main Page Content -->
     <main id="mainContent">
-        <h1>PureTrace</h1>
+        <!-- <h1>PureTrace</h1> -->
 
+        <!-- Top Splash Video Container (Rendered Dynamically) -->
+        <div id="splashVideoContainer" class="splash-video-container" style="display: none;"></div>
+
+        <!-- Top Splash Logo Container (Rendered Dynamically) -->
+        <div id="splashLogoContainer" class="splash-logo-container" style="display: none;"></div>
+
+        <!-- Action Buttons Container -->
         <div class="action-buttons">
             <button type="button" class="btn-primary" id="specificationsBtn" onclick="openSpecifications()">
                 Specifications
@@ -479,6 +567,12 @@
         <button type="button" class="btn-close" onclick="window.close()">
             Close
         </button>
+
+        <!-- Social Media Links (Rendered Dynamically) -->
+        <div id="socialLinksContainer" class="social-links" style="display: none;"></div>
+
+        <!-- ID Footer Text -->
+        <div id="urlIdDisplay" class="url-id-footer"></div>
     </main>
 
     <!-- Complete Product Form Modal -->
@@ -515,8 +609,7 @@
                     </div>
                     <div class="form-group">
                         <label for="mrp_currency">Currency of MRP <span class="req">*</span></label>
-                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc."
-                            required />
+                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc." required />
                     </div>
                     <div class="form-group">
                         <label for="manufactured_by">Manufactured By <span class="req">*</span></label>
@@ -541,6 +634,16 @@
                     <div class="form-group">
                         <label for="customer_care_phone">Customer Care Phone Number <span class="req">*</span></label>
                         <input type="text" id="customer_care_phone" name="customer_care_phone" required />
+                    </div>
+
+                    <!-- Splash Screen Customization (Optional) -->
+                    <div class="form-group">
+                        <label for="splash_screen_logo">Splash Screen Logo</label>
+                        <input type="file" id="splash_screen_logo" name="splash_screen_logo" accept="image/*" />
+                    </div>
+                    <div class="form-group">
+                        <label for="splash_screen_video">Splash Screen Video (YouTube, Facebook, or Direct URL)</label>
+                        <input type="url" id="splash_screen_video" name="splash_screen_video" placeholder="https://www.youtube.com/watch?v=..." />
                     </div>
 
                     <!-- Optional Fields -->
@@ -590,8 +693,7 @@
                     </div>
                     <div class="form-group">
                         <label for="location_coordinates">Location Coordinates</label>
-                        <input type="text" id="location_coordinates" name="location_coordinates"
-                            placeholder="Lat, Lng" />
+                        <input type="text" id="location_coordinates" name="location_coordinates" placeholder="Lat, Lng" />
                     </div>
                     <div class="form-group">
                         <label for="whatsapp_link">WhatsApp Link</label>
@@ -603,19 +705,35 @@
                     </div>
                 </div>
 
-                <!-- SECTION 2: Certificates (1 - 10) -->
-                <div class="section-title">2. Certificates (Optional)</div>
+                <!-- SECTION 2: Social Media Links (Optional) -->
+                <div class="section-title">2. Social Links (Optional)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="social_youtube">YouTube</label>
+                        <input type="url" id="social_youtube" name="social_youtube" placeholder="https://youtube.com/..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="social_instagram">Instagram</label>
+                        <input type="url" id="social_instagram" name="social_instagram" placeholder="https://instagram.com/..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="social_facebook">Facebook</label>
+                        <input type="url" id="social_facebook" name="social_facebook" placeholder="https://facebook.com/..." />
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Certificates (1 - 10) -->
+                <div class="section-title">3. Certificates (Optional)</div>
                 <div id="certificatesContainer"></div>
 
-                <!-- SECTION 3: Product Images (1 - 6) -->
-                <div class="section-title">3. Product Images (Optional)</div>
+                <!-- SECTION 4: Product Images (1 - 6) -->
+                <div class="section-title">4. Product Images (Optional)</div>
                 <div id="productImagesContainer"></div>
 
                 <!-- Action Buttons: Exit, Preview, Save, Submit -->
                 <div class="modal-actions-grid">
                     <button type="button" class="btn-danger" id="exitBtn" onclick="closeModal()">Exit</button>
-                    <button type="button" class="btn-secondary" id="previewBtn"
-                        onclick="generatePreview()">Preview</button>
+                    <button type="button" class="btn-secondary" id="previewBtn" onclick="generatePreview()">Preview</button>
                     <button type="button" class="btn-secondary" id="saveBtn" onclick="saveLocally()">Save</button>
                     <button type="submit" class="btn-primary" id="submitBatchBtn">
                         <span id="btnText">Submit</span>
@@ -658,6 +776,10 @@
             country_of_origin: "Country of Origin",
             customer_care_contact: "Customer Care Contact",
             customer_care_phone: "Customer Care Phone",
+            splash_screen_video: "Splash Screen Video URL",
+            social_youtube: "YouTube Link",
+            social_instagram: "Instagram Link",
+            social_facebook: "Facebook Link",
             serial_number: "Serial Number",
             product_size: "Product Size",
             unit_sales_price: "Unit Sales Price",
@@ -735,6 +857,7 @@
 
         function showMainContent() {
             hidePageSpinner();
+            renderSplashAndSocials();
             document.getElementById("mainContent").classList.add("visible");
         }
 
@@ -762,6 +885,88 @@
             });
         }
 
+        function formatEmbedVideoUrl(url) {
+            if (!url) return null;
+            let videoUrl = url.trim();
+
+            const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            if (ytMatch && ytMatch[1]) {
+                return { type: 'iframe', src: `https://www.youtube.com/embed/${ytMatch[1]}` };
+            }
+
+            if (videoUrl.includes("facebook.com")) {
+                const encoded = encodeURIComponent(videoUrl);
+                return { type: 'iframe', src: `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false` };
+            }
+
+            return { type: 'video', src: videoUrl };
+        }
+
+        function renderSplashAndSocials() {
+            if (!storedProductData) return;
+
+            // 1. Splash Video
+            const splashVideoContainer = document.getElementById("splashVideoContainer");
+            if (storedProductData.splash_screen_video) {
+                const embedInfo = formatEmbedVideoUrl(storedProductData.splash_screen_video);
+                if (embedInfo) {
+                    if (embedInfo.type === 'iframe') {
+                        splashVideoContainer.innerHTML = `<iframe src="${embedInfo.src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                    } else {
+                        splashVideoContainer.innerHTML = `<video src="${embedInfo.src}" controls playsinline></video>`;
+                    }
+                    splashVideoContainer.style.display = "block";
+                }
+            } else {
+                splashVideoContainer.style.display = "none";
+                splashVideoContainer.innerHTML = "";
+            }
+
+            // 2. Splash Logo
+            const splashLogoContainer = document.getElementById("splashLogoContainer");
+            if (storedProductData.splash_screen_logo && storedProductData.splash_screen_logo.base64) {
+                splashLogoContainer.innerHTML = `<img src="${storedProductData.splash_screen_logo.base64}" alt="Splash Logo" />`;
+                splashLogoContainer.style.display = "flex";
+            } else {
+                splashLogoContainer.style.display = "none";
+                splashLogoContainer.innerHTML = "";
+            }
+
+            // 3. Social Media Links
+            const socialLinksContainer = document.getElementById("socialLinksContainer");
+            let socialHtml = "";
+
+            if (storedProductData.social_youtube) {
+                socialHtml += `
+                    <a href="${storedProductData.social_youtube}" target="_blank" class="social-icon" title="YouTube">
+                        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </a>
+                `;
+            }
+            if (storedProductData.social_instagram) {
+                socialHtml += `
+                    <a href="${storedProductData.social_instagram}" target="_blank" class="social-icon" title="Instagram">
+                        <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </a>
+                `;
+            }
+            if (storedProductData.social_facebook) {
+                socialHtml += `
+                    <a href="${storedProductData.social_facebook}" target="_blank" class="social-icon" title="Facebook">
+                        <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    </a>
+                `;
+            }
+
+            if (socialHtml) {
+                socialLinksContainer.innerHTML = socialHtml;
+                socialLinksContainer.style.display = "flex";
+            } else {
+                socialLinksContainer.style.display = "none";
+                socialLinksContainer.innerHTML = "";
+            }
+        }
+
         async function collectFormData() {
             const form = document.getElementById("productDetailsForm");
             const formData = new FormData(form);
@@ -773,6 +978,20 @@
                 }
             }
 
+            // Process Splash Screen Logo
+            const logoInput = document.getElementById("splash_screen_logo");
+            const logoFile = logoInput ? logoInput.files[0] : null;
+            if (logoFile && logoFile.size > 0) {
+                payloadData.splash_screen_logo = {
+                    filename: logoFile.name,
+                    content_type: logoFile.type,
+                    base64: await fileToBase64(logoFile)
+                };
+            } else if (storedProductData && storedProductData.splash_screen_logo) {
+                payloadData.splash_screen_logo = storedProductData.splash_screen_logo;
+            }
+
+            // Process Certificates
             payloadData.certificates = [];
             for (let i = 1; i <= 10; i++) {
                 const name = formData.get(`cert_name_${i}`);
@@ -801,6 +1020,7 @@
                 }
             }
 
+            // Process Product Images
             payloadData.product_images = [];
             for (let i = 1; i <= 6; i++) {
                 const fileInput = document.getElementById(`img_file_${i}`);
@@ -837,6 +1057,7 @@
                 const data = await collectFormData();
                 localStorage.setItem("puretrace_local_data", JSON.stringify(data));
                 storedProductData = data;
+                renderSplashAndSocials();
                 alert("Product information saved locally on browser!");
             } catch (err) {
                 console.error("Save error:", err);
@@ -853,14 +1074,14 @@
                 }
             });
 
-            if (data.certificates) {
+            if (data.certificates && Array.isArray(data.certificates)) {
                 data.certificates.forEach((cert) => {
                     if (form.elements[`cert_name_${cert.id}`]) form.elements[`cert_name_${cert.id}`].value = cert.name || "";
                     if (form.elements[`cert_desc_${cert.id}`]) form.elements[`cert_desc_${cert.id}`].value = cert.description || "";
                 });
             }
 
-            if (data.product_images) {
+            if (data.product_images && Array.isArray(data.product_images)) {
                 data.product_images.forEach((img) => {
                     if (form.elements[`img_desc_${img.id}`]) form.elements[`img_desc_${img.id}`].value = img.description || "";
                 });
@@ -870,7 +1091,6 @@
         async function generatePreview() {
             const data = await collectFormData();
 
-            // Set title
             document.getElementById("previewModalTitle").textContent = data.product_name ? `${data.product_name} - Details` : "Product Details Preview";
 
             let previewHtml = "";
@@ -878,7 +1098,7 @@
             // Section 1: Specifications Grid
             previewHtml += `<div class="section-title" style="margin-top:0;">1. Product Specifications</div>`;
             previewHtml += `<div class="preview-grid-2col">`;
-            
+
             let specsCount = 0;
             Object.keys(fieldLabels).forEach((key) => {
                 const val = data[key];
@@ -893,6 +1113,16 @@
                     `;
                 }
             });
+
+            if (data.splash_screen_logo && data.splash_screen_logo.filename) {
+                specsCount++;
+                previewHtml += `
+                    <div class="preview-item">
+                        <span class="preview-label">Splash Screen Logo</span>
+                        <span class="preview-val">${data.splash_screen_logo.filename}</span>
+                    </div>
+                `;
+            }
 
             if (specsCount === 0) {
                 previewHtml += `<div class="preview-item full-width" style="color:#71717a;">No specifications entered yet.</div>`;
@@ -950,19 +1180,14 @@
             }
         }
 
-        // Page Load Logic with Automatic Fallback Handling
+        // Page Load Logic
         (async function initBatchCheck() {
-            // 1. Restore local storage immediately if present
-            const savedLocal = localStorage.getItem("puretrace_local_data");
-            if (savedLocal) {
-                try {
-                    storedProductData = JSON.parse(savedLocal);
-                    restoreLocalData(storedProductData);
-                } catch (e) { }
-            }
-
             const urlParams = new URLSearchParams(window.location.search);
             const linkId = urlParams.get("id") || "";
+
+            if (linkId) {
+                document.getElementById("urlIdDisplay").textContent = `ID: ${linkId}`;
+            }
 
             const feedbackBtn = document.getElementById("feedbackBtn");
             feedbackBtn.href = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
@@ -972,30 +1197,33 @@
                 return;
             }
 
-            // Helper with maximum timeout (5s) for API call
-            const fetchWithTimeout = (url, options, timeout = 5000) => {
+            const fetchWithTimeout = (url, options, timeout = 7000) => {
                 return Promise.race([
                     fetch(url, options),
                     new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), timeout))
                 ]);
             };
 
+            let isDataFetchedFromDB = false;
+
             try {
+                // Fetch saved record from backend database on load
                 const res = await fetchWithTimeout(`${API_BASE}/get_medsign_link/${linkId}`);
-                if (!res.ok) {
-                    showMainContent();
-                    return;
-                }
+                if (res.ok) {
+                    const data = await res.json();
+                    const record = data?.record;
 
-                const data = await res.json();
-                const record = data?.record;
+                    if (record && record.product_details) {
+                        storedProductData = record.product_details;
+                        restoreLocalData(storedProductData);
+                        isDataFetchedFromDB = true;
+                    }
 
-                if (record && record.product_details) {
-                    storedProductData = record.product_details;
-                }
-
-                if (record && (!record.batch_id || record.batch_id.trim() === "")) {
-                    showModal();
+                    if (!record || !record.batch_id || record.batch_id.trim() === "") {
+                        showModal();
+                    } else {
+                        showMainContent();
+                    }
                 } else {
                     showMainContent();
                 }
@@ -1006,7 +1234,19 @@
                 hidePageSpinner();
             }
 
-            // Setup form submit action
+            // Fallback to local data if network fail/no DB data loaded yet
+            if (!isDataFetchedFromDB) {
+                const savedLocal = localStorage.getItem("puretrace_local_data");
+                if (savedLocal) {
+                    try {
+                        storedProductData = JSON.parse(savedLocal);
+                        restoreLocalData(storedProductData);
+                        renderSplashAndSocials();
+                    } catch (e) { }
+                }
+            }
+
+            // Form Submit Action
             const form = document.getElementById("productDetailsForm");
             const submitBtn = document.getElementById("submitBatchBtn");
             const btnText = document.getElementById("btnText");
@@ -1020,6 +1260,7 @@
                 try {
                     const payloadData = await collectFormData();
 
+                    // Saves all details (splash screen logo, video URL, specifications, certs, imgs) to backend DB
                     const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -1033,14 +1274,14 @@
                     if (updateRes.ok) {
                         storedProductData = payloadData;
                         localStorage.removeItem("puretrace_local_data");
-                        alert("Product specification submitted successfully!");
+                        alert("Product specifications and splash media successfully saved to database!");
                         closeModal();
                     } else {
-                        alert("Failed to submit details. Please try again.");
+                        alert("Failed to submit details to database. Please try again.");
                     }
                 } catch (err) {
                     console.error("Error submitting details:", err);
-                    alert("An error occurred. Please try again.");
+                    alert("An error occurred during network submit. Please try again.");
                 } finally {
                     submitBtn.disabled = false;
                     btnText.textContent = "Submit";
