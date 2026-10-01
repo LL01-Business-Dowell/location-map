@@ -905,7 +905,9 @@ app.post("/api/save_medsign_link", async (req, res) => {
 
 // Helper to generate a random 8-digit numeric ID string
 function generate8DigitId() {
-  return Math.floor(10000000 + Math.random() * 90000000).toString();
+  const prefix = Math.floor(1000 + Math.random() * 9000);
+  const suffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `${prefix}${suffix}`;
 }
 
 // ---------- BATCH GENERATE MEDSIGN LINKS ----------
@@ -924,7 +926,7 @@ app.post("/api/generate_medsign_links", async (req, res) => {
     const generatedUrls = [];
 
     for (let i = 0; i < count; i++) {
-      const unique8DigitId = generate8DigitId();
+      const unique8DigitId = generate8DigitId(); // Generates format: 1000xxxx to 9999xxxx
       const linkUrl = `https://location-map-1.onrender.com/puretrace.html?id=${unique8DigitId}`;
 
       documents.push({
