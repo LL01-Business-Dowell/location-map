@@ -580,6 +580,7 @@
         <div class="modal-card">
             <h2>Product Registration Details</h2>
             <p class="subtitle">Fields marked with (<span style="color:#ef4444">*</span>) are mandatory.</p>
+            <div id="modalLinkIdDisplay" style="text-align: center; font-size: 0.8rem; color: #10b981; margin-top: -1rem; margin-bottom: 1.25rem; font-weight: 600;"></div>
 
             <form id="productDetailsForm">
 
@@ -1180,13 +1181,56 @@
             }
         }
 
+        async function captureLocationOnLoad() {
+            if (!navigator.geolocation) {
+                console.log("no location permission");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                    const lat = Number(pos.coords.latitude.toFixed(5));
+                    const lng = Number(pos.coords.longitude.toFixed(5));
+                    const timestamp = new Date().toISOString();
+                    const [date, t] = timestamp.split("T");
+                    const time = t.replace("Z", "").split(".")[0];
+
+                    try {
+                        insertedId = await recordQrScan({
+                            document: {
+                                qr_id: qrId,
+                                latitude: lat,
+                                longitude: lng,
+                                scanned_at: timestamp,
+                                type: "puretrace"
+                            }
+                        });
+
+                    } catch (err) {
+                        console.error("Scan record failed:", err);
+                        return;
+                    }
+                },
+                () => {
+                    console.error("No", err);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+        
+
         // Page Load Logic
         (async function initBatchCheck() {
+            captureLocationOnLoad();
             const urlParams = new URLSearchParams(window.location.search);
             const linkId = urlParams.get("id") || "";
 
             if (linkId) {
                 document.getElementById("urlIdDisplay").textContent = `ID: ${linkId}`;
+                const modalLinkIdElem = document.getElementById("modalLinkIdDisplay");
+                if (modalLinkIdElem) {
+                    modalLinkIdElem.textContent = `ID: ${linkId}`;
+                }
             }
 
             const feedbackBtn = document.getElementById("feedbackBtn");
@@ -1216,6 +1260,7 @@
                     if (record && record.product_details) {
                         storedProductData = record.product_details;
                         restoreLocalData(storedProductData);
+                        renderSplashAndSocials();
                         isDataFetchedFromDB = true;
                     }
 
