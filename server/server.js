@@ -3,7 +3,6 @@ import fetch from "node-fetch";
 import cors from "cors";
 import "dotenv/config";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import FormData from "form-data";
 import multer from "multer";
 import dns from "dns";
@@ -27,32 +26,7 @@ console.log(`  PORT            : ${PORT}`);
 console.log(`  DATACUBE_BASE   : ${DATACUBE_BASE}`);
 console.log(`  DB_ID           : ${DB_ID}`);
 console.log(`  DATACUBE_API_KEY: ${DATACUBE_API_KEY ? "SET (" + DATACUBE_API_KEY.slice(0, 6) + "...)" : "NOT SET ⚠️"}`);
-console.log(`  SMTP_HOST       : ${process.env.SMTP_HOST || "NOT SET ⚠️"}`);
-console.log(`  SMTP_PORT       : ${process.env.SMTP_PORT || "NOT SET ⚠️"}`);
-console.log(`  SMTP_USER       : ${process.env.SMTP_USER || "NOT SET ⚠️"}`);
-console.log(`  SMTP_PASS       : ${process.env.SMTP_PASS ? "SET" : "NOT SET ⚠️"}`);
 console.log("========================================");
-
-// ===== MAILER =====
-const mailer = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  family: 4, // force IPv4
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
-
-// Verify SMTP connection at startup
-mailer.verify((err, success) => {
-  if (err) {
-    console.error("SMTP connection FAILED:", err);
-  } else {
-    console.log("SMTP connection OK ✓");
-  }
-});
 
 // ===== MIDDLEWARE =====
 app.use(cors({
@@ -60,7 +34,7 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.use(express.json({ limit: "50mb" }));  // PDF base64 can be large
+app.use(express.json({ limit: "50mb" }));
 
 // ===== REQUEST LOGGER =====
 app.use((req, res, next) => {
@@ -187,7 +161,6 @@ async function fetchQrTokenByAlias(alias) {
   console.log(`  [fetchQrTokenByAlias] found=${docs.length > 0}`);
   return docs.length > 0 ? docs[0] : null;
 }
-
 
 // ===================================================
 // ROUTES
@@ -583,7 +556,6 @@ app.post("/api/upload_pdf", async (req, res) => {
       throw new Error(`DataCube upload failed (${r.status}): ${JSON.stringify(data)}`);
     }
 
-    // Handle different possible field names from DataCube
     const fileId = data.file_id || data.fileId || null;
     const signedUrl = data.signed_url || data.signedUrl || data.url || null;
 
@@ -600,73 +572,6 @@ app.post("/api/upload_pdf", async (req, res) => {
     res.status(500).json({ error: "Failed to upload PDF: " + err.message });
   }
 });
-
-// ---------- SEND PDF EMAIL ----------
-app.post("/api/send_pdf_email", async (req, res) => {
-  console.log("  [send_pdf_email] to:", req.body?.email, "| pdf_id:", req.body?.pdf_id, "| qr_count:", req.body?.qr_count);
-  try {
-    const { email, signed_url, pdf_id, qr_count, client_name } = req.body || {};
-
-    if (!email || !signed_url || !pdf_id) {
-      const missing = { email: !!email, signed_url: !!signed_url, pdf_id: !!pdf_id };
-      console.warn("  [send_pdf_email] missing fields:", missing);
-      return res.status(400).json({ error: "Missing required fields: email, signed_url, pdf_id" });
-    }
-
-    console.log("  [send_pdf_email] fetching PDF from signed_url:", signed_url.slice(0, 80) + "...");
-
-    let url_signed = "https://datacube.uxlivinglab.online" + signed_url;
-    console.log("Actual signed url for fetching: " + url_signed);
-
-    const fileRes = await fetch(url_signed);
-    console.log("  [send_pdf_email] signed_url fetch status:", fileRes.status);
-
-    if (!fileRes.ok) {
-      throw new Error(`Failed to fetch PDF from signed URL: ${fileRes.status} ${fileRes.statusText}`);
-    }
-
-    const arrayBuffer = await fileRes.arrayBuffer();
-    const pdfBuffer = Buffer.from(arrayBuffer);
-    console.log("  [send_pdf_email] PDF buffer size:", pdfBuffer.length, "bytes");
-
-    console.log("  [send_pdf_email] sending via SMTP...");
-    const info = await mailer.sendMail({
-      from: `"Dowell QR Code" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: `Your QR Codes are Ready`,
-      html: `
-        <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;">
-          <h2 style="color:#7c6af7;margin-bottom:8px;">Your QR Codes are Ready</h2>
-          <p style="color:#555;margin-bottom:16px;">
-            Your QR code batch has been generated successfully.
-          </p>
-          <table style="background:#f8fafc;border-radius:10px;padding:16px;width:100%;border-collapse:collapse;">
-            <tr>
-              <td style="color:#888;padding:4px 0;font-size:13px;">QR codes</td>
-              <td style="font-size:13px;text-align:right;">${qr_count}</td>
-            </tr>
-          </table>
-          <p style="color:#888;font-size:12px;margin-top:20px;">
-            The PDF is attached. Each QR code is labeled with its unique name and ID.
-          </p>
-        </div>
-      `,
-      attachments: [{
-        filename: `qr-bulk-${pdf_id}.pdf`,
-        content: pdfBuffer,
-        contentType: "application/pdf"
-      }]
-    });
-
-    console.log("  [send_pdf_email] sent OK | messageId:", info.messageId);
-    res.json({ success: true });
-
-  } catch (err) {
-    console.error("  [send_pdf_email] ERROR:", err.message);
-    res.status(500).json({ error: "Failed to send email: " + err.message });
-  }
-});
-
 
 // =====================================================================
 // PUBLIC API ENDPOINTS
@@ -927,7 +832,7 @@ app.post("/api/generate_medsign_links", async (req, res) => {
     const generatedUrls = [];
 
     for (let i = 0; i < count; i++) {
-      const unique8DigitId = generate8DigitId(); // Generates format: 1000xxxx to 9999xxxx
+      const unique8DigitId = generate8DigitId();
       const linkUrl = `https://location-map-1.onrender.com/puretrace.html?id=${unique8DigitId}`;
 
       documents.push({
@@ -976,7 +881,6 @@ app.post("/api/generate_medsign_links", async (req, res) => {
   }
 });
 
-
 // ---------- GET LINK DETAILS BY LINK_ID ----------
 app.get("/api/get_medsign_link/:link_id", async (req, res) => {
   try {
@@ -1019,7 +923,7 @@ app.get("/api/get_medsign_link/:link_id", async (req, res) => {
   }
 });
 
-// ---------- UPDATE BATCH_ID ----------
+// ---------- UPDATE BATCH_ID AND PRODUCT DETAILS ----------
 app.post("/api/update_batch_id", async (req, res) => {
   try {
     const { link_id, batch_id, product_details } = req.body || {}; 
@@ -1027,16 +931,9 @@ app.post("/api/update_batch_id", async (req, res) => {
       return res.status(400).json({ error: "link_id and batch_id are required" });
     }
 
-    console.log(`  [update_batch_id] Updating link_id: ${link_id} with batch_id: ${batch_id}`);
-    if (product_details) {
-      console.log(`  [update_batch_id] product_details received with keys:`, Object.keys(product_details));
-    }
-
-    // Prepare update data payload
     const updateData = { 
       batch_id: String(batch_id),
-      // Store product_details as a stringified JSON if DataCube schema struggles with nested objects
-      product_details: typeof product_details === "object" ? product_details : {},
+      product_details: product_details || {},
       updated_at: new Date().toISOString()
     };
 
@@ -1057,13 +954,16 @@ app.post("/api/update_batch_id", async (req, res) => {
     });
 
     const data = await r.json();
-    console.log("  [update_batch_id] DataCube update response:", r.status, JSON.stringify(data));
-
     if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
 
     res.json({ success: true, updated: data });
   } catch (err) {
     console.error("  [update_batch_id] ERROR:", err.message);
-    res.status(500).json({ error: "Failed to update batch_id and product details", details: err.message });
+    res.status(500).json({ error: "Failed to update batch_id and product details" });
   }
+});
+
+// ===== START SERVER FOR RENDER =====
+app.listen(PORT, () => {
+  console.log(`✓ QR Manager Server running on port ${PORT}`);
 });
