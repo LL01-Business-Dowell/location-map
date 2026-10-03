@@ -90,7 +90,7 @@ async function ensureLinksCollection() {
   const payload = {
     database_id: DB_ID,
     collections: [{
-      name: "medsign_links",
+      name: "puretrace_links",
       fields: [
         { name: "link_id", type: "string" },
         { name: "email", type: "string" },
@@ -98,7 +98,7 @@ async function ensureLinksCollection() {
         { name: "batch_id", type: "string" },
         { name: "client_name", type: "string" },
         { name: "client_no", type: "array" },
-        { name: "product_details", type: "object" }, // <--- ADD THIS FIELD
+        { name: "product_details", type: "object" }, 
         { name: "created_at", type: "string" },
         { name: "status", type: "string" }
       ]
@@ -1011,7 +1011,7 @@ app.get("/api/get_medsign_link/:link_id", async (req, res) => {
 // ---------- UPDATE BATCH_ID ----------
 app.post("/api/update_batch_id", async (req, res) => {
   try {
-    const { link_id, batch_id, product_details } = req.body || {}; // <--- EXTRACT product_details
+    const { link_id, batch_id, product_details } = req.body || {}; 
     if (!link_id || !batch_id) {
       return res.status(400).json({ error: "link_id and batch_id are required" });
     }
@@ -1032,7 +1032,7 @@ app.post("/api/update_batch_id", async (req, res) => {
       database_id: DB_ID,
       collection_name: "medsign_links",
       filters: { link_id: String(link_id) },
-      update_data: updateData, // <--- SAVES product_details ALONGSIDE batch_id
+      update_data: updateData, 
       update_all_fields: false,
       update_many: true,
       upsert: false

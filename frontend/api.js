@@ -781,6 +781,7 @@ async function registerMedSignLinksCollection() {
           { name: "batch_id", type: "string" },
           { name: "client_name", type: "string" },
           { name: "client_no", type: "array" },
+          { name: "product_details", type: "object" },
           { name: "created_at", type: "string" },
           { name: "status", type: "string" }
         ]
