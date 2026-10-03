@@ -90,7 +90,7 @@ async function ensureLinksCollection() {
   const payload = {
     database_id: DB_ID,
     collections: [{
-      name: "puretrace_links",
+      name: "medsign_links",
       fields: [
         { name: "link_id", type: "string" },
         { name: "email", type: "string" },
@@ -937,6 +937,7 @@ app.post("/api/generate_medsign_links", async (req, res) => {
         batch_id: batchId,
         client_name: "",
         client_no: [],
+        product_details: {},
         created_at: new Date().toISOString(),
         status: "active"
       });
