@@ -1259,14 +1259,12 @@
                     if (updateRes.ok) {
                         storedProductData = payloadData;
                         localStorage.removeItem("puretrace_local_data");
-                        alert("Product specifications and splash media successfully saved to database!");
                         closeModal();
                     } else {
-                        alert("Failed to submit details to database. Please try again.");
+                        console.error("Failed to submit details to database.");
                     }
                 } catch (err) {
                     console.error("Error submitting details:", err);
-                    alert("An error occurred during network submit. Please try again.");
                 } finally {
                     submitBtn.disabled = false;
                     btnText.textContent = "Submit";
