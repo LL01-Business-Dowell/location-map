@@ -22,7 +22,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 1.5rem 1.5rem 3.5rem 1.5rem; /* Added bottom padding for mobile spacing */
+            padding: 1.5rem 1.5rem 3.5rem 1.5rem;
+            /* Added bottom padding for mobile spacing */
             overflow-x: hidden;
         }
 
@@ -503,7 +504,7 @@
             </a>
         </div>
 
-        <button type="button" class="btn-close" onclick="window.close()">
+        <button type="button" class="btn-close" onclick="window.location.href='thank_you.html'">
             Close
         </button>
 
@@ -513,11 +514,6 @@
         <!-- ID Footer Text -->
         <div id="urlIdDisplay" class="url-id-footer"></div>
 
-        <!-- Brand Footer -->
-        <div class="brand-footer">
-            <div>PureTrace @ DoWell Research</div>
-            <div><a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a></div>
-        </div>
     </main>
 
     <!-- Complete Product Form Modal -->
@@ -1091,11 +1087,11 @@
         function updateFeedbackLink(linkId, batchId) {
             const feedbackBtn = document.getElementById("feedbackBtn");
             let url = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
-            
+
             if (batchId) {
                 url += `&batch_id=${encodeURIComponent(batchId)}`;
             }
-            
+
             feedbackBtn.href = url;
         }
 
@@ -1142,6 +1138,12 @@
                         renderSplashAndSocials();
                         isDataFetchedFromDB = true;
                     }
+
+                    // Extract batch_id from the response record or product_details
+                    const fetchedBatchId = record?.batch_id || record?.product_details?.batch_id || "";
+                    
+                    // Update the feedback link with the fetched batch_id
+                    updateFeedbackLink(linkId, fetchedBatchId);
 
                     if (!record || !record.batch_id || record.batch_id.trim() === "") {
                         showModal();

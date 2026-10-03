@@ -243,7 +243,7 @@
             <h1 id="pageTitle">Product Specifications</h1>
             <div class="header-actions">
                 <!-- <button class="btn-secondary-action" onclick="window.print()">Print Page</button> -->
-                <button class="btn-action" onclick="window.location.href='thank_you.html'">Close</button>
+                <button class="btn-action" onclick="window.close()">Close</button>
             </div>
         </div>
 
@@ -298,32 +298,54 @@
             if (loader) loader.classList.add("hidden");
         }
 
-        // Helper function to turn video URLs (YouTube, Vimeo, MP4) into HTML player elements
-        function renderVideoElement(url) {
-            if (!url) return "";
+        // Helper to render media: Images, Videos (YouTube/Vimeo/MP4), PDFs, and files
+        function renderMediaElement(src, filename = "") {
+            if (!src) return "";
 
-            let embedUrl = url;
+            const cleanSrc = src.trim();
 
-            // YouTube Embed URL conversion
-            if (url.includes("youtube.com/watch?v=")) {
-                embedUrl = url.replace("watch?v=", "embed/");
+            // 1. YouTube Videos
+            if (cleanSrc.includes("youtube.com/watch?v=")) {
+                const embedUrl = cleanSrc.replace("watch?v=", "embed/");
                 return `<iframe src="${embedUrl}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
-            } else if (url.includes("youtu.be/")) {
-                const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+            } else if (cleanSrc.includes("youtu.be/")) {
+                const videoId = cleanSrc.split("youtu.be/")[1]?.split("?")[0];
                 return `<iframe src="https://www.youtube.com/embed/${videoId}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
             }
-            // Vimeo Embed URL conversion
-            else if (url.includes("vimeo.com/")) {
-                const videoId = url.split("vimeo.com/")[1];
+
+            // 2. Vimeo Videos
+            else if (cleanSrc.includes("vimeo.com/")) {
+                const videoId = cleanSrc.split("vimeo.com/")[1];
                 return `<iframe src="https://player.vimeo.com/video/${videoId}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
             }
-            // Direct MP4 or video files
-            else if (url.match(/\.(mp4|webm|ogg)$/i) || url.startsWith("data:video")) {
-                return `<video src="${url}" controls class="img-preview"></video>`;
+
+            // 3. Direct HTML5 Video
+            else if (cleanSrc.match(/\.(mp4|webm|ogg)$/i) || cleanSrc.startsWith("data:video")) {
+                return `<video src="${cleanSrc}" controls class="img-preview"></video>`;
             }
-            // Generic fallback iframe/link
+
+            // 4. PDF Files
+            else if (cleanSrc.match(/\.pdf$/i) || cleanSrc.startsWith("data:application/pdf")) {
+                return `
+                <object data="${cleanSrc}" type="application/pdf" class="img-preview" style="height:300px;">
+                    <iframe src="${cleanSrc}" style="width:100%; height:300px; border:0;"></iframe>
+                </object>
+                <a href="${cleanSrc}" download="${filename || 'document.pdf'}" class="btn-download">📄 Download PDF</a>
+            `;
+            }
+
+            // 5. Images (base64, direct files, PNG, JPG, WebP, etc.)
+            else if (cleanSrc.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || cleanSrc.startsWith("data:image")) {
+                return `<img src="${cleanSrc}" alt="Product Media" class="img-preview" />`;
+            }
+
+            // 6. Generic File Link Fallback
             else {
-                return `<iframe src="${url}" class="img-preview" style="border:0;"></iframe>`;
+                return `
+                <div style="padding: 1rem; text-align: center; background: #09090b; border-radius: 8px; border: 1px dashed #3f3f46;">
+                    <a href="${cleanSrc}" download="${filename || 'file'}" class="btn-download">📁 View / Download File</a>
+                </div>
+            `;
             }
         }
 
@@ -351,29 +373,6 @@
                 }
             });
 
-            // Splash Screen Logo Preview
-            if (data.splash_screen_logo && (data.splash_screen_logo.base64 || data.splash_screen_logo.filename)) {
-                const imgSrc = data.splash_screen_logo.base64 || data.splash_screen_logo.filename;
-                specsHtml += `
-                <div class="spec-card">
-                    <div class="spec-label">Splash Screen Logo</div>
-                    <img src="${imgSrc}" alt="Splash Screen Logo" class="img-preview" style="height:120px; object-fit:contain; margin-top:0.5rem;" />
-                </div>
-            `;
-            }
-
-            // Embedded Splash Screen Video
-            if (data.splash_screen_video && data.splash_screen_video.trim() !== "") {
-                specsHtml += `
-                <div class="spec-card full-width">
-                    <div class="spec-label">Splash Screen Video</div>
-                    <div style="margin-top:0.5rem;">
-                        ${renderVideoElement(data.splash_screen_video)}
-                    </div>
-                </div>
-            `;
-            }
-
             specsGrid.innerHTML = count > 0 ? specsHtml : `<div class="spec-card full-width" style="color:#71717a;">No specifications found.</div>`;
 
             // Render Certificates
@@ -382,7 +381,8 @@
                 if (validCerts.length > 0) {
                     let certsHtml = "";
                     validCerts.forEach(c => {
-                        const fileLink = c.file ? `<a href="${c.file.base64 || c.file.url}" download="${c.file.filename || 'certificate'}" class="btn-download">📄 Download ${c.file.filename || 'Certificate'}</a>` : "";
+                        const certSrc = c.file?.base64 || c.file?.url || (typeof c.file === 'string' ? c.file : '');
+                        const fileLink = certSrc ? `<a href="${certSrc}" download="${c.file?.filename || 'certificate'}" class="btn-download">📄 Download ${c.file?.filename || 'Certificate'}</a>` : "";
                         certsHtml += `
                         <div class="spec-card">
                             <div style="font-weight:700; color:#10b981; font-size:1rem;">${c.name || 'Certificate'}</div>
@@ -396,21 +396,15 @@
                 }
             }
 
-            // Render Product Images & Videos
+            // Render Product Media (Images, Videos, PDFs, Documents)
             if (data.product_images && data.product_images.length > 0) {
                 const validImgs = data.product_images.filter(i => i.file || i.base64 || i.url || i.description);
                 if (validImgs.length > 0) {
                     let imgsHtml = "";
                     validImgs.forEach(img => {
                         const mediaSrc = img.file?.base64 || img.base64 || img.url || (typeof img.file === 'string' ? img.file : '');
-                        let mediaElement = "";
-
-                        // Check if file is video or image
-                        if (mediaSrc.match(/\.(mp4|webm|ogg)$/i) || mediaSrc.startsWith("data:video")) {
-                            mediaElement = `<video src="${mediaSrc}" controls class="img-preview"></video>`;
-                        } else if (mediaSrc) {
-                            mediaElement = `<img src="${mediaSrc}" alt="${img.label || 'Product Image'}" class="img-preview" />`;
-                        }
+                        const fileName = img.file?.filename || "";
+                        const mediaElement = renderMediaElement(mediaSrc, fileName);
 
                         imgsHtml += `
                         <div class="spec-card">
