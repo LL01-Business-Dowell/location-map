@@ -433,90 +433,9 @@
             }
         }
 
-        /* PREVIEW POPUP STYLES */
-        .preview-grid-2col {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .preview-item {
-            background-color: #09090b;
-            border: 1px solid #27272a;
-            border-radius: 10px;
-            padding: 0.85rem 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .preview-item.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .preview-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #10b981;
-            font-weight: 700;
-        }
-
-        .preview-val {
-            font-size: 0.95rem;
-            color: #f4f4f5;
-            font-weight: 500;
-            word-break: break-word;
-        }
-
-        .preview-cert-card,
-        .preview-img-card {
-            background-color: #09090b;
-            border: 1px solid #27272a;
-            border-radius: 12px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .preview-img-card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #27272a;
-        }
-
-        .preview-file-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            padding: 0.5rem 0.85rem;
-            background-color: #18181b;
-            border: 1px solid #3f3f46;
-            color: #10b981;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            width: fit-content;
-            transition: all 0.2s ease;
-        }
-
-        .preview-file-btn:hover {
-            background-color: #27272a;
-            border-color: #10b981;
-        }
-
         @media (max-width: 640px) {
             .modal-actions-grid {
                 grid-template-columns: 1fr 1fr;
-            }
-
-            .preview-grid-2col {
-                grid-template-columns: 1fr;
             }
         }
 
@@ -546,8 +465,6 @@
 
     <!-- Main Page Content -->
     <main id="mainContent">
-        <!-- <h1>PureTrace</h1> -->
-
         <!-- Top Splash Video Container (Rendered Dynamically) -->
         <div id="splashVideoContainer" class="splash-video-container" style="display: none;"></div>
 
@@ -556,7 +473,7 @@
 
         <!-- Action Buttons Container -->
         <div class="action-buttons">
-            <button type="button" class="btn-primary" id="specificationsBtn" onclick="openSpecifications()">
+            <button type="button" class="btn-primary" id="specificationsBtn" onclick="openSpecificationsPage()">
                 Specifications
             </button>
             <a id="feedbackBtn" href="#" target="_blank" class="btn-primary">
@@ -743,29 +660,13 @@
                 <div class="modal-actions-grid">
                     <button type="button" class="btn-danger" id="exitBtn" onclick="closeModal()">Exit</button>
                     <button type="button" class="btn-secondary" id="previewBtn"
-                        onclick="generatePreview()">Preview</button>
+                        onclick="openSpecificationsPage()">Preview Page</button>
                     <button type="button" class="btn-secondary" id="saveBtn" onclick="saveLocally()">Save</button>
                     <button type="submit" class="btn-primary" id="submitBatchBtn">
                         <span id="btnText">Submit</span>
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- PREVIEW POPUP MODAL OVERLAY -->
-    <div id="previewModal" class="modal-overlay">
-        <div class="modal-card">
-            <h2 id="previewModalTitle">Product Specification Preview</h2>
-            <p class="subtitle">Review the details entered before saving or submitting.</p>
-
-            <div id="previewModalBody"></div>
-
-            <div style="margin-top: 2rem; text-align: center;">
-                <button type="button" class="btn-secondary" onclick="closePreviewModal()" style="min-width: 140px;">
-                    Close Preview
-                </button>
-            </div>
         </div>
     </div>
 
@@ -884,10 +785,6 @@
         function closeModal() {
             document.getElementById("batchModal").classList.remove("active");
             showMainContent();
-        }
-
-        function closePreviewModal() {
-            document.getElementById("previewModal").classList.remove("active");
         }
 
         function fileToBase64(file) {
@@ -1103,27 +1000,35 @@
             }
         }
 
-        async function generatePreview() {
-            const data = await collectFormData();
+        /* OPENS FULL DYNAMIC HTML SPECIFICATION PAGE IN NEW TAB */
+        async function openSpecificationsPage() {
+            let data = storedProductData;
 
-            document.getElementById("previewModalTitle").textContent = data.product_name ? `${data.product_name} - Details` : "Product Details Preview";
+            // If the user is currently editing inside the modal form, pull live details from fields
+            const form = document.getElementById("productDetailsForm");
+            if (form && document.getElementById("batchModal").classList.contains("active")) {
+                data = await collectFormData();
+            }
 
-            let previewHtml = "";
+            if (!data || Object.keys(data).length === 0) {
+                alert("No product specifications are entered yet. Please fill in details first.");
+                return;
+            }
 
-            // Section 1: Specifications Grid
-            previewHtml += `<div class="section-title" style="margin-top:0;">1. Product Specifications</div>`;
-            previewHtml += `<div class="preview-grid-2col">`;
+            const pageTitle = data.product_name ? `${data.product_name} - Specifications` : "Product Specifications";
 
+            // Construct Specifications HTML Grid
+            let specsHtml = "";
             let specsCount = 0;
             Object.keys(fieldLabels).forEach((key) => {
                 const val = data[key];
                 if (val && val.toString().trim() !== "") {
                     specsCount++;
                     const isFullWidth = ["description", "notes", "storage_instructions_consumer", "expiry_details"].includes(key);
-                    previewHtml += `
-                        <div class="preview-item ${isFullWidth ? 'full-width' : ''}">
-                            <span class="preview-label">${fieldLabels[key]}</span>
-                            <span class="preview-val">${val}</span>
+                    specsHtml += `
+                        <div class="spec-card ${isFullWidth ? 'full-width' : ''}">
+                            <div class="spec-label">${fieldLabels[key]}</div>
+                            <div class="spec-value">${val}</div>
                         </div>
                     `;
                 }
@@ -1131,67 +1036,225 @@
 
             if (data.splash_screen_logo && data.splash_screen_logo.filename) {
                 specsCount++;
-                previewHtml += `
-                    <div class="preview-item">
-                        <span class="preview-label">Splash Screen Logo</span>
-                        <span class="preview-val">${data.splash_screen_logo.filename}</span>
+                specsHtml += `
+                    <div class="spec-card">
+                        <div class="spec-label">Splash Screen Logo</div>
+                        <div class="spec-value">${data.splash_screen_logo.filename}</div>
                     </div>
                 `;
             }
 
             if (specsCount === 0) {
-                previewHtml += `<div class="preview-item full-width" style="color:#71717a;">No specifications entered yet.</div>`;
+                specsHtml = `<div class="spec-card full-width" style="color:#71717a;">No specifications entered yet.</div>`;
             }
-            previewHtml += `</div>`;
 
-            // Section 2: Certificates
+            // Construct Certificates HTML Grid
+            let certsHtml = "";
             if (data.certificates && data.certificates.length > 0) {
                 const validCerts = data.certificates.filter(c => c.name || c.description || c.file);
                 if (validCerts.length > 0) {
-                    previewHtml += `<div class="section-title">2. Certificates</div>`;
-                    previewHtml += `<div class="form-grid">`;
+                    certsHtml += `<div class="section-heading">Certificates</div><div class="grid-container">`;
                     validCerts.forEach(c => {
-                        let fileLink = c.file ? `<a href="${c.file.base64}" download="${c.file.filename}" class="preview-file-btn">📄 Download ${c.file.filename}</a>` : "";
-                        previewHtml += `
-                            <div class="preview-cert-card">
-                                <div style="font-weight:700; color:#10b981;">${c.name || 'Certificate'}</div>
-                                ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa;">${c.description}</div>` : ''}
+                        let fileLink = c.file ? `<a href="${c.file.base64}" download="${c.file.filename}" class="btn-download">📄 Download ${c.file.filename}</a>` : "";
+                        certsHtml += `
+                            <div class="spec-card">
+                                <div style="font-weight:700; color:#10b981; font-size: 1rem;">${c.name || 'Certificate'}</div>
+                                ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${c.description}</div>` : ''}
                                 ${fileLink}
                             </div>
                         `;
                     });
-                    previewHtml += `</div>`;
+                    certsHtml += `</div>`;
                 }
             }
 
-            // Section 3: Product Images
+            // Construct Product Images HTML Grid
+            let imgsHtml = "";
             if (data.product_images && data.product_images.length > 0) {
                 const validImgs = data.product_images.filter(i => i.file || i.description);
                 if (validImgs.length > 0) {
-                    previewHtml += `<div class="section-title">3. Product Images</div>`;
-                    previewHtml += `<div class="form-grid">`;
+                    imgsHtml += `<div class="section-heading">Product Images</div><div class="grid-container">`;
                     validImgs.forEach(img => {
-                        previewHtml += `
-                            <div class="preview-img-card">
-                                ${img.file ? `<img src="${img.file.base64}" alt="${img.label}" />` : ''}
-                                <div style="font-weight:700; color:#10b981; font-size:0.9rem;">${img.label}</div>
-                                ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa;">${img.description}</div>` : ''}
+                        imgsHtml += `
+                            <div class="spec-card">
+                                ${img.file ? `<img src="${img.file.base64}" alt="${img.label}" class="img-preview" />` : ''}
+                                <div style="font-weight:700; color:#10b981; font-size:0.9rem; margin-top: 0.5rem;">${img.label}</div>
+                                ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${img.description}</div>` : ''}
                             </div>
                         `;
                     });
-                    previewHtml += `</div>`;
+                    imgsHtml += `</div>`;
                 }
             }
 
-            document.getElementById("previewModalBody").innerHTML = previewHtml;
-            document.getElementById("previewModal").classList.add("active");
-        }
+            // Complete Document Assembly for New Page
+            const pageDocument = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${pageTitle}</title>
+                    <style>
+                        * { box-sizing: border-box; margin: 0; padding: 0; }
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                            background-color: #000000;
+                            color: #ffffff;
+                            padding: 2rem 1.5rem;
+                            display: flex;
+                            justify-content: center;
+                        }
+                        .page-container {
+                            width: 100%;
+                            max-width: 850px;
+                        }
+                        .header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            border-bottom: 2px solid #27272a;
+                            padding-bottom: 1.25rem;
+                            margin-bottom: 2rem;
+                        }
+                        .header h1 {
+                            font-size: 1.8rem;
+                            color: #ffffff;
+                            font-weight: 800;
+                        }
+                        .header-actions {
+                            display: flex;
+                            gap: 0.75rem;
+                        }
+                        .btn-action {
+                            background-color: #10b981;
+                            color: #000000;
+                            border: none;
+                            padding: 0.6rem 1.25rem;
+                            font-weight: 700;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            text-decoration: none;
+                            font-size: 0.9rem;
+                            transition: background-color 0.2s;
+                        }
+                        .btn-action:hover {
+                            background-color: #059669;
+                            color: #ffffff;
+                        }
+                        .btn-secondary-action {
+                            background-color: #27272a;
+                            color: #ffffff;
+                            border: 1px solid #3f3f46;
+                            padding: 0.6rem 1.25rem;
+                            font-weight: 600;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        }
+                        .btn-secondary-action:hover {
+                            background-color: #3f3f46;
+                        }
+                        .section-heading {
+                            font-size: 1.2rem;
+                            color: #10b981;
+                            font-weight: 700;
+                            border-bottom: 1px solid #27272a;
+                            padding-bottom: 0.5rem;
+                            margin: 2rem 0 1rem 0;
+                        }
+                        .grid-container {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 1rem;
+                        }
+                        .spec-card {
+                            background-color: #18181b;
+                            border: 1px solid #27272a;
+                            border-radius: 12px;
+                            padding: 1rem;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.35rem;
+                        }
+                        .spec-card.full-width {
+                            grid-column: 1 / -1;
+                        }
+                        .spec-label {
+                            font-size: 0.75rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            color: #10b981;
+                            font-weight: 700;
+                        }
+                        .spec-value {
+                            font-size: 0.95rem;
+                            color: #f4f4f5;
+                            word-break: break-word;
+                        }
+                        .img-preview {
+                            width: 100%;
+                            height: 200px;
+                            object-fit: cover;
+                            border-radius: 8px;
+                            border: 1px solid #27272a;
+                        }
+                        .btn-download {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            margin-top: 0.5rem;
+                            padding: 0.5rem 0.85rem;
+                            background-color: #09090b;
+                            border: 1px solid #3f3f46;
+                            color: #10b981;
+                            border-radius: 6px;
+                            text-decoration: none;
+                            font-size: 0.85rem;
+                            font-weight: 600;
+                            width: fit-content;
+                        }
+                        @media (max-width: 640px) {
+                            .grid-container { grid-template-columns: 1fr; }
+                            .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+                        }
+                        @media print {
+                            .header-actions { display: none; }
+                            body { background-color: #ffffff; color: #000000; }
+                            .spec-card { border-color: #ccc; background-color: #fff; }
+                            .spec-value { color: #000; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="page-container">
+                        <div class="header">
+                            <h1>${pageTitle}</h1>
+                            <div class="header-actions">
+                                <button class="btn-secondary-action" onclick="window.print()">Print Page</button>
+                                <button class="btn-action" onclick="window.close()">Close</button>
+                            </div>
+                        </div>
 
-        function openSpecifications() {
-            if (storedProductData) {
-                generatePreview();
+                        <div class="section-heading" style="margin-top:0;">Product Specifications</div>
+                        <div class="grid-container">
+                            ${specsHtml}
+                        </div>
+
+                        ${certsHtml}
+                        ${imgsHtml}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const specWindow = window.open("", "_blank");
+            if (specWindow) {
+                specWindow.document.open();
+                specWindow.document.write(pageDocument);
+                specWindow.document.close();
             } else {
-                alert("No product specifications are entered yet. Please fill in and submit the details first.");
+                alert("Please allow pop-ups for this website to open the specification page.");
             }
         }
 
@@ -1231,7 +1294,6 @@
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         }
-
 
         // Page Load Logic
         (async function initBatchCheck() {
@@ -1319,7 +1381,7 @@
                 try {
                     const payloadData = await collectFormData();
 
-                    // Saves all details (splash screen logo, video URL, specifications, certs, imgs) to backend DB
+                    // Saves all details to backend DB
                     const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
