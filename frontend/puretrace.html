@@ -22,7 +22,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 1.5rem;
+            padding: 1.5rem 1.5rem 3.5rem 1.5rem; /* Added bottom padding for mobile spacing */
             overflow-x: hidden;
         }
 
@@ -58,6 +58,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-bottom: 1.5rem;
         }
 
         main.visible {
@@ -249,6 +250,27 @@
             font-size: 0.75rem;
             color: #71717a;
             letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .brand-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .brand-footer a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .brand-footer a:hover {
+            text-decoration: underline;
         }
 
         /* Modal Overlay Styles */
@@ -490,6 +512,12 @@
 
         <!-- ID Footer Text -->
         <div id="urlIdDisplay" class="url-id-footer"></div>
+
+        <!-- Brand Footer -->
+        <div class="brand-footer">
+            <div>PureTrace @ DoWell Research</div>
+            <div><a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a></div>
+        </div>
     </main>
 
     <!-- Complete Product Form Modal -->
@@ -665,6 +693,10 @@
                     <button type="submit" class="btn-primary" id="submitBatchBtn">
                         <span id="btnText">Submit</span>
                     </button>
+                </div>
+                <div class="brand-footer" style="margin-top: 1.5rem;">
+                    <div>PureTrace @ DoWell Research</div>
+                    <div><a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a></div>
                 </div>
             </form>
         </div>
@@ -1001,260 +1033,21 @@
         }
 
         /* OPENS FULL DYNAMIC HTML SPECIFICATION PAGE IN NEW TAB */
-        async function openSpecificationsPage() {
-            let data = storedProductData;
+        function openSpecificationsPage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const linkId = urlParams.get("id") || "";
 
-            // If the user is currently editing inside the modal form, pull live details from fields
-            const form = document.getElementById("productDetailsForm");
-            if (form && document.getElementById("batchModal").classList.contains("active")) {
-                data = await collectFormData();
-            }
-
-            if (!data || Object.keys(data).length === 0) {
-                alert("No product specifications are entered yet. Please fill in details first.");
-                return;
-            }
-
-            const pageTitle = data.product_name ? `${data.product_name} - Specifications` : "Product Specifications";
-
-            // Construct Specifications HTML Grid
-            let specsHtml = "";
-            let specsCount = 0;
-            Object.keys(fieldLabels).forEach((key) => {
-                const val = data[key];
-                if (val && val.toString().trim() !== "") {
-                    specsCount++;
-                    const isFullWidth = ["description", "notes", "storage_instructions_consumer", "expiry_details"].includes(key);
-                    specsHtml += `
-                        <div class="spec-card ${isFullWidth ? 'full-width' : ''}">
-                            <div class="spec-label">${fieldLabels[key]}</div>
-                            <div class="spec-value">${val}</div>
-                        </div>
-                    `;
-                }
-            });
-
-            if (data.splash_screen_logo && data.splash_screen_logo.filename) {
-                specsCount++;
-                specsHtml += `
-                    <div class="spec-card">
-                        <div class="spec-label">Splash Screen Logo</div>
-                        <div class="spec-value">${data.splash_screen_logo.filename}</div>
-                    </div>
-                `;
-            }
-
-            if (specsCount === 0) {
-                specsHtml = `<div class="spec-card full-width" style="color:#71717a;">No specifications entered yet.</div>`;
-            }
-
-            // Construct Certificates HTML Grid
-            let certsHtml = "";
-            if (data.certificates && data.certificates.length > 0) {
-                const validCerts = data.certificates.filter(c => c.name || c.description || c.file);
-                if (validCerts.length > 0) {
-                    certsHtml += `<div class="section-heading">Certificates</div><div class="grid-container">`;
-                    validCerts.forEach(c => {
-                        let fileLink = c.file ? `<a href="${c.file.base64}" download="${c.file.filename}" class="btn-download">📄 Download ${c.file.filename}</a>` : "";
-                        certsHtml += `
-                            <div class="spec-card">
-                                <div style="font-weight:700; color:#10b981; font-size: 1rem;">${c.name || 'Certificate'}</div>
-                                ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${c.description}</div>` : ''}
-                                ${fileLink}
-                            </div>
-                        `;
-                    });
-                    certsHtml += `</div>`;
-                }
-            }
-
-            // Construct Product Images HTML Grid
-            let imgsHtml = "";
-            if (data.product_images && data.product_images.length > 0) {
-                const validImgs = data.product_images.filter(i => i.file || i.description);
-                if (validImgs.length > 0) {
-                    imgsHtml += `<div class="section-heading">Product Images</div><div class="grid-container">`;
-                    validImgs.forEach(img => {
-                        imgsHtml += `
-                            <div class="spec-card">
-                                ${img.file ? `<img src="${img.file.base64}" alt="${img.label}" class="img-preview" />` : ''}
-                                <div style="font-weight:700; color:#10b981; font-size:0.9rem; margin-top: 0.5rem;">${img.label}</div>
-                                ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${img.description}</div>` : ''}
-                            </div>
-                        `;
-                    });
-                    imgsHtml += `</div>`;
-                }
-            }
-
-            // Complete Document Assembly for New Page
-            const pageDocument = `
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>${pageTitle}</title>
-                    <style>
-                        * { box-sizing: border-box; margin: 0; padding: 0; }
-                        body {
-                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                            background-color: #000000;
-                            color: #ffffff;
-                            padding: 2rem 1.5rem;
-                            display: flex;
-                            justify-content: center;
-                        }
-                        .page-container {
-                            width: 100%;
-                            max-width: 850px;
-                        }
-                        .header {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            border-bottom: 2px solid #27272a;
-                            padding-bottom: 1.25rem;
-                            margin-bottom: 2rem;
-                        }
-                        .header h1 {
-                            font-size: 1.8rem;
-                            color: #ffffff;
-                            font-weight: 800;
-                        }
-                        .header-actions {
-                            display: flex;
-                            gap: 0.75rem;
-                        }
-                        .btn-action {
-                            background-color: #10b981;
-                            color: #000000;
-                            border: none;
-                            padding: 0.6rem 1.25rem;
-                            font-weight: 700;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            text-decoration: none;
-                            font-size: 0.9rem;
-                            transition: background-color 0.2s;
-                        }
-                        .btn-action:hover {
-                            background-color: #059669;
-                            color: #ffffff;
-                        }
-                        .btn-secondary-action {
-                            background-color: #27272a;
-                            color: #ffffff;
-                            border: 1px solid #3f3f46;
-                            padding: 0.6rem 1.25rem;
-                            font-weight: 600;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-size: 0.9rem;
-                        }
-                        .btn-secondary-action:hover {
-                            background-color: #3f3f46;
-                        }
-                        .section-heading {
-                            font-size: 1.2rem;
-                            color: #10b981;
-                            font-weight: 700;
-                            border-bottom: 1px solid #27272a;
-                            padding-bottom: 0.5rem;
-                            margin: 2rem 0 1rem 0;
-                        }
-                        .grid-container {
-                            display: grid;
-                            grid-template-columns: repeat(2, 1fr);
-                            gap: 1rem;
-                        }
-                        .spec-card {
-                            background-color: #18181b;
-                            border: 1px solid #27272a;
-                            border-radius: 12px;
-                            padding: 1rem;
-                            display: flex;
-                            flex-direction: column;
-                            gap: 0.35rem;
-                        }
-                        .spec-card.full-width {
-                            grid-column: 1 / -1;
-                        }
-                        .spec-label {
-                            font-size: 0.75rem;
-                            text-transform: uppercase;
-                            letter-spacing: 0.05em;
-                            color: #10b981;
-                            font-weight: 700;
-                        }
-                        .spec-value {
-                            font-size: 0.95rem;
-                            color: #f4f4f5;
-                            word-break: break-word;
-                        }
-                        .img-preview {
-                            width: 100%;
-                            height: 200px;
-                            object-fit: cover;
-                            border-radius: 8px;
-                            border: 1px solid #27272a;
-                        }
-                        .btn-download {
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                            margin-top: 0.5rem;
-                            padding: 0.5rem 0.85rem;
-                            background-color: #09090b;
-                            border: 1px solid #3f3f46;
-                            color: #10b981;
-                            border-radius: 6px;
-                            text-decoration: none;
-                            font-size: 0.85rem;
-                            font-weight: 600;
-                            width: fit-content;
-                        }
-                        @media (max-width: 640px) {
-                            .grid-container { grid-template-columns: 1fr; }
-                            .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-                        }
-                        @media print {
-                            .header-actions { display: none; }
-                            body { background-color: #ffffff; color: #000000; }
-                            .spec-card { border-color: #ccc; background-color: #fff; }
-                            .spec-value { color: #000; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="page-container">
-                        <div class="header">
-                            <h1>${pageTitle}</h1>
-                            <div class="header-actions">
-                                <button class="btn-secondary-action" onclick="window.print()">Print Page</button>
-                                <button class="btn-action" onclick="window.close()">Close</button>
-                            </div>
-                        </div>
-
-                        <div class="section-heading" style="margin-top:0;">Product Specifications</div>
-                        <div class="grid-container">
-                            ${specsHtml}
-                        </div>
-
-                        ${certsHtml}
-                        ${imgsHtml}
-                    </div>
-                </body>
-                </html>
-            `;
-
-            const specWindow = window.open("", "_blank");
-            if (specWindow) {
-                specWindow.document.open();
-                specWindow.document.write(pageDocument);
-                specWindow.document.close();
+            if (linkId) {
+                // Redirect to standalone page passing the ID
+                window.open(`specifications.html?id=${encodeURIComponent(linkId)}`, "_blank");
             } else {
-                alert("Please allow pop-ups for this website to open the specification page.");
+                // Fallback for draft/local work: save state so specifications.html can read it
+                if (storedProductData) {
+                    localStorage.setItem("puretrace_local_data", JSON.stringify(storedProductData));
+                    window.open("specifications.html", "_blank");
+                } else {
+                    alert("No product specifications are available to display.");
+                }
             }
         }
 
