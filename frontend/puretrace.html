@@ -15,7 +15,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #000000;
+            background-color: white;
             color: #ffffff;
             min-height: 100vh;
             display: flex;
@@ -1088,6 +1088,17 @@
             );
         }
 
+        function updateFeedbackLink(linkId, batchId) {
+            const feedbackBtn = document.getElementById("feedbackBtn");
+            let url = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
+            
+            if (batchId) {
+                url += `&batch_id=${encodeURIComponent(batchId)}`;
+            }
+            
+            feedbackBtn.href = url;
+        }
+
         // Page Load Logic
         (async function initBatchCheck() {
             captureLocationOnLoad();
@@ -1102,8 +1113,7 @@
                 }
             }
 
-            const feedbackBtn = document.getElementById("feedbackBtn");
-            feedbackBtn.href = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
+            updateFeedbackLink(linkId, "");
 
             if (!linkId) {
                 showMainContent();

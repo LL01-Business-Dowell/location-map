@@ -55,7 +55,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .page-container {
@@ -196,15 +198,35 @@
         }
 
         @media (max-width: 640px) {
-            .grid-container { grid-template-columns: 1fr; }
-            .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
         }
 
         @media print {
-            .header-actions { display: none; }
-            body { background-color: #ffffff; color: #000000; }
-            .spec-card { border-color: #ccc; background-color: #fff; }
-            .spec-value { color: #000; }
+            .header-actions {
+                display: none;
+            }
+
+            body {
+                background-color: #ffffff;
+                color: #000000;
+            }
+
+            .spec-card {
+                border-color: #ccc;
+                background-color: #fff;
+            }
+
+            .spec-value {
+                color: #000;
+            }
         }
     </style>
 </head>
@@ -221,7 +243,7 @@
             <h1 id="pageTitle">Product Specifications</h1>
             <div class="header-actions">
                 <!-- <button class="btn-secondary-action" onclick="window.print()">Print Page</button> -->
-                <button class="btn-action" onclick="window.close()">Close</button>
+                <button class="btn-action" onclick="window.location.href='thank_you.html'">Close</button>
             </div>
         </div>
 
@@ -255,10 +277,6 @@
             country_of_origin: "Country of Origin",
             customer_care_contact: "Customer Care Contact",
             customer_care_phone: "Customer Care Phone",
-            splash_screen_video: "Splash Screen Video URL",
-            social_youtube: "YouTube Link",
-            social_instagram: "Instagram Link",
-            social_facebook: "Facebook Link",
             serial_number: "Serial Number",
             product_size: "Product Size",
             unit_sales_price: "Unit Sales Price",
@@ -280,6 +298,35 @@
             if (loader) loader.classList.add("hidden");
         }
 
+        // Helper function to turn video URLs (YouTube, Vimeo, MP4) into HTML player elements
+        function renderVideoElement(url) {
+            if (!url) return "";
+
+            let embedUrl = url;
+
+            // YouTube Embed URL conversion
+            if (url.includes("youtube.com/watch?v=")) {
+                embedUrl = url.replace("watch?v=", "embed/");
+                return `<iframe src="${embedUrl}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
+            } else if (url.includes("youtu.be/")) {
+                const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+                return `<iframe src="https://www.youtube.com/embed/${videoId}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
+            }
+            // Vimeo Embed URL conversion
+            else if (url.includes("vimeo.com/")) {
+                const videoId = url.split("vimeo.com/")[1];
+                return `<iframe src="https://player.vimeo.com/video/${videoId}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
+            }
+            // Direct MP4 or video files
+            else if (url.match(/\.(mp4|webm|ogg)$/i) || url.startsWith("data:video")) {
+                return `<video src="${url}" controls class="img-preview"></video>`;
+            }
+            // Generic fallback iframe/link
+            else {
+                return `<iframe src="${url}" class="img-preview" style="border:0;"></iframe>`;
+            }
+        }
+
         function renderData(data) {
             const title = data.product_name ? `${data.product_name} - Specifications` : "Product Specifications";
             document.title = title;
@@ -296,21 +343,35 @@
                     count++;
                     const isFullWidth = ["description", "notes", "storage_instructions_consumer", "expiry_details"].includes(key);
                     specsHtml += `
-                        <div class="spec-card ${isFullWidth ? 'full-width' : ''}">
-                            <div class="spec-label">${fieldLabels[key]}</div>
-                            <div class="spec-value">${val}</div>
-                        </div>
-                    `;
+                    <div class="spec-card ${isFullWidth ? 'full-width' : ''}">
+                        <div class="spec-label">${fieldLabels[key]}</div>
+                        <div class="spec-value">${val}</div>
+                    </div>
+                `;
                 }
             });
 
-            if (data.splash_screen_logo && data.splash_screen_logo.filename) {
+            // Splash Screen Logo Preview
+            if (data.splash_screen_logo && (data.splash_screen_logo.base64 || data.splash_screen_logo.filename)) {
+                const imgSrc = data.splash_screen_logo.base64 || data.splash_screen_logo.filename;
                 specsHtml += `
-                    <div class="spec-card">
-                        <div class="spec-label">Splash Screen Logo</div>
-                        <div class="spec-value">${data.splash_screen_logo.filename}</div>
+                <div class="spec-card">
+                    <div class="spec-label">Splash Screen Logo</div>
+                    <img src="${imgSrc}" alt="Splash Screen Logo" class="img-preview" style="height:120px; object-fit:contain; margin-top:0.5rem;" />
+                </div>
+            `;
+            }
+
+            // Embedded Splash Screen Video
+            if (data.splash_screen_video && data.splash_screen_video.trim() !== "") {
+                specsHtml += `
+                <div class="spec-card full-width">
+                    <div class="spec-label">Splash Screen Video</div>
+                    <div style="margin-top:0.5rem;">
+                        ${renderVideoElement(data.splash_screen_video)}
                     </div>
-                `;
+                </div>
+            `;
             }
 
             specsGrid.innerHTML = count > 0 ? specsHtml : `<div class="spec-card full-width" style="color:#71717a;">No specifications found.</div>`;
@@ -321,33 +382,43 @@
                 if (validCerts.length > 0) {
                     let certsHtml = "";
                     validCerts.forEach(c => {
-                        const fileLink = c.file ? `<a href="${c.file.base64}" download="${c.file.filename}" class="btn-download">📄 Download ${c.file.filename}</a>` : "";
+                        const fileLink = c.file ? `<a href="${c.file.base64 || c.file.url}" download="${c.file.filename || 'certificate'}" class="btn-download">📄 Download ${c.file.filename || 'Certificate'}</a>` : "";
                         certsHtml += `
-                            <div class="spec-card">
-                                <div style="font-weight:700; color:#10b981; font-size:1rem;">${c.name || 'Certificate'}</div>
-                                ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${c.description}</div>` : ''}
-                                ${fileLink}
-                            </div>
-                        `;
+                        <div class="spec-card">
+                            <div style="font-weight:700; color:#10b981; font-size:1rem;">${c.name || 'Certificate'}</div>
+                            ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${c.description}</div>` : ''}
+                            ${fileLink}
+                        </div>
+                    `;
                     });
                     document.getElementById("certsGrid").innerHTML = certsHtml;
                     document.getElementById("certificatesSection").style.display = "block";
                 }
             }
 
-            // Render Product Images
+            // Render Product Images & Videos
             if (data.product_images && data.product_images.length > 0) {
-                const validImgs = data.product_images.filter(i => i.file || i.description);
+                const validImgs = data.product_images.filter(i => i.file || i.base64 || i.url || i.description);
                 if (validImgs.length > 0) {
                     let imgsHtml = "";
                     validImgs.forEach(img => {
+                        const mediaSrc = img.file?.base64 || img.base64 || img.url || (typeof img.file === 'string' ? img.file : '');
+                        let mediaElement = "";
+
+                        // Check if file is video or image
+                        if (mediaSrc.match(/\.(mp4|webm|ogg)$/i) || mediaSrc.startsWith("data:video")) {
+                            mediaElement = `<video src="${mediaSrc}" controls class="img-preview"></video>`;
+                        } else if (mediaSrc) {
+                            mediaElement = `<img src="${mediaSrc}" alt="${img.label || 'Product Image'}" class="img-preview" />`;
+                        }
+
                         imgsHtml += `
-                            <div class="spec-card">
-                                ${img.file ? `<img src="${img.file.base64}" alt="${img.label}" class="img-preview" />` : ''}
-                                <div style="font-weight:700; color:#10b981; font-size:0.9rem; margin-top:0.5rem;">${img.label}</div>
-                                ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${img.description}</div>` : ''}
-                            </div>
-                        `;
+                        <div class="spec-card">
+                            ${mediaElement}
+                            ${img.label ? `<div style="font-weight:700; color:#10b981; font-size:0.9rem; margin-top:0.5rem;">${img.label}</div>` : ''}
+                            ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${img.description}</div>` : ''}
+                        </div>
+                    `;
                     });
                     document.getElementById("imagesGrid").innerHTML = imgsHtml;
                     document.getElementById("imagesSection").style.display = "block";
@@ -363,13 +434,12 @@
             const linkId = urlParams.get("id");
 
             if (!linkId) {
-                // Fallback: check if local preview data exists
                 const savedLocal = localStorage.getItem("puretrace_local_data");
                 if (savedLocal) {
                     try {
                         renderData(JSON.parse(savedLocal));
                         return;
-                    } catch (e) {}
+                    } catch (e) { }
                 }
                 showError("No Product ID specified in URL.");
                 return;
