@@ -23,7 +23,6 @@
             justify-content: center;
             align-items: center;
             padding: 1.5rem 1.5rem 3.5rem 1.5rem;
-            /* Added bottom padding for mobile spacing */
             overflow-x: hidden;
         }
 
@@ -504,7 +503,7 @@
             </a>
         </div>
 
-        <button type="button" class="btn-close" onclick="window.location.href='thank_you.html'">
+        <button type="button" class="btn-close" onclick="openThankYouAndClose()">
             Close
         </button>
 
@@ -652,8 +651,50 @@
                     </div>
                 </div>
 
-                <!-- SECTION 2: Social Media Links (Optional) -->
-                <div class="section-title">2. Social Links (Optional)</div>
+                <!-- SECTION 2: Product Videos (Optional) -->
+                <div class="section-title">Product Videos (Optional)</div>
+                <div class="nested-card">
+                    <div class="nested-card-title">Video 1</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="video_link_1">Video Link</label>
+                            <input type="url" id="video_link_1" name="video_link_1" placeholder="https://..." />
+                        </div>
+                        <div class="form-group">
+                            <label for="video_desc_1">Description</label>
+                            <input type="text" id="video_desc_1" name="video_desc_1" placeholder="Video 1 Description" />
+                        </div>
+                    </div>
+                </div>
+                <div class="nested-card">
+                    <div class="nested-card-title">Video 2</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="video_link_2">Video Link</label>
+                            <input type="url" id="video_link_2" name="video_link_2" placeholder="https://..." />
+                        </div>
+                        <div class="form-group">
+                            <label for="video_desc_2">Description</label>
+                            <input type="text" id="video_desc_2" name="video_desc_2" placeholder="Video 2 Description" />
+                        </div>
+                    </div>
+                </div>
+                <div class="nested-card">
+                    <div class="nested-card-title">Video 3</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="video_link_3">Video Link</label>
+                            <input type="url" id="video_link_3" name="video_link_3" placeholder="https://..." />
+                        </div>
+                        <div class="form-group">
+                            <label for="video_desc_3">Description</label>
+                            <input type="text" id="video_desc_3" name="video_desc_3" placeholder="Video 3 Description" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Social Media Links (Optional) -->
+                <div class="section-title">3. Social Links (Optional)</div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="social_youtube">YouTube</label>
@@ -672,12 +713,12 @@
                     </div>
                 </div>
 
-                <!-- SECTION 3: Certificates (1 - 10) -->
-                <div class="section-title">3. Certificates (Optional)</div>
+                <!-- SECTION 4: Certificates (1 - 10) -->
+                <div class="section-title">4. Certificates (Optional)</div>
                 <div id="certificatesContainer"></div>
 
-                <!-- SECTION 4: Product Images (1 - 6) -->
-                <div class="section-title">4. Product Images (Optional)</div>
+                <!-- SECTION 5: Product Images (1 - 6) -->
+                <div class="section-title">5. Product Images (Optional)</div>
                 <div id="productImagesContainer"></div>
 
                 <!-- Action Buttons: Exit, Preview, Save, Submit -->
@@ -825,6 +866,11 @@
             });
         }
 
+        function openThankYouAndClose() {
+            window.open('thank_you.html', '_blank');
+            window.close(); 
+        }
+
         function formatEmbedVideoUrl(url) {
             if (!url) return null;
             let videoUrl = url.trim();
@@ -931,6 +977,21 @@
                 payloadData.splash_screen_logo = storedProductData.splash_screen_logo;
             }
 
+            // Process Product Videos
+            payloadData.product_videos = [];
+            for (let i = 1; i <= 3; i++) {
+                const link = formData.get(`video_link_${i}`);
+                const desc = formData.get(`video_desc_${i}`);
+
+                if (link || desc) {
+                    payloadData.product_videos.push({
+                        id: i,
+                        link: link || "",
+                        description: desc || ""
+                    });
+                }
+            }
+
             // Process Certificates
             payloadData.certificates = [];
             for (let i = 1; i <= 10; i++) {
@@ -1014,6 +1075,13 @@
                 }
             });
 
+            if (data.product_videos && Array.isArray(data.product_videos)) {
+                data.product_videos.forEach((vid) => {
+                    if (form.elements[`video_link_${vid.id}`]) form.elements[`video_link_${vid.id}`].value = vid.link || "";
+                    if (form.elements[`video_desc_${vid.id}`]) form.elements[`video_desc_${vid.id}`].value = vid.description || "";
+                });
+            }
+
             if (data.certificates && Array.isArray(data.certificates)) {
                 data.certificates.forEach((cert) => {
                     if (form.elements[`cert_name_${cert.id}`]) form.elements[`cert_name_${cert.id}`].value = cert.name || "";
@@ -1034,10 +1102,8 @@
             const linkId = urlParams.get("id") || "";
 
             if (linkId) {
-                // Redirect to standalone page passing the ID
                 window.open(`specifications.html?id=${encodeURIComponent(linkId)}`, "_blank");
             } else {
-                // Fallback for draft/local work: save state so specifications.html can read it
                 if (storedProductData) {
                     localStorage.setItem("puretrace_local_data", JSON.stringify(storedProductData));
                     window.open("specifications.html", "_blank");
@@ -1053,7 +1119,6 @@
                 return;
             }
 
-            // Extract linkId / qrId from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const qrId = urlParams.get("id") || "";
 
@@ -1126,7 +1191,6 @@
             let isDataFetchedFromDB = false;
 
             try {
-                // Fetch saved record from backend database on load
                 const res = await fetchWithTimeout(`${API_BASE}/get_medsign_link/${linkId}`);
                 if (res.ok) {
                     const data = await res.json();
@@ -1139,10 +1203,7 @@
                         isDataFetchedFromDB = true;
                     }
 
-                    // Extract batch_id from the response record or product_details
                     const fetchedBatchId = record?.batch_id || record?.product_details?.batch_id || "";
-                    
-                    // Update the feedback link with the fetched batch_id
                     updateFeedbackLink(linkId, fetchedBatchId);
 
                     if (!record || !record.batch_id || record.batch_id.trim() === "") {
@@ -1160,7 +1221,6 @@
                 hidePageSpinner();
             }
 
-            // Fallback to local data if network fail/no DB data loaded yet
             if (!isDataFetchedFromDB) {
                 const savedLocal = localStorage.getItem("puretrace_local_data");
                 if (savedLocal) {
@@ -1186,7 +1246,6 @@
                 try {
                     const payloadData = await collectFormData();
 
-                    // Saves all details to backend DB
                     const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

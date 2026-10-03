@@ -108,21 +108,6 @@
             color: #ffffff;
         }
 
-        .btn-secondary-action {
-            background-color: #27272a;
-            color: #ffffff;
-            border: 1px solid #3f3f46;
-            padding: 0.6rem 1.25rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .btn-secondary-action:hover {
-            background-color: #3f3f46;
-        }
-
         .section-heading {
             font-size: 1.2rem;
             color: #10b981;
@@ -168,8 +153,9 @@
 
         .img-preview {
             width: 100%;
-            height: 200px;
-            object-fit: cover;
+            height: 250px;
+            object-fit: contain;
+            background-color: #09090b;
             border-radius: 8px;
             border: 1px solid #27272a;
         }
@@ -207,25 +193,9 @@
                 align-items: flex-start;
                 gap: 1rem;
             }
-        }
 
-        @media print {
-            .header-actions {
-                display: none;
-            }
-
-            body {
-                background-color: #ffffff;
-                color: #000000;
-            }
-
-            .spec-card {
-                border-color: #ccc;
-                background-color: #fff;
-            }
-
-            .spec-value {
-                color: #000;
+            .img-preview {
+                height: 200px;
             }
         }
     </style>
@@ -242,22 +212,29 @@
         <div class="header">
             <h1 id="pageTitle">Product Specifications</h1>
             <div class="header-actions">
-                <!-- <button class="btn-secondary-action" onclick="window.print()">Print Page</button> -->
-                <button class="btn-action" onclick="window.close()">Close</button>
+                <button class="btn-action" onclick="closeTab()">Close</button>
             </div>
         </div>
 
         <div class="section-heading" style="margin-top:0;">Product Specifications</div>
         <div id="specsGrid" class="grid-container"></div>
 
-        <div id="certificatesSection" style="display: none;">
-            <div class="section-heading">Certificates</div>
-            <div id="certsGrid" class="grid-container"></div>
-        </div>
-
+        <!-- 1. Product Images First -->
         <div id="imagesSection" style="display: none;">
             <div class="section-heading">Product Images</div>
             <div id="imagesGrid" class="grid-container"></div>
+        </div>
+
+        <!-- 2. Product Videos Second -->
+        <div id="videosSection" style="display: none;">
+            <div class="section-heading">Product Videos</div>
+            <div id="videosGrid" class="grid-container"></div>
+        </div>
+
+        <!-- 3. Certificates Third -->
+        <div id="certificatesSection" style="display: none;">
+            <div class="section-heading">Certificates</div>
+            <div id="certsGrid" class="grid-container"></div>
         </div>
     </div>
 
@@ -293,60 +270,76 @@
             notes: "Notes"
         };
 
+        function closeTab() {
+            window.close();
+            setTimeout(() => {
+                window.open('', '_self', '');
+                window.close();
+            }, 100);
+            setTimeout(() => {
+                alert("Your browser security settings prevented automatically closing this tab. Please close it manually.");
+            }, 500);
+        }
+
         function hideLoader() {
             const loader = document.getElementById("loader");
             if (loader) loader.classList.add("hidden");
         }
 
-        // Helper to render media: Images, Videos (YouTube/Vimeo/MP4), PDFs, and files
+        // Renders YouTube, Facebook, Vimeo, MP4, PDF, Images, and Base64 Media
         function renderMediaElement(src, filename = "") {
             if (!src) return "";
 
             const cleanSrc = src.trim();
 
             // 1. YouTube Videos
-            if (cleanSrc.includes("youtube.com/watch?v=")) {
-                const embedUrl = cleanSrc.replace("watch?v=", "embed/");
-                return `<iframe src="${embedUrl}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
-            } else if (cleanSrc.includes("youtu.be/")) {
-                const videoId = cleanSrc.split("youtu.be/")[1]?.split("?")[0];
-                return `<iframe src="https://www.youtube.com/embed/${videoId}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
+            const ytMatch = cleanSrc.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+            if (ytMatch && ytMatch[1]) {
+                return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
             }
 
-            // 2. Vimeo Videos
-            else if (cleanSrc.includes("vimeo.com/")) {
-                const videoId = cleanSrc.split("vimeo.com/")[1];
+            // 2. Facebook Video Embed (Uses official Facebook Plugin Iframe endpoint)
+            if (cleanSrc.includes("facebook.com") || cleanSrc.includes("fb.watch")) {
+                const encodedUrl = encodeURIComponent(cleanSrc);
+                const fbEmbedSrc = `https://www.facebook.com/plugins/video.php?height=250&href=${encodedUrl}&show_text=false&width=500`;
+                return `
+                    <iframe src="${fbEmbedSrc}" class="img-preview" style="border:0; width:100%; height:250px; scrolling:no; allow:autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen="true"></iframe>
+                    <a href="${cleanSrc}" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem; color:#10b981; margin-top:0.3rem; display:inline-block;">↗ Open Video on Facebook</a>
+                `;
+            }
+
+            // 3. Vimeo Videos
+            if (cleanSrc.includes("vimeo.com/")) {
+                const videoId = cleanSrc.split("vimeo.com/")[1]?.split("?")[0];
                 return `<iframe src="https://player.vimeo.com/video/${videoId}" class="img-preview" style="border:0;" allowfullscreen></iframe>`;
             }
 
-            // 3. Direct HTML5 Video
-            else if (cleanSrc.match(/\.(mp4|webm|ogg)$/i) || cleanSrc.startsWith("data:video")) {
+            // 4. Direct Video Files (MP4/WebM/Base64 Video)
+            if (cleanSrc.match(/\.(mp4|webm|ogg)$/i) || cleanSrc.startsWith("data:video")) {
                 return `<video src="${cleanSrc}" controls class="img-preview"></video>`;
             }
 
-            // 4. PDF Files
-            else if (cleanSrc.match(/\.pdf$/i) || cleanSrc.startsWith("data:application/pdf")) {
+            // 5. PDF Documents
+            if (cleanSrc.match(/\.pdf$/i) || cleanSrc.startsWith("data:application/pdf")) {
                 return `
-                <object data="${cleanSrc}" type="application/pdf" class="img-preview" style="height:300px;">
-                    <iframe src="${cleanSrc}" style="width:100%; height:300px; border:0;"></iframe>
-                </object>
-                <a href="${cleanSrc}" download="${filename || 'document.pdf'}" class="btn-download">📄 Download PDF</a>
-            `;
+                    <object data="${cleanSrc}" type="application/pdf" class="img-preview" style="height:250px;">
+                        <iframe src="${cleanSrc}" style="width:100%; height:250px; border:0;"></iframe>
+                    </object>
+                    <a href="${cleanSrc}" download="${filename || 'document.pdf'}" class="btn-download">📄 Download PDF</a>
+                `;
             }
 
-            // 5. Images (base64, direct files, PNG, JPG, WebP, etc.)
-            else if (cleanSrc.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || cleanSrc.startsWith("data:image")) {
+            // 6. Base64 & Direct Images (PNG, JPG, WebP, SVG, etc.)
+            if (cleanSrc.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || cleanSrc.startsWith("data:image")) {
                 return `<img src="${cleanSrc}" alt="Product Media" class="img-preview" />`;
             }
 
-            // 6. Generic File Link Fallback
-            else {
-                return `
+            // 7. Generic File Download Link Fallback
+            return `
                 <div style="padding: 1rem; text-align: center; background: #09090b; border-radius: 8px; border: 1px dashed #3f3f46;">
                     <a href="${cleanSrc}" download="${filename || 'file'}" class="btn-download">📁 View / Download File</a>
                 </div>
             `;
-            }
         }
 
         function renderData(data) {
@@ -354,7 +347,7 @@
             document.title = title;
             document.getElementById("pageTitle").textContent = title;
 
-            // Render Specifications Grid
+            // Render Product Specifications Grid
             const specsGrid = document.getElementById("specsGrid");
             let specsHtml = "";
             let count = 0;
@@ -365,58 +358,111 @@
                     count++;
                     const isFullWidth = ["description", "notes", "storage_instructions_consumer", "expiry_details"].includes(key);
                     specsHtml += `
-                    <div class="spec-card ${isFullWidth ? 'full-width' : ''}">
-                        <div class="spec-label">${fieldLabels[key]}</div>
-                        <div class="spec-value">${val}</div>
-                    </div>
-                `;
+                        <div class="spec-card ${isFullWidth ? 'full-width' : ''}">
+                            <div class="spec-label">${fieldLabels[key]}</div>
+                            <div class="spec-value">${val}</div>
+                        </div>
+                    `;
                 }
             });
 
             specsGrid.innerHTML = count > 0 ? specsHtml : `<div class="spec-card full-width" style="color:#71717a;">No specifications found.</div>`;
 
-            // Render Certificates
-            if (data.certificates && data.certificates.length > 0) {
-                const validCerts = data.certificates.filter(c => c.name || c.description || c.file);
-                if (validCerts.length > 0) {
-                    let certsHtml = "";
-                    validCerts.forEach(c => {
-                        const certSrc = c.file?.base64 || c.file?.url || (typeof c.file === 'string' ? c.file : '');
-                        const fileLink = certSrc ? `<a href="${certSrc}" download="${c.file?.filename || 'certificate'}" class="btn-download">📄 Download ${c.file?.filename || 'Certificate'}</a>` : "";
-                        certsHtml += `
-                        <div class="spec-card">
-                            <div style="font-weight:700; color:#10b981; font-size:1rem;">${c.name || 'Certificate'}</div>
-                            ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${c.description}</div>` : ''}
-                            ${fileLink}
-                        </div>
-                    `;
-                    });
-                    document.getElementById("certsGrid").innerHTML = certsHtml;
-                    document.getElementById("certificatesSection").style.display = "block";
+            // 1. Render Product Images FIRST (Excludes Splash Screen Logo)
+            let imageList = [];
+            if (data.product_images && Array.isArray(data.product_images)) {
+                imageList = data.product_images.filter(i => i.file || i.base64 || i.url || i.description);
+            } else {
+                for (let i = 1; i <= 6; i++) {
+                    const desc = data[`img_desc_${i}`];
+                    const file = data[`img_file_${i}`];
+                    if (file || desc) {
+                        imageList.push({ label: `Product Image ${i}`, file: file, description: desc || "" });
+                    }
                 }
             }
 
-            // Render Product Media (Images, Videos, PDFs, Documents)
-            if (data.product_images && data.product_images.length > 0) {
-                const validImgs = data.product_images.filter(i => i.file || i.base64 || i.url || i.description);
-                if (validImgs.length > 0) {
-                    let imgsHtml = "";
-                    validImgs.forEach(img => {
-                        const mediaSrc = img.file?.base64 || img.base64 || img.url || (typeof img.file === 'string' ? img.file : '');
-                        const fileName = img.file?.filename || "";
-                        const mediaElement = renderMediaElement(mediaSrc, fileName);
+            if (imageList.length > 0) {
+                let imgsHtml = "";
+                imageList.forEach(img => {
+                    const mediaSrc = img.file?.base64 || img.base64 || img.url || (typeof img.file === 'string' ? img.file : '');
+                    const fileName = img.file?.filename || "";
+                    const mediaElement = renderMediaElement(mediaSrc, fileName);
 
-                        imgsHtml += `
+                    imgsHtml += `
                         <div class="spec-card">
                             ${mediaElement}
                             ${img.label ? `<div style="font-weight:700; color:#10b981; font-size:0.9rem; margin-top:0.5rem;">${img.label}</div>` : ''}
                             ${img.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${img.description}</div>` : ''}
                         </div>
                     `;
-                    });
-                    document.getElementById("imagesGrid").innerHTML = imgsHtml;
-                    document.getElementById("imagesSection").style.display = "block";
+                });
+                document.getElementById("imagesGrid").innerHTML = imgsHtml;
+                document.getElementById("imagesSection").style.display = "block";
+            }
+
+            // 2. Render Product Videos SECOND
+            let videoList = [];
+            if (data.product_videos && Array.isArray(data.product_videos)) {
+                videoList = data.product_videos.filter(v => v.link && v.link.trim() !== "");
+            } else {
+                for (let i = 1; i <= 3; i++) {
+                    const link = data[`video_link_${i}`];
+                    const desc = data[`video_desc_${i}`];
+                    if (link && link.trim() !== "") {
+                        videoList.push({ link: link, description: desc || "" });
+                    }
                 }
+            }
+
+            if (videoList.length > 0) {
+                let videosHtml = "";
+                videoList.forEach((v, index) => {
+                    const mediaElement = renderMediaElement(v.link);
+                    videosHtml += `
+                        <div class="spec-card">
+                            ${mediaElement}
+                            <div style="font-weight:700; color:#10b981; font-size:0.9rem; margin-top:0.5rem;">Video ${index + 1}</div>
+                            ${v.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${v.description}</div>` : ''}
+                        </div>
+                    `;
+                });
+                document.getElementById("videosGrid").innerHTML = videosHtml;
+                document.getElementById("videosSection").style.display = "block";
+            }
+
+            // 3. Render Certificates THIRD
+            let certList = [];
+            if (data.certificates && Array.isArray(data.certificates)) {
+                certList = data.certificates.filter(c => c.name || c.description || c.file);
+            } else {
+                for (let i = 1; i <= 10; i++) {
+                    const name = data[`cert_name_${i}`];
+                    const desc = data[`cert_desc_${i}`];
+                    const file = data[`cert_file_${i}`];
+                    if (name || desc || file) {
+                        certList.push({ name: name || `Certificate ${i}`, description: desc || "", file: file });
+                    }
+                }
+            }
+
+            if (certList.length > 0) {
+                let certsHtml = "";
+                certList.forEach(c => {
+                    const certSrc = c.file?.base64 || c.file?.url || (typeof c.file === 'string' ? c.file : '');
+                    const fileName = c.file?.filename || `${c.name || 'certificate'}`;
+                    const mediaElement = certSrc ? renderMediaElement(certSrc, fileName) : "";
+
+                    certsHtml += `
+                        <div class="spec-card">
+                            ${mediaElement}
+                            <div style="font-weight:700; color:#10b981; font-size:1rem; margin-top: 0.5rem;">${c.name || 'Certificate'}</div>
+                            ${c.description ? `<div style="font-size:0.85rem; color:#a1a1aa; margin-top:0.25rem;">${c.description}</div>` : ''}
+                        </div>
+                    `;
+                });
+                document.getElementById("certsGrid").innerHTML = certsHtml;
+                document.getElementById("certificatesSection").style.display = "block";
             }
 
             document.getElementById("contentContainer").classList.add("visible");
