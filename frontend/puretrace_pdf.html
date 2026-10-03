@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureTrace - A3 QR Code Grid PDF Generator</title>
+
+    <!-- QRCode JS Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Controls Panel */
+        .controls-card {
+            background-color: #262626;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px 20px;
+            width: 100%;
+            max-width: 700px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .controls-card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #10b981;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #4b5563;
+            background-color: #000;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #10b981;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-update {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-print {
+            background-color: #10b981;
+            color: #000000;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Printable Wrapper */
+        .preview-wrapper {
+            background-color: #333;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        /* A3 Page (420mm x 297mm) */
+        .a3-page {
+            width: 420mm;
+            height: 297mm;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 4mm 0 2mm 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+
+        /* 1. OUTER DOTTED GRID: Adjusted height to 45.5mm to give 12mm headroom for footer */
+        .qr-grid-container {
+            display: grid;
+            grid-template-columns: repeat(9, 46.54mm);
+            grid-template-rows: repeat(6, 45.5mm);
+            gap: 0;
+            justify-content: center;
+            align-content: center;
+            margin: 0 auto;
+            border-top: 0.6px dotted #000000;
+            border-left: 0.6px dotted #000000;
+            width: 418.86mm;
+        }
+
+        .qr-grid-cell {
+            width: 46.54mm;
+            height: 45.5mm;
+            border-right: 0.6px dotted #000000;
+            border-bottom: 0.6px dotted #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-sizing: border-box;
+            background-color: #ffffff;
+        }
+
+        /* 2. SOLID INNER BOX */
+        .qr-inner-card {
+            width: 43mm;
+            height: 42mm;
+            border: 0.8px solid #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            padding: 0.5mm 0.5mm;
+            position: relative;
+        }
+
+        /* 3. LIGHT COLOR TEXT (8pt) SURROUNDING QR CODE */
+        .qr-id-text {
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #e2e8f0 !important;
+            letter-spacing: 0.3px;
+            width: 100%;
+            text-align: center;
+            line-height: 1;
+            user-select: none;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .qr-middle-content {
+            display: flex;
+            width: 100%;
+            height: 30mm;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .qr-side-text {
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #e2e8f0 !important;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            width: 3.5mm;
+            height: 30mm;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .qr-side-text span {
+            display: inline-block;
+        }
+
+        .qr-side-text.left span {
+            transform: rotate(-90deg);
+            transform-origin: center center;
+        }
+
+        .qr-side-text.right span {
+            transform: rotate(90deg);
+            transform-origin: center center;
+        }
+
+        /* 4. CENTER QR CODE */
+        .qr-code-element {
+            width: 33mm !important;
+            height: 33mm !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qr-code-element img,
+        .qr-code-element canvas {
+            width: 33mm !important;
+            height: 33mm !important;
+        }
+
+        /* FOOTER LAYOUT FIXED */
+        .bottom-footer-wrapper {
+            width: 418.86mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2mm 5mm 0 5mm;
+            border-top: 0.8px solid #000000;
+            margin-left: auto;
+            margin-right: auto;
+            padding-bottom: 2mm;
+        }
+
+        .setup-instructions-grid {
+            display: flex;
+            gap: 8mm;
+            font-size: 10pt;
+            line-height: 1.2;
+            color: #000000;
+        }
+
+        .setup-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .setup-col-1 {
+            width: 65mm;
+        }
+
+        .setup-col-2 {
+            width: 80mm;
+        }
+
+        .setup-col-3 {
+            width: 140mm;
+        }
+
+        .setup-title {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .brand-section {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .id-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .brand-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border-left: 1px solid #cccccc;
+            padding-left: 14px;
+        }
+
+        .id-label {
+            font-size: 10pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .id-value {
+            font-size: 11pt;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .brand-title {
+            font-size: 11pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .brand-tagline {
+            font-size: 5.5pt;
+            font-weight: 500;
+            color: #333333;
+            line-height: 1.1;
+        }
+
+        /* PRINT CONFIGURATION */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            html,
+            body {
+                width: 420mm;
+                height: 297mm;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: hidden !important;
+            }
+
+            .controls-card,
+            .preview-wrapper {
+                background: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .controls-card {
+                display: none !important;
+            }
+
+            .a3-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 420mm !important;
+                height: 297mm !important;
+                max-height: 297mm !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+                overflow: hidden !important;
+            }
+
+            .qr-id-text,
+            .qr-side-text {
+                color: #e2e8f0 !important;
+            }
+
+            @page {
+                size: A3 landscape;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Controls Bar -->
+    <div class="controls-card">
+        <h2>PureTrace A3 Generator</h2>
+        <div class="input-group">
+            <input type="text" id="urlInput" value="https://example.com/puretrace?id=72475709"
+                placeholder="Paste link here...">
+            <div class="btn-group">
+                <button class="btn btn-update" onclick="updateGrid()">Generate Grid</button>
+                <button class="btn btn-print" onclick="window.print()">Download A3 PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable A3 Sheet -->
+    <div class="preview-wrapper">
+        <div class="a3-page">
+
+            <!-- Dotted Grid Container -->
+            <div class="qr-grid-container" id="gridContainer"></div>
+
+            <!-- Footer Section -->
+            <div class="bottom-footer-wrapper">
+                <div class="setup-instructions-grid">
+                    <div class="setup-col setup-col-1">
+                        <div class="setup-title">How to do setup</div>
+                        <div><strong>Step 1</strong> - Scan one QR code using mobile phone camera</div>
+                    </div>
+
+                    <div class="setup-col setup-col-2">
+                        <div class="setup-title">&nbsp;</div>
+                        <div><strong>Step 2</strong> - Register Batch with product details. One registration is
+                            applicable to all QR codes</div>
+                    </div>
+
+                    <div class="setup-col setup-col-3">
+                        <div class="setup-title">&nbsp;</div>
+                        <div><strong>Step 3</strong> - Contact puretrace@dowellresearch.com or WhatsApp 7306545151 from
+                            registered mail/phone mentioning QR code ID for Dashboard link</div>
+                    </div>
+                </div>
+
+                <!-- Side-by-Side Brand Section -->
+                <div class="brand-section">
+                    <div class="id-block">
+                        <div class="id-label">Your QR CODE ID</div>
+                        <div class="id-value" id="footerIdDisplay">72475709</div>
+                    </div>
+                    <div class="brand-block">
+                        <div class="brand-title">PURETRACE</div>
+                        <div class="brand-tagline">The Label That Listens</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+
+    <script>
+        function extractIdFromUrl(urlString) {
+            try {
+                const url = new URL(urlString);
+                return url.searchParams.get("id") || "72475709";
+            } catch (e) {
+                const match = urlString.match(/[?&]id=([^&]+)/);
+                return match ? match[1] : "72475709";
+            }
+        }
+
+        function updateGrid() {
+            const inputUrl = document.getElementById("urlInput").value.trim();
+            if (!inputUrl) return;
+
+            const qrId = extractIdFromUrl(inputUrl);
+
+            // Update bottom footer ID display
+            document.getElementById("footerIdDisplay").textContent = qrId;
+
+            const gridContainer = document.getElementById("gridContainer");
+            gridContainer.innerHTML = "";
+
+            const TOTAL_CODES = 54;
+
+            for (let i = 0; i < TOTAL_CODES; i++) {
+                const cell = document.createElement("div");
+                cell.className = "qr-grid-cell";
+
+                cell.innerHTML = `
+                    <div class="qr-inner-card">
+                        <div class="qr-id-text">${qrId}</div>
+                        <div class="qr-middle-content">
+                            <div class="qr-side-text left"><span>PURETRACE</span></div>
+                            <div class="qr-code-element" id="qr_${i}"></div>
+                            <div class="qr-side-text right"><span>PURETRACE</span></div>
+                        </div>
+                        <div class="qr-id-text">${qrId}</div>
+                    </div>
+                `;
+
+                gridContainer.appendChild(cell);
+
+                // 30mm x 30mm QR code canvas rendering
+                new QRCode(document.getElementById(`qr_${i}`), {
+                    text: inputUrl,
+                    width: 300,
+                    height: 300,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }
+
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const passedUrl = urlParams.get("url") || urlParams.get("id");
+
+            if (passedUrl) {
+                if (passedUrl.startsWith("http")) {
+                    document.getElementById("urlInput").value = passedUrl;
+                } else {
+                    document.getElementById("urlInput").value = `https://example.com/puretrace?id=${passedUrl}`;
+                }
+            }
+            updateGrid();
+        };
+    </script>
+</body>
+
+</html>
