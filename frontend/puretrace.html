@@ -1141,6 +1141,16 @@
             const urlParams = new URLSearchParams(window.location.search);
             const qrId = urlParams.get("id") || "";
 
+            if (!qrId) {
+                console.log("No QR ID found in URL. Scan record skipped.");
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                console.log("No location permission or support.");
+                return;
+            }
+
             navigator.geolocation.getCurrentPosition(
                 async (pos) => {
                     const lat = Number(pos.coords.latitude.toFixed(5));
