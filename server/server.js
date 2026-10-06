@@ -1021,36 +1021,40 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
       return res.status(400).json({ error: "file_id is required" });
     }
 
-    // 1. Fetch the presigned download details from DataCube
-    const downloadInfoUrl = `${DATACUBE_BASE}/files/download/${file_id}/`;
-    const downloadRes = await fetch(downloadInfoUrl, {
+    // 1. Fetch file metadata from DataCube (authenticated via headers)
+    const metadataUrl = `${DATACUBE_BASE}/files/${file_id}/`;
+    const metaRes = await fetch(metadataUrl, {
       method: "GET",
-      headers: authHeaders() // Attaches your Api-Key or Bearer token
+      headers: authHeaders() // Attaches Authorization: Api-Key or Bearer token
     });
 
-    if (!downloadRes.ok) {
-      const errText = await downloadRes.text();
-      console.error(`  [files stream GET] DataCube Presign Error (${downloadRes.status}):`, errText);
-      return res.status(downloadRes.status).send(errText);
+    if (!metaRes.ok) {
+      const errText = await metaRes.text();
+      console.error(`  [files stream GET] DataCube Metadata Error (${metaRes.status}):`, errText);
+      return res.status(metaRes.status).send(errText);
     }
 
-    const downloadData = await downloadRes.json();
+    const metaData = await metaRes.json();
 
-    // Extract the presigned URL with signature parameters
-    const signedUrl = downloadData.download_url || downloadData.url || downloadData.stream_url;
+    // 2. Extract the presigned URL containing the required signature parameters
+    // Check common keys returned in the metadata object
+    const signedUrl =
+      metaData.download_url ||
+      metaData.stream_url ||
+      metaData.url ||
+      (metaData.data && (metaData.data.download_url || metaData.data.stream_url || metaData.data.url));
 
     if (!signedUrl) {
-      // If DataCube returns binary data directly on the download route
-      const contentType = downloadRes.headers.get("content-type") || "image/png";
-      res.setHeader("Content-Type", contentType);
-      const buffer = await downloadRes.arrayBuffer();
-      return res.send(Buffer.from(buffer));
+      console.error("  [files stream GET] Metadata response:", metaData);
+      return res.status(500).json({ error: "Presigned URL not found in file metadata response." });
     }
 
-    // 2. Fetch the binary image data from the presigned URL
+    // 3. Fetch the binary image using the signed URL
     const imageRes = await fetch(signedUrl);
     if (!imageRes.ok) {
-      return res.status(imageRes.status).send("Failed to retrieve image from signed URL.");
+      const errText = await imageRes.text();
+      console.error(`  [files stream GET] Signed URL Error (${imageRes.status}):`, errText);
+      return res.status(imageRes.status).send(errText);
     }
 
     const contentType = imageRes.headers.get("content-type") || "image/png";
