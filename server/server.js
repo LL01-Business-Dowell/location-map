@@ -936,7 +936,7 @@ app.post("/api/update_batch_id", async (req, res) => {
     const updateData = {
       batch_id: String(batch_id),
       product_details: product_details || {},
-      updated_at: new Date().toISOString()
+      // updated_at: new Date().toISOString()
     };
 
     const payload = {
