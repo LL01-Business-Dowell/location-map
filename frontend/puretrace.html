@@ -768,7 +768,13 @@
 
     <script>
         const API_BASE = "https://location-map-a89a.onrender.com/api";
+        
+        // Tab-session Memory Cache for long-running tab instances
         let storedProductData = null;
+        const memoryCache = {
+            images: {},
+            videos: {}
+        };
 
         const fieldLabels = {
             product_name: "Product Name",
@@ -862,9 +868,10 @@
             if (pageSpinner) pageSpinner.classList.add("hidden");
         }
 
-        function showMainContent() {
+        async function showMainContent() {
+            // Wait for media preload to complete before making page visible
+            await renderSplashAndSocials();
             hidePageSpinner();
-            renderSplashAndSocials();
             document.getElementById("mainContent").classList.add("visible");
         }
 
@@ -912,8 +919,47 @@
             return { type: 'video', src: videoUrl };
         }
 
-        function renderSplashAndSocials() {
+        function preloadImage(url) {
+            return new Promise((resolve) => {
+                if (!url) return resolve(false);
+                if (memoryCache.images[url]) return resolve(true);
+
+                const img = new Image();
+                img.onload = () => {
+                    memoryCache.images[url] = img;
+                    resolve(true);
+                };
+                img.onerror = () => resolve(false);
+                img.src = url;
+            });
+        }
+
+        function preloadVideo(url) {
+            return new Promise((resolve) => {
+                if (!url) return resolve(false);
+                const formatted = formatEmbedVideoUrl(url);
+                if (!formatted) return resolve(false);
+
+                if (formatted.type === 'iframe') {
+                    // Embeds load asynchronously via iframe load event
+                    resolve(true);
+                } else {
+                    if (memoryCache.videos[url]) return resolve(true);
+                    const vid = document.createElement('video');
+                    vid.onloadeddata = () => {
+                        memoryCache.videos[url] = vid;
+                        resolve(true);
+                    };
+                    vid.onerror = () => resolve(false);
+                    vid.src = formatted.src;
+                }
+            });
+        }
+
+        async function renderSplashAndSocials() {
             if (!storedProductData) return;
+
+            const preloads = [];
 
             // 1. RENDER SPLASH VIDEO
             const splashVideoContainer = document.getElementById("splashVideoContainer");
@@ -928,6 +974,7 @@
                         splashVideoContainer.innerHTML = `<video src="${formatted.src}" controls autoplay muted playsinline></video>`;
                     }
                     splashVideoContainer.style.display = "block";
+                    preloads.push(preloadVideo(videoUrl));
                 }
             } else if (splashVideoContainer) {
                 splashVideoContainer.style.display = "none";
@@ -940,22 +987,19 @@
             if (splashLogoContainer && logoData) {
                 let imageUrl = null;
 
-                // Check for file_id on logo object
                 if (typeof logoData === "object" && logoData.file_id) {
                     imageUrl = `${API_BASE}/files/stream/${logoData.file_id}`;
-                }
-                // Check for nested file object (e.g. logoData.file.file_id)
-                else if (typeof logoData === "object" && logoData.file && logoData.file.file_id) {
+                } else if (typeof logoData === "object" && logoData.file && logoData.file.file_id) {
                     imageUrl = `${API_BASE}/files/stream/${logoData.file.file_id}`;
-                }
-                // Direct string URL or Base64 data
-                else if (typeof logoData === "string" && logoData.trim() !== "") {
+                } else if (typeof logoData === "string" && logoData.trim() !== "") {
                     imageUrl = logoData.trim();
                 }
 
                 if (imageUrl) {
                     splashLogoContainer.innerHTML = `<img src="${imageUrl}" alt="Splash Logo" id="splashLogoImg" />`;
                     splashLogoContainer.style.display = "flex";
+
+                    preloads.push(preloadImage(imageUrl));
 
                     const imgElem = document.getElementById("splashLogoImg");
                     if (imgElem) {
@@ -970,6 +1014,9 @@
             } else if (splashLogoContainer) {
                 splashLogoContainer.style.display = "none";
             }
+
+            // Wait for all preloads to resolve before completing setup
+            await Promise.all(preloads);
         }
 
         async function collectFormData() {
@@ -1063,9 +1110,11 @@
         async function saveLocally() {
             try {
                 const data = await collectFormData();
-                localStorage.setItem("puretrace_local_data", JSON.stringify(data));
+                const jsonStr = JSON.stringify(data);
+                localStorage.setItem("puretrace_local_data", jsonStr);
+                sessionStorage.setItem("puretrace_session_data", jsonStr);
                 storedProductData = data;
-                renderSplashAndSocials();
+                await renderSplashAndSocials();
                 console.log("Product information saved locally on browser!");
             } catch (err) {
                 console.error("Save error:", err);
@@ -1111,7 +1160,9 @@
                 window.open(`specifications.html?id=${encodeURIComponent(linkId)}`, "_blank");
             } else {
                 if (storedProductData) {
-                    localStorage.setItem("puretrace_local_data", JSON.stringify(storedProductData));
+                    const jsonStr = JSON.stringify(storedProductData);
+                    localStorage.setItem("puretrace_local_data", jsonStr);
+                    sessionStorage.setItem("puretrace_session_data", jsonStr);
                     window.open("specifications.html", "_blank");
                 } else {
                     console.log("No product specifications are available to display.");
@@ -1190,7 +1241,7 @@
             updateFeedbackLink(linkId, "");
 
             if (!linkId) {
-                showMainContent();
+                await showMainContent();
                 return;
             }
 
@@ -1211,8 +1262,9 @@
 
                     if (record && record.product_details) {
                         storedProductData = record.product_details;
+                        sessionStorage.setItem("puretrace_session_data", JSON.stringify(storedProductData));
                         restoreLocalData(storedProductData);
-                        renderSplashAndSocials();
+                        await renderSplashAndSocials();
                         isDataFetchedFromDB = true;
                     }
 
@@ -1222,25 +1274,28 @@
                     if (!record || !record.batch_id || record.batch_id.trim() === "") {
                         showModal();
                     } else {
-                        showMainContent();
+                        await showMainContent();
                     }
                 } else {
-                    showMainContent();
+                    await showMainContent();
                 }
             } catch (err) {
                 console.warn("API check bypassed or timed out:", err);
-                showMainContent();
+                await showMainContent();
             } finally {
                 hidePageSpinner();
             }
 
             if (!isDataFetchedFromDB) {
+                const savedSession = sessionStorage.getItem("puretrace_session_data");
                 const savedLocal = localStorage.getItem("puretrace_local_data");
-                if (savedLocal) {
+                const dataToRestore = savedSession || savedLocal;
+
+                if (dataToRestore) {
                     try {
-                        storedProductData = JSON.parse(savedLocal);
+                        storedProductData = JSON.parse(dataToRestore);
                         restoreLocalData(storedProductData);
-                        renderSplashAndSocials();
+                        await renderSplashAndSocials();
                     } catch (e) { }
                 }
             }
@@ -1296,6 +1351,7 @@
                     console.log("Submission successful:", result);
 
                     storedProductData = payloadData;
+                    sessionStorage.setItem("puretrace_session_data", JSON.stringify(payloadData));
                     localStorage.removeItem("puretrace_local_data");
                     closeModal();
                     console.log("Product registration submitted successfully!");
