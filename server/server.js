@@ -931,6 +931,8 @@ app.post("/api/update_batch_id", async (req, res) => {
       return res.status(400).json({ error: "link_id and batch_id are required" });
     }
 
+    console.log("Incoming req.body:", JSON.stringify(req.body, null, 2));
+
     const updateData = {
       batch_id: String(batch_id),
       product_details: product_details || {},

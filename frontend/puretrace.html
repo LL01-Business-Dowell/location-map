@@ -486,14 +486,12 @@
 
             .modal-card {
                 padding: 1.25rem 1rem 2rem 1rem;
-                /* Extra padding at the bottom */
                 max-height: 95vh;
             }
 
             .brand-footer {
                 margin-top: 2rem;
                 padding-bottom: 1.5rem;
-                /* Ensures clearance above mobile navigation bars */
             }
         }
     </style>
@@ -586,7 +584,7 @@
                     </div>
                     <div class="form-group">
                         <label for="mfg_date">Month and Year of Manufacturing <span class="req">*</span></label>
-                        <input type="text" id="mfg_date" name="mfg_date" placeholder="MM/YYYY" required />
+                        <input type="text" id="mfg_date" name="mfg_date" placeholder="e.g. 10/2026" required />
                     </div>
                     <div class="form-group">
                         <label for="country_of_origin">Country of Origin <span class="req">*</span></label>
@@ -882,7 +880,9 @@
 
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
-                if (!file) return resolve(null);
+                if (!file || !(file instanceof File) || file.size === 0) {
+                    return resolve(null);
+                }
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = (err) => reject(err);
@@ -1120,7 +1120,6 @@
             }
         }
 
-        /* OPENS FULL DYNAMIC HTML SPECIFICATION PAGE IN NEW TAB */
         function openSpecificationsPage() {
             const urlParams = new URLSearchParams(window.location.search);
             const linkId = urlParams.get("id") || "";
@@ -1151,11 +1150,6 @@
                 return;
             }
 
-            if (!navigator.geolocation) {
-                console.log("No location permission or support.");
-                return;
-            }
-
             navigator.geolocation.getCurrentPosition(
                 async (pos) => {
                     const lat = Number(pos.coords.latitude.toFixed(5));
@@ -1163,15 +1157,17 @@
                     const timestamp = new Date().toISOString();
 
                     try {
-                        await recordQrScan({
-                            document: {
-                                qr_id: qrId,
-                                latitude: lat,
-                                longitude: lng,
-                                scanned_at: timestamp,
-                                type: "puretrace"
-                            }
-                        });
+                        if (typeof recordQrScan === "function") {
+                            await recordQrScan({
+                                document: {
+                                    qr_id: qrId,
+                                    latitude: lat,
+                                    longitude: lng,
+                                    scanned_at: timestamp,
+                                    type: "puretrace"
+                                }
+                            });
+                        }
                     } catch (err) {
                         console.error("Scan record failed:", err);
                     }
@@ -1272,49 +1268,58 @@
             const btnText = document.getElementById("btnText");
 
             form.addEventListener("submit", async (e) => {
+                // Prevent browser standard submission & page refresh
                 e.preventDefault();
 
+                console.log("Starting batch form submission process...");
                 submitBtn.disabled = true;
                 btnText.innerHTML = `<span class="spinner-btn"></span> Submitting...`;
 
                 try {
                     const payloadData = await collectFormData();
+                    console.log("Compiled Payload:", payloadData);
 
+                    const currentLinkId = new URLSearchParams(window.location.search).get("id") || linkId || "";
+
+                    console.log(`Sending POST request to ${API_BASE}/update_batch_id...`);
                     const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            link_id: linkId,
+                            link_id: currentLinkId,
                             batch_id: payloadData.batch_id,
                             product_details: payloadData
                         })
                     });
 
-                    // 1. Check if HTTP status is OK (200-299)
+                    console.log("Response status code:", updateRes.status);
+
                     if (!updateRes.ok) {
                         const errorText = await updateRes.text();
-                        console.error(`Server returned status ${updateRes.status}:`, errorText);
-                        alert(`Submission failed (${updateRes.status}). Please check backend API path.`);
+                        console.error(`Server returned error status ${updateRes.status}:`, errorText);
+                        alert(`Submission failed (${updateRes.status}): ${errorText}`);
                         return;
                     }
 
-                    // 2. Safe JSON parsing check
                     const contentType = updateRes.headers.get("content-type");
                     if (!contentType || !contentType.includes("application/json")) {
                         const htmlResponse = await updateRes.text();
-                        console.error("Expected JSON but received HTML/Text:", htmlResponse);
-                        alert("Server endpoint configuration error: Received HTML instead of JSON.");
+                        console.error("Expected JSON response but received non-JSON:", htmlResponse);
+                        alert("Server configuration error: Received standard HTML instead of JSON.");
                         return;
                     }
 
                     const result = await updateRes.json();
+                    console.log("Submission successful:", result);
+
                     storedProductData = payloadData;
                     localStorage.removeItem("puretrace_local_data");
                     closeModal();
+                    alert("Product registration submitted successfully!");
 
                 } catch (err) {
                     console.error("Error submitting details:", err);
-                    alert("Network or connection error while submitting.");
+                    alert(`Frontend or Connection Error: ${err.message}`);
                 } finally {
                     submitBtn.disabled = false;
                     btnText.textContent = "Submit";
