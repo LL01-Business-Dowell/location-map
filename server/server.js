@@ -72,7 +72,7 @@ async function ensureLinksCollection() {
         { name: "batch_id", type: "string" },
         { name: "client_name", type: "string" },
         { name: "client_no", type: "array" },
-        { name: "product_details", type: "object" }, 
+        { name: "product_details", type: "object" },
         { name: "created_at", type: "string" },
         { name: "status", type: "string" }
       ]
@@ -127,10 +127,10 @@ async function storeQrToken({ alias, target_url, db_id, qr_id, target_app = null
     documents: [{
       alias,
       target_url,
-      db_id:       String(db_id),
-      qr_id:       String(qr_id),
-      target_app:  target_app || null,
-      created_at:  new Date().toISOString()
+      db_id: String(db_id),
+      qr_id: String(qr_id),
+      target_app: target_app || null,
+      created_at: new Date().toISOString()
     }]
   };
 
@@ -360,10 +360,10 @@ app.get("/api/resolve/:alias", async (req, res) => {
 
     console.log("  [resolve] found → qr_id:", record.qr_id, "| db_id:", record.db_id);
     res.json({
-      alias:      record.alias,
+      alias: record.alias,
       target_url: record.target_url,
-      db_id:      record.db_id,
-      qr_id:      record.qr_id,
+      db_id: record.db_id,
+      qr_id: record.qr_id,
       target_app: record.target_app || null,
       created_at: record.created_at
     });
@@ -926,12 +926,12 @@ app.get("/api/get_medsign_link/:link_id", async (req, res) => {
 // ---------- UPDATE BATCH_ID AND PRODUCT DETAILS ----------
 app.post("/api/update_batch_id", async (req, res) => {
   try {
-    const { link_id, batch_id, product_details } = req.body || {}; 
+    const { link_id, batch_id, product_details } = req.body || {};
     if (!link_id || !batch_id) {
       return res.status(400).json({ error: "link_id and batch_id are required" });
     }
 
-    const updateData = { 
+    const updateData = {
       batch_id: String(batch_id),
       product_details: product_details || {},
       updated_at: new Date().toISOString()
@@ -941,7 +941,7 @@ app.post("/api/update_batch_id", async (req, res) => {
       database_id: DB_ID,
       collection_name: "medsign_links",
       filters: { link_id: String(link_id) },
-      update_data: updateData, 
+      update_data: updateData,
       update_all_fields: false,
       update_many: true,
       upsert: false
@@ -953,8 +953,26 @@ app.post("/api/update_batch_id", async (req, res) => {
       body: JSON.stringify(payload)
     });
 
-    const data = await r.json();
-    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+    // 1. Read response as raw text first
+    const rawText = await r.text();
+
+    // 2. Safely parse JSON or handle HTML errors
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error(`  [update_batch_id] Upstream returned non-JSON response (${r.status}):`);
+      console.error("  " + rawText.slice(0, 300)); // Log first 300 chars of HTML
+      return res.status(r.status || 500).json({
+        error: `DataCube returned HTML instead of JSON (${r.status})`,
+        details: rawText.slice(0, 200)
+      });
+    }
+
+    if (!r.ok) {
+      console.error(`  [update_batch_id] DataCube Error (${r.status}):`, data);
+      return res.status(r.status).json({ error: "DataCube update failed", details: data });
+    }
 
     res.json({ success: true, updated: data });
   } catch (err) {
