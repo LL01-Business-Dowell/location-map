@@ -720,15 +720,9 @@
 
         <!-- Page Footer -->
         <div class="page-footer">
-            <div
-                style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">
-                Verified By
-            </div>
-            <div id="footerName"
-                style="font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 0.25rem;">
-                —
-            </div>
-            <div id="footerWebsite"></div>
+            <p>Verified By</p>
+            <p id="footerName"></p>
+            <p id="footerWebsite"></p>
         </div>
 
     </div>
@@ -1051,7 +1045,7 @@
             } else {
                 document.getElementById("footerWebsite").innerHTML = `<a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a>`;
             }
-            
+
 
             document.getElementById("contentContainer").classList.add("visible");
             hideLoader();
