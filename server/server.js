@@ -1035,8 +1035,6 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
     }
 
     const metaData = await metaRes.json();
-
-    // 2. Extract relative signed_url from info object
     const relativeSignedUrl = metaData?.info?.signed_url;
 
     if (!relativeSignedUrl) {
@@ -1044,10 +1042,13 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
       return res.status(500).json({ error: "Presigned URL not found in file metadata response." });
     }
 
-    // 3. Construct full DataCube URL
-    const fullSignedUrl = `${DATACUBE_BASE}${relativeSignedUrl}`;
+    // 2. Extract base origin host (e.g., "https://datacube.uxlivinglab.online")
+    const datacubeOrigin = new URL(DATACUBE_BASE).origin;
 
-    // 4. Fetch binary image from the full signed URL (no auth headers needed on presigned URLs)
+    // 3. Construct clean target URL without path duplication
+    const fullSignedUrl = new URL(relativeSignedUrl, datacubeOrigin).toString();
+
+    // 4. Fetch binary image from the constructed presigned URL
     const imageRes = await fetch(fullSignedUrl);
     if (!imageRes.ok) {
       const errText = await imageRes.text();
@@ -1055,7 +1056,7 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
       return res.status(imageRes.status).send(errText);
     }
 
-    // Set content-type and stream back
+    // Set content type and stream binary data back to browser
     const contentType = imageRes.headers.get("content-type") || metaData.info.content_type || "image/png";
     res.setHeader("Content-Type", contentType);
 
