@@ -931,7 +931,7 @@ app.post("/api/update_batch_id", async (req, res) => {
       return res.status(400).json({ error: "link_id and batch_id are required" });
     }
 
-    console.log("Incoming req.body:", JSON.stringify(req.body, null, 2));
+    // console.log("Incoming req.body:", JSON.stringify(req.body, null, 2));
 
     const updateData = {
       batch_id: String(batch_id),
@@ -1021,25 +1021,44 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
       return res.status(400).json({ error: "file_id is required" });
     }
 
-    const datacubeStreamUrl = `${DATACUBE_BASE}/files/stream/${file_id}/`;
-
-    const r = await fetch(datacubeStreamUrl, {
+    // 1. Fetch the presigned download details from DataCube
+    const downloadInfoUrl = `${DATACUBE_BASE}/files/download/${file_id}/`;
+    const downloadRes = await fetch(downloadInfoUrl, {
       method: "GET",
-      headers: authHeaders() // Includes your Api-Key header
+      headers: authHeaders() // Attaches your Api-Key or Bearer token
     });
 
-    if (!r.ok) {
-      const errText = await r.text();
-      console.error(`  [files stream GET] DataCube Error (${r.status}):`, errText);
-      return res.status(r.status).send(errText);
+    if (!downloadRes.ok) {
+      const errText = await downloadRes.text();
+      console.error(`  [files stream GET] DataCube Presign Error (${downloadRes.status}):`, errText);
+      return res.status(downloadRes.status).send(errText);
     }
 
-    // Set appropriate image/file headers and stream arrayBuffer back
-    const contentType = r.headers.get("content-type") || "image/png";
+    const downloadData = await downloadRes.json();
+
+    // Extract the presigned URL with signature parameters
+    const signedUrl = downloadData.download_url || downloadData.url || downloadData.stream_url;
+
+    if (!signedUrl) {
+      // If DataCube returns binary data directly on the download route
+      const contentType = downloadRes.headers.get("content-type") || "image/png";
+      res.setHeader("Content-Type", contentType);
+      const buffer = await downloadRes.arrayBuffer();
+      return res.send(Buffer.from(buffer));
+    }
+
+    // 2. Fetch the binary image data from the presigned URL
+    const imageRes = await fetch(signedUrl);
+    if (!imageRes.ok) {
+      return res.status(imageRes.status).send("Failed to retrieve image from signed URL.");
+    }
+
+    const contentType = imageRes.headers.get("content-type") || "image/png";
     res.setHeader("Content-Type", contentType);
 
-    const buffer = await r.arrayBuffer();
+    const buffer = await imageRes.arrayBuffer();
     res.send(Buffer.from(buffer));
+
   } catch (err) {
     console.error("  [files stream GET] ERROR:", err.message);
     res.status(500).json({ error: "File streaming proxy error" });
