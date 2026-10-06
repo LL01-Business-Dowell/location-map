@@ -1025,7 +1025,7 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
     const metadataUrl = `${DATACUBE_BASE}/files/${file_id}/`;
     const metaRes = await fetch(metadataUrl, {
       method: "GET",
-      headers: authHeaders() // Attaches Authorization: Api-Key or Bearer token
+      headers: authHeaders() // Attaches your Api-Key or Bearer token
     });
 
     if (!metaRes.ok) {
@@ -1036,28 +1036,27 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
 
     const metaData = await metaRes.json();
 
-    // 2. Extract the presigned URL containing the required signature parameters
-    // Check common keys returned in the metadata object
-    const signedUrl =
-      metaData.download_url ||
-      metaData.stream_url ||
-      metaData.url ||
-      (metaData.data && (metaData.data.download_url || metaData.data.stream_url || metaData.data.url));
+    // 2. Extract relative signed_url from info object
+    const relativeSignedUrl = metaData?.info?.signed_url;
 
-    if (!signedUrl) {
-      console.error("  [files stream GET] Metadata response:", metaData);
+    if (!relativeSignedUrl) {
+      console.error("  [files stream GET] Missing signed_url in metadata response:", metaData);
       return res.status(500).json({ error: "Presigned URL not found in file metadata response." });
     }
 
-    // 3. Fetch the binary image using the signed URL
-    const imageRes = await fetch(signedUrl);
+    // 3. Construct full DataCube URL
+    const fullSignedUrl = `${DATACUBE_BASE}${relativeSignedUrl}`;
+
+    // 4. Fetch binary image from the full signed URL (no auth headers needed on presigned URLs)
+    const imageRes = await fetch(fullSignedUrl);
     if (!imageRes.ok) {
       const errText = await imageRes.text();
       console.error(`  [files stream GET] Signed URL Error (${imageRes.status}):`, errText);
       return res.status(imageRes.status).send(errText);
     }
 
-    const contentType = imageRes.headers.get("content-type") || "image/png";
+    // Set content-type and stream back
+    const contentType = imageRes.headers.get("content-type") || metaData.info.content_type || "image/png";
     res.setHeader("Content-Type", contentType);
 
     const buffer = await imageRes.arrayBuffer();
