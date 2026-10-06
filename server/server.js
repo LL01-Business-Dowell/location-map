@@ -947,7 +947,7 @@ app.post("/api/update_batch_id", async (req, res) => {
       upsert: false
     };
 
-    const r = await fetch(`${DATACUBE_BASE}/crud/`, {
+    const r = await fetch(`${DATACUBE_BASE}/crud`, {
       method: "PUT",
       headers: authHeaders(),
       body: JSON.stringify(payload)

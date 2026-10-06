@@ -485,13 +485,15 @@
             }
 
             .modal-card {
-                padding: 1.25rem 1rem 2rem 1rem; /* Extra padding at the bottom */
+                padding: 1.25rem 1rem 2rem 1rem;
+                /* Extra padding at the bottom */
                 max-height: 95vh;
             }
 
             .brand-footer {
                 margin-top: 2rem;
-                padding-bottom: 1.5rem; /* Ensures clearance above mobile navigation bars */
+                padding-bottom: 1.5rem;
+                /* Ensures clearance above mobile navigation bars */
             }
         }
     </style>
@@ -681,7 +683,8 @@
                         </div>
                         <div class="form-group">
                             <label for="video_desc_1">Description</label>
-                            <input type="text" id="video_desc_1" name="video_desc_1" placeholder="Video 1 Description" />
+                            <input type="text" id="video_desc_1" name="video_desc_1"
+                                placeholder="Video 1 Description" />
                         </div>
                     </div>
                 </div>
@@ -694,7 +697,8 @@
                         </div>
                         <div class="form-group">
                             <label for="video_desc_2">Description</label>
-                            <input type="text" id="video_desc_2" name="video_desc_2" placeholder="Video 2 Description" />
+                            <input type="text" id="video_desc_2" name="video_desc_2"
+                                placeholder="Video 2 Description" />
                         </div>
                     </div>
                 </div>
@@ -707,7 +711,8 @@
                         </div>
                         <div class="form-group">
                             <label for="video_desc_3">Description</label>
-                            <input type="text" id="video_desc_3" name="video_desc_3" placeholder="Video 3 Description" />
+                            <input type="text" id="video_desc_3" name="video_desc_3"
+                                placeholder="Video 3 Description" />
                         </div>
                     </div>
                 </div>
@@ -887,7 +892,7 @@
 
         function openThankYouAndClose() {
             window.open('thank_you.html', '_blank');
-            window.close(); 
+            window.close();
         }
 
         function formatEmbedVideoUrl(url) {
@@ -1285,15 +1290,31 @@
                         })
                     });
 
-                    if (updateRes.ok) {
-                        storedProductData = payloadData;
-                        localStorage.removeItem("puretrace_local_data");
-                        closeModal();
-                    } else {
-                        console.error("Failed to submit details to database.");
+                    // 1. Check if HTTP status is OK (200-299)
+                    if (!updateRes.ok) {
+                        const errorText = await updateRes.text();
+                        console.error(`Server returned status ${updateRes.status}:`, errorText);
+                        alert(`Submission failed (${updateRes.status}). Please check backend API path.`);
+                        return;
                     }
+
+                    // 2. Safe JSON parsing check
+                    const contentType = updateRes.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        const htmlResponse = await updateRes.text();
+                        console.error("Expected JSON but received HTML/Text:", htmlResponse);
+                        alert("Server endpoint configuration error: Received HTML instead of JSON.");
+                        return;
+                    }
+
+                    const result = await updateRes.json();
+                    storedProductData = payloadData;
+                    localStorage.removeItem("puretrace_local_data");
+                    closeModal();
+
                 } catch (err) {
                     console.error("Error submitting details:", err);
+                    alert("Network or connection error while submitting.");
                 } finally {
                     submitBtn.disabled = false;
                     btnText.textContent = "Submit";
