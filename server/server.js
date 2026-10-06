@@ -983,6 +983,36 @@ app.post("/api/update_batch_id", async (req, res) => {
   }
 });
 
+// ---------- FILES UPLOAD (GridFS Proxy) ----------
+app.post("/api/files", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const form = new FormData();
+    form.append("file", req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+
+    const r = await fetch(`${DATACUBE_BASE}/files/`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Api-Key ${DATACUBE_API_KEY}`
+      },
+      body: form
+    });
+
+    const data = await r.json();
+    console.log(`  [files POST] result: ${r.status} | file_id:`, data?.file_id);
+    res.status(r.status).json(data);
+  } catch (err) {
+    console.error("  [files POST] ERROR:", err.message);
+    res.status(500).json({ error: "File upload proxy error" });
+  }
+});
+
 // ===== START SERVER FOR RENDER =====
 app.listen(PORT, () => {
   console.log(`✓ QR Manager Server running on port ${PORT}`);

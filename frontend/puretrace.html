@@ -915,65 +915,11 @@
         function renderSplashAndSocials() {
             if (!storedProductData) return;
 
-            // 1. Splash Video
-            const splashVideoContainer = document.getElementById("splashVideoContainer");
-            if (storedProductData.splash_screen_video) {
-                const embedInfo = formatEmbedVideoUrl(storedProductData.splash_screen_video);
-                if (embedInfo) {
-                    if (embedInfo.type === 'iframe') {
-                        splashVideoContainer.innerHTML = `<iframe src="${embedInfo.src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                    } else {
-                        splashVideoContainer.innerHTML = `<video src="${embedInfo.src}" controls playsinline></video>`;
-                    }
-                    splashVideoContainer.style.display = "block";
-                }
-            } else {
-                splashVideoContainer.style.display = "none";
-                splashVideoContainer.innerHTML = "";
-            }
-
-            // 2. Splash Logo
             const splashLogoContainer = document.getElementById("splashLogoContainer");
-            if (storedProductData.splash_screen_logo && storedProductData.splash_screen_logo.base64) {
-                splashLogoContainer.innerHTML = `<img src="${storedProductData.splash_screen_logo.base64}" alt="Splash Logo" />`;
+            if (storedProductData.splash_screen_logo && storedProductData.splash_screen_logo.file_id) {
+                const imageUrl = `https://datacube.uxlivinglab.online/api/v2/files/stream/${storedProductData.splash_screen_logo.file_id}/`;
+                splashLogoContainer.innerHTML = `<img src="${imageUrl}" alt="Splash Logo" />`;
                 splashLogoContainer.style.display = "flex";
-            } else {
-                splashLogoContainer.style.display = "none";
-                splashLogoContainer.innerHTML = "";
-            }
-
-            // 3. Social Media Links
-            const socialLinksContainer = document.getElementById("socialLinksContainer");
-            let socialHtml = "";
-
-            if (storedProductData.social_youtube) {
-                socialHtml += `
-                    <a href="${storedProductData.social_youtube}" target="_blank" class="social-icon" title="YouTube">
-                        <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                    </a>
-                `;
-            }
-            if (storedProductData.social_instagram) {
-                socialHtml += `
-                    <a href="${storedProductData.social_instagram}" target="_blank" class="social-icon" title="Instagram">
-                        <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                    </a>
-                `;
-            }
-            if (storedProductData.social_facebook) {
-                socialHtml += `
-                    <a href="${storedProductData.social_facebook}" target="_blank" class="social-icon" title="Facebook">
-                        <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                    </a>
-                `;
-            }
-
-            if (socialHtml) {
-                socialLinksContainer.innerHTML = socialHtml;
-                socialLinksContainer.style.display = "flex";
-            } else {
-                socialLinksContainer.style.display = "none";
-                socialLinksContainer.innerHTML = "";
             }
         }
 
@@ -988,20 +934,16 @@
                 }
             }
 
-            // Process Splash Screen Logo
+            // 1. Splash Screen Logo (GridFS upload)
             const logoInput = document.getElementById("splash_screen_logo");
             const logoFile = logoInput ? logoInput.files[0] : null;
             if (logoFile && logoFile.size > 0) {
-                payloadData.splash_screen_logo = {
-                    filename: logoFile.name,
-                    content_type: logoFile.type,
-                    base64: await fileToBase64(logoFile)
-                };
+                payloadData.splash_screen_logo = await uploadImageToGridFS(logoFile);
             } else if (storedProductData && storedProductData.splash_screen_logo) {
                 payloadData.splash_screen_logo = storedProductData.splash_screen_logo;
             }
 
-            // Process Product Videos
+            // 2. Product Videos (Direct Links preserved)
             payloadData.product_videos = [];
             for (let i = 1; i <= 3; i++) {
                 const link = formData.get(`video_link_${i}`);
@@ -1016,7 +958,7 @@
                 }
             }
 
-            // Process Certificates
+            // 3. Certificates (GridFS upload for documents/images)
             payloadData.certificates = [];
             for (let i = 1; i <= 10; i++) {
                 const name = formData.get(`cert_name_${i}`);
@@ -1026,11 +968,7 @@
 
                 let fileData = null;
                 if (file && file.size > 0) {
-                    fileData = {
-                        filename: file.name,
-                        content_type: file.type,
-                        base64: await fileToBase64(file)
-                    };
+                    fileData = await uploadImageToGridFS(file);
                 } else if (storedProductData && storedProductData.certificates?.[i - 1]?.file) {
                     fileData = storedProductData.certificates[i - 1].file;
                 }
@@ -1045,7 +983,7 @@
                 }
             }
 
-            // Process Product Images
+            // 4. Product Images (GridFS upload)
             payloadData.product_images = [];
             for (let i = 1; i <= 6; i++) {
                 const fileInput = document.getElementById(`img_file_${i}`);
@@ -1055,11 +993,7 @@
 
                 let fileData = null;
                 if (file && file.size > 0) {
-                    fileData = {
-                        filename: file.name,
-                        content_type: file.type,
-                        base64: await fileToBase64(file)
-                    };
+                    fileData = await uploadImageToGridFS(file);
                 } else if (storedProductData && storedProductData.product_images?.[i - 1]?.file) {
                     fileData = storedProductData.product_images[i - 1].file;
                 }
@@ -1083,10 +1017,10 @@
                 localStorage.setItem("puretrace_local_data", JSON.stringify(data));
                 storedProductData = data;
                 renderSplashAndSocials();
-                alert("Product information saved locally on browser!");
+                console.log("Product information saved locally on browser!");
             } catch (err) {
                 console.error("Save error:", err);
-                alert("Failed to save data locally.");
+                console.log("Failed to save data locally.");
             }
         }
 
@@ -1131,7 +1065,7 @@
                     localStorage.setItem("puretrace_local_data", JSON.stringify(storedProductData));
                     window.open("specifications.html", "_blank");
                 } else {
-                    alert("No product specifications are available to display.");
+                    console.log("No product specifications are available to display.");
                 }
             }
         }
@@ -1297,7 +1231,7 @@
                     if (!updateRes.ok) {
                         const errorText = await updateRes.text();
                         console.error(`Server returned error status ${updateRes.status}:`, errorText);
-                        alert(`Submission failed (${updateRes.status}): ${errorText}`);
+                        console.log(`Submission failed (${updateRes.status}): ${errorText}`);
                         return;
                     }
 
@@ -1305,7 +1239,7 @@
                     if (!contentType || !contentType.includes("application/json")) {
                         const htmlResponse = await updateRes.text();
                         console.error("Expected JSON response but received non-JSON:", htmlResponse);
-                        alert("Server configuration error: Received standard HTML instead of JSON.");
+                        console.log("Server configuration error: Received standard HTML instead of JSON.");
                         return;
                     }
 
@@ -1315,11 +1249,11 @@
                     storedProductData = payloadData;
                     localStorage.removeItem("puretrace_local_data");
                     closeModal();
-                    alert("Product registration submitted successfully!");
+                    console.log("Product registration submitted successfully!");
 
                 } catch (err) {
                     console.error("Error submitting details:", err);
-                    alert(`Frontend or Connection Error: ${err.message}`);
+                    console.log(`Frontend or Connection Error: ${err.message}`);
                 } finally {
                     submitBtn.disabled = false;
                     btnText.textContent = "Submit";

@@ -616,6 +616,30 @@ async function recordQrScan({
   return data.inserted_ids[0];
 }
 
+async function uploadImageToGridFS(file) {
+  if (!file || !(file instanceof File) || file.size === 0) return null;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE}/files`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to upload file ${file.name}`);
+  }
+
+  const data = await res.json();
+  // Returns object containing the GridFS file_id
+  return {
+    file_id: data.file_id,
+    filename: file.name,
+    content_type: file.type
+  };
+}
+
 
 async function generateCustomQrImage(link, color = "#000000", logoFile = null) {
 
