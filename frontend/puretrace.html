@@ -915,11 +915,60 @@
         function renderSplashAndSocials() {
             if (!storedProductData) return;
 
+            // 1. RENDER SPLASH VIDEO
+            const splashVideoContainer = document.getElementById("splashVideoContainer");
+            const videoUrl = storedProductData.splash_screen_video;
+
+            if (splashVideoContainer && videoUrl && videoUrl.trim() !== "") {
+                const formatted = formatEmbedVideoUrl(videoUrl);
+                if (formatted) {
+                    if (formatted.type === 'iframe') {
+                        splashVideoContainer.innerHTML = `<iframe src="${formatted.src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+                    } else {
+                        splashVideoContainer.innerHTML = `<video src="${formatted.src}" controls autoplay muted playsinline></video>`;
+                    }
+                    splashVideoContainer.style.display = "block";
+                }
+            } else if (splashVideoContainer) {
+                splashVideoContainer.style.display = "none";
+            }
+
+            // 2. RENDER SPLASH LOGO (PROXIED THROUGH API_BASE)
             const splashLogoContainer = document.getElementById("splashLogoContainer");
-            if (storedProductData.splash_screen_logo && storedProductData.splash_screen_logo.file_id) {
-                const imageUrl = `https://datacube.uxlivinglab.online/api/v2/files/stream/${storedProductData.splash_screen_logo.file_id}/`;
-                splashLogoContainer.innerHTML = `<img src="${imageUrl}" alt="Splash Logo" />`;
-                splashLogoContainer.style.display = "flex";
+            const logoData = storedProductData.splash_screen_logo;
+
+            if (splashLogoContainer && logoData) {
+                let imageUrl = null;
+
+                // Check for file_id on logo object
+                if (typeof logoData === "object" && logoData.file_id) {
+                    imageUrl = `${API_BASE}/files/stream/${logoData.file_id}`;
+                }
+                // Check for nested file object (e.g. logoData.file.file_id)
+                else if (typeof logoData === "object" && logoData.file && logoData.file.file_id) {
+                    imageUrl = `${API_BASE}/files/stream/${logoData.file.file_id}`;
+                }
+                // Direct string URL or Base64 data
+                else if (typeof logoData === "string" && logoData.trim() !== "") {
+                    imageUrl = logoData.trim();
+                }
+
+                if (imageUrl) {
+                    splashLogoContainer.innerHTML = `<img src="${imageUrl}" alt="Splash Logo" id="splashLogoImg" />`;
+                    splashLogoContainer.style.display = "flex";
+
+                    const imgElem = document.getElementById("splashLogoImg");
+                    if (imgElem) {
+                        imgElem.onerror = function () {
+                            console.error("Failed to load splash screen logo image from URL:", imageUrl);
+                            splashLogoContainer.style.display = "none";
+                        };
+                    }
+                } else {
+                    splashLogoContainer.style.display = "none";
+                }
+            } else if (splashLogoContainer) {
+                splashLogoContainer.style.display = "none";
             }
         }
 

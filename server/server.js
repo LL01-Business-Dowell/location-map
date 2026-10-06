@@ -1013,6 +1013,39 @@ app.post("/api/files", upload.single("file"), async (req, res) => {
   }
 });
 
+// ---------- FILES STREAM PROXY ----------
+app.get("/api/files/stream/:file_id", async (req, res) => {
+  try {
+    const { file_id } = req.params;
+    if (!file_id) {
+      return res.status(400).json({ error: "file_id is required" });
+    }
+
+    const datacubeStreamUrl = `${DATACUBE_BASE}/files/stream/${file_id}/`;
+
+    const r = await fetch(datacubeStreamUrl, {
+      method: "GET",
+      headers: authHeaders() // Includes your Api-Key header
+    });
+
+    if (!r.ok) {
+      const errText = await r.text();
+      console.error(`  [files stream GET] DataCube Error (${r.status}):`, errText);
+      return res.status(r.status).send(errText);
+    }
+
+    // Set appropriate image/file headers and stream arrayBuffer back
+    const contentType = r.headers.get("content-type") || "image/png";
+    res.setHeader("Content-Type", contentType);
+
+    const buffer = await r.arrayBuffer();
+    res.send(Buffer.from(buffer));
+  } catch (err) {
+    console.error("  [files stream GET] ERROR:", err.message);
+    res.status(500).json({ error: "File streaming proxy error" });
+  }
+});
+
 // ===== START SERVER FOR RENDER =====
 app.listen(PORT, () => {
   console.log(`✓ QR Manager Server running on port ${PORT}`);
