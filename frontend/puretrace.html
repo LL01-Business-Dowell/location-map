@@ -15,14 +15,14 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: white;
-            color: #ffffff;
+            background-color: #f8fafc;
+            color: #1e293b;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
-            padding: 1.5rem 1.5rem 3.5rem 1.5rem;
+            padding: 1rem 1rem 3rem 1rem;
             overflow-x: hidden;
         }
 
@@ -47,7 +47,7 @@
             pointer-events: none;
         }
 
-        /* Main Content Animations */
+        /* Main Content Animations & Container */
         main {
             width: 100%;
             max-width: 440px;
@@ -66,24 +66,16 @@
             transform: translateY(0);
         }
 
-        /* Prominent Title */
-        h1 {
-            font-size: 3.25rem;
-            font-weight: 800;
-            letter-spacing: -0.04em;
-            color: #ffffff;
-            margin-bottom: 2rem;
-        }
-
-        /* Splash Screen Media Containers */
+        /* Top Banner Video Container */
         .splash-video-container {
             width: 100%;
-            margin-bottom: 1.5rem;
-            border-radius: 12px;
+            margin-bottom: 1.25rem;
+            border-radius: 20px;
             overflow: hidden;
-            background: #18181b;
-            border: 1px solid #27272a;
+            background: #000000;
+            border: 1px solid #e2e8f0;
             aspect-ratio: 16 / 9;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
         }
 
         .splash-video-container iframe,
@@ -94,119 +86,140 @@
             display: block;
         }
 
+        /* Second Row: Logo Container */
         .splash-logo-container {
             width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
         }
 
         .splash-logo-container img {
             max-width: 180px;
-            max-height: 100px;
+            max-height: 80px;
             object-fit: contain;
         }
 
-        /* Side-by-Side Action Buttons Container */
-        .action-buttons {
+        /* Grid Action Buttons (Inspired by Image Card Grid) */
+        .action-cards-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.25rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.85rem;
             width: 100%;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.85rem;
         }
 
-        /* Prominent Emerald Green Buttons */
-        .btn-primary {
-            position: relative;
-            display: inline-flex;
-            justify-content: center;
+        .action-cards-grid.single-col {
+            grid-template-columns: 1fr;
+        }
+
+        /* Secondary Dynamic Links Grid */
+        .secondary-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.85rem;
+            width: 100%;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Rounded Action Card Buttons */
+        .action-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 1rem 0.5rem;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 1.25rem 1rem;
-            font-size: 1.15rem;
-            font-weight: 700;
-            border-radius: 14px;
-            border: none;
-            background-color: #10b981;
-            color: #000000;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            justify-content: center;
+            gap: 0.6rem;
             text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
         }
 
-        .btn-primary:hover {
-            background-color: #059669;
-            color: #ffffff;
+        .action-card:hover {
+            transform: translateY(-2px);
+            border-color: #10b981;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.12);
         }
 
-        .btn-primary:active {
+        .action-card:active {
             transform: scale(0.96);
         }
 
-        .btn-primary:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background-color: #27272a;
-            color: #ffffff;
-            border: 1px solid #3f3f46;
-            padding: 0.75rem 1.25rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-            background-color: #3f3f46;
-        }
-
-        .btn-danger {
-            background-color: transparent;
-            color: #ef4444;
-            border: 1px solid #ef4444;
-            padding: 0.75rem 1.25rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-danger:hover {
-            background-color: #ef4444;
-            color: #ffffff;
-        }
-
-        /* Smaller Close Button */
-        .btn-close {
-            display: inline-flex;
-            justify-content: center;
+        .action-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #f0fdf4;
+            color: #10b981;
+            display: flex;
             align-items: center;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            border-radius: 8px;
-            border: 1px solid #27272a;
-            background-color: transparent;
-            color: #71717a;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            justify-content: center;
+        }
+
+        .action-card-icon.whatsapp-bg {
+            background: #f0fdf4;
+            color: #25d366;
+        }
+
+        .action-card-icon.website-bg {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .action-card-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke-width: 2;
+        }
+
+        .action-card-title {
+            font-size: 0.825rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        /* Distinctly Styled Standalone Close Button */
+        .btn-close-standalone {
+            width: 100%;
+            max-width: 200px;
+            padding: 0.65rem 1.25rem;
             margin-bottom: 1.5rem;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
 
-        .btn-close:hover {
-            background-color: #18181b;
-            color: #a1a1aa;
-            border-color: #3f3f46;
+        .btn-close-standalone:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
         }
 
-        .btn-close:active {
+        .btn-close-standalone:active {
             transform: scale(0.96);
         }
 
@@ -227,16 +240,16 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background-color: #18181b;
-            border: 1px solid #27272a;
-            color: #a1a1aa;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
             text-decoration: none;
             transition: all 0.2s ease;
         }
 
         .social-icon:hover {
-            background-color: #27272a;
-            color: #10b981;
+            background-color: #10b981;
+            color: #ffffff;
             border-color: #10b981;
         }
 
@@ -248,9 +261,10 @@
 
         .url-id-footer {
             font-size: 0.75rem;
-            color: #71717a;
+            color: #64748b;
             letter-spacing: 0.05em;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
         }
 
         .brand-footer {
@@ -258,7 +272,7 @@
             flex-direction: column;
             gap: 0.25rem;
             font-size: 0.8rem;
-            color: #a1a1aa;
+            color: #64748b;
             text-align: center;
             margin-top: 0.5rem;
         }
@@ -266,7 +280,7 @@
         .brand-footer a {
             color: #10b981;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .brand-footer a:hover {
@@ -307,6 +321,7 @@
             max-height: 90vh;
             overflow-y: auto;
             text-align: left;
+            color: #ffffff;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             transform: scale(0.95);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -378,6 +393,7 @@
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group input[type="date"],
+        .form-group input[type="time"],
         .form-group input[type="email"],
         .form-group input[type="url"],
         .form-group textarea,
@@ -437,6 +453,39 @@
             gap: 0.75rem;
         }
 
+        .btn-primary-form {
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            background-color: #10b981;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .btn-secondary-form {
+            background-color: #27272a;
+            color: #ffffff;
+            border: 1px solid #3f3f46;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .btn-danger-form {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
         /* CSS Spinner Component */
         .spinner {
             width: 24px;
@@ -471,13 +520,14 @@
         }
 
         @media (max-width: 480px) {
-            h1 {
-                font-size: 2.75rem;
+            .action-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.65rem;
             }
 
-            .action-buttons {
-                grid-template-columns: 1fr;
-                gap: 1rem;
+            .secondary-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.65rem;
             }
 
             .modal-overlay {
@@ -490,7 +540,7 @@
             }
 
             .brand-footer {
-                margin-top: 2rem;
+                margin-top: 1.25rem;
                 padding-bottom: 1.5rem;
             }
         }
@@ -506,32 +556,51 @@
 
     <!-- Main Page Content -->
     <main id="mainContent">
-        <!-- Top Splash Video Container (Rendered Dynamically) -->
+        <!-- Top Splash Video Container -->
         <div id="splashVideoContainer" class="splash-video-container" style="display: none;"></div>
 
-        <!-- Top Splash Logo Container (Rendered Dynamically) -->
+        <!-- Top Splash Logo Container -->
         <div id="splashLogoContainer" class="splash-logo-container" style="display: none;"></div>
 
-        <!-- Action Buttons Container -->
-        <div class="action-buttons">
-            <button type="button" class="btn-primary" id="specificationsBtn" onclick="openSpecificationsPage()">
-                Specifications
+        <!-- Main Action Cards Grid (Specifications & Voice Feedback) -->
+        <div class="action-cards-grid">
+            <button type="button" class="action-card" id="specificationsBtn" onclick="openSpecificationsPage()">
+                <div class="action-card-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <span class="action-card-title">Specifications</span>
             </button>
-            <a id="feedbackBtn" href="#" target="_blank" class="btn-primary">
-                Feedback
+
+            <!-- Voice Feedback Button with Microphone Icon -->
+            <a id="feedbackBtn" href="#" target="_blank" class="action-card">
+                <div class="action-card-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                </div>
+                <span class="action-card-title">Voice Feedback</span>
             </a>
         </div>
 
-        <button type="button" class="btn-close" onclick="openThankYouAndClose()">
-            Close
+        <!-- Secondary Dynamic Cards Grid (Website & WhatsApp - Rendered dynamically if available) -->
+        <div id="secondaryCardsGrid" class="secondary-cards-grid" style="display: none;"></div>
+
+        <!-- Distinctly Styled Separate Close Button -->
+        <button type="button" class="btn-close-standalone" onclick="openThankYouAndClose()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Close Page
         </button>
 
-        <!-- Social Media Links (Rendered Dynamically) -->
+        <!-- Social Media Links -->
         <div id="socialLinksContainer" class="social-links" style="display: none;"></div>
 
-        <!-- ID Footer Text -->
+        <!-- ID Footer & Branding Text -->
         <div id="urlIdDisplay" class="url-id-footer"></div>
-        <div class="brand-footer" style="margin-top: 1.5rem;">
+        <div class="brand-footer">
             <div>PureTrace @ DoWell Research</div>
             <div><a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a></div>
         </div>
@@ -570,13 +639,16 @@
                         <input type="number" id="quantity" name="quantity" required />
                     </div>
                     <div class="form-group">
+                        <label for="quantity_unit">Quantity Unit <span class="req">*</span></label>
+                        <input type="text" id="quantity_unit" name="quantity_unit" placeholder="e.g. kg, pcs, ml, g" required />
+                    </div>
+                    <div class="form-group">
                         <label for="mrp">MRP (inclusive of all taxes) <span class="req">*</span></label>
                         <input type="number" step="0.01" id="mrp" name="mrp" required />
                     </div>
                     <div class="form-group">
                         <label for="mrp_currency">Currency of MRP <span class="req">*</span></label>
-                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc."
-                            required />
+                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc." required />
                     </div>
                     <div class="form-group">
                         <label for="manufactured_by">Manufactured By <span class="req">*</span></label>
@@ -587,8 +659,12 @@
                         <input type="text" id="marketed_by" name="marketed_by" required />
                     </div>
                     <div class="form-group">
-                        <label for="mfg_date">Month and Year of Manufacturing <span class="req">*</span></label>
-                        <input type="text" id="mfg_date" name="mfg_date" placeholder="e.g. 10/2026" required />
+                        <label for="mfg_date">Date of Manufacturing <span class="req">*</span></label>
+                        <input type="date" id="mfg_date" name="mfg_date" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="mfg_time">Manufacturing Time (Optional)</label>
+                        <input type="time" id="mfg_time" name="mfg_time" />
                     </div>
                     <div class="form-group">
                         <label for="country_of_origin">Country of Origin <span class="req">*</span></label>
@@ -719,7 +795,7 @@
                     </div>
                 </div>
 
-                <!-- SECTION 3: Social Media Links (Optional) -->
+                <!-- SECTION 3: Social Links (Optional) -->
                 <div class="section-title">3. Social Links (Optional)</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -749,11 +825,11 @@
 
                 <!-- Action Buttons: Exit, Preview, Save, Submit -->
                 <div class="modal-actions-grid">
-                    <button type="button" class="btn-danger" id="exitBtn" onclick="closeModal()">Exit</button>
-                    <button type="button" class="btn-secondary" id="previewBtn"
+                    <button type="button" class="btn-danger-form" id="exitBtn" onclick="closeModal()">Exit</button>
+                    <button type="button" class="btn-secondary-form" id="previewBtn"
                         onclick="openSpecificationsPage()">Preview Page</button>
-                    <button type="button" class="btn-secondary" id="saveBtn" onclick="saveLocally()">Save</button>
-                    <button type="submit" class="btn-primary" id="submitBatchBtn">
+                    <button type="button" class="btn-secondary-form" id="saveBtn" onclick="saveLocally()">Save</button>
+                    <button type="submit" class="btn-primary-form" id="submitBatchBtn">
                         <span id="btnText">Submit</span>
                     </button>
                 </div>
@@ -785,11 +861,13 @@
             batch_id: "Batch Number",
             description: "Description",
             quantity: "Quantity",
+            quantity_unit: "Quantity Unit",
             mrp: "MRP",
             mrp_currency: "Currency of MRP",
             manufactured_by: "Manufactured By",
             marketed_by: "Marketed By",
-            mfg_date: "Month & Year of Manufacturing",
+            mfg_date: "Date of Manufacturing",
+            mfg_time: "Manufacturing Time",
             country_of_origin: "Country of Origin",
             customer_care_contact: "Customer Care Contact",
             customer_care_phone: "Customer Care Phone",
@@ -873,8 +951,8 @@
         }
 
         async function showMainContent() {
-            // Wait for media preload to complete before making page visible
             await renderSplashAndSocials();
+            renderSecondaryCards();
             hidePageSpinner();
             document.getElementById("mainContent").classList.add("visible");
         }
@@ -887,18 +965,6 @@
         function closeModal() {
             document.getElementById("batchModal").classList.remove("active");
             showMainContent();
-        }
-
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                if (!file || !(file instanceof File) || file.size === 0) {
-                    return resolve(null);
-                }
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = (err) => reject(err);
-                reader.readAsDataURL(file);
-            });
         }
 
         function openThankYouAndClose() {
@@ -945,7 +1011,6 @@
                 if (!formatted) return resolve(false);
 
                 if (formatted.type === 'iframe') {
-                    // Embeds load asynchronously via iframe load event
                     resolve(true);
                 } else {
                     if (memoryCache.videos[url]) return resolve(true);
@@ -960,12 +1025,64 @@
             });
         }
 
+        /* Render Website and WhatsApp Cards dynamically if present */
+        function renderSecondaryCards() {
+            const secondaryGrid = document.getElementById("secondaryCardsGrid");
+            if (!secondaryGrid) return;
+
+            let html = "";
+            let cardCount = 0;
+
+            const websiteUrl = storedProductData?.website?.trim();
+            const whatsappUrl = storedProductData?.whatsapp_link?.trim();
+
+            if (websiteUrl) {
+                cardCount++;
+                html += `
+                    <a href="${websiteUrl}" target="_blank" class="action-card">
+                        <div class="action-card-icon website-bg">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                            </svg>
+                        </div>
+                        <span class="action-card-title">Website</span>
+                    </a>
+                `;
+            }
+
+            if (whatsappUrl) {
+                cardCount++;
+                html += `
+                    <a href="${whatsappUrl}" target="_blank" class="action-card">
+                        <div class="action-card-icon whatsapp-bg">
+                            <svg fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                            </svg>
+                        </div>
+                        <span class="action-card-title">WhatsApp</span>
+                    </a>
+                `;
+            }
+
+            if (cardCount > 0) {
+                secondaryGrid.innerHTML = html;
+                secondaryGrid.style.display = "grid";
+                if (cardCount === 1) {
+                    secondaryGrid.style.gridTemplateColumns = "1fr";
+                } else {
+                    secondaryGrid.style.gridTemplateColumns = "repeat(2, 1fr)";
+                }
+            } else {
+                secondaryGrid.style.display = "none";
+            }
+        }
+
         async function renderSplashAndSocials() {
             if (!storedProductData) return;
 
             const preloads = [];
 
-            // 1. RENDER SPLASH VIDEO
+            // 1. RENDER SPLASH VIDEO AT THE TOP
             const splashVideoContainer = document.getElementById("splashVideoContainer");
             const videoUrl = storedProductData.splash_screen_video;
 
@@ -984,7 +1101,7 @@
                 splashVideoContainer.style.display = "none";
             }
 
-            // 2. RENDER SPLASH LOGO (PROXIED THROUGH API_BASE)
+            // 2. RENDER SPLASH LOGO DIRECTLY BELOW VIDEO
             const splashLogoContainer = document.getElementById("splashLogoContainer");
             const logoData = storedProductData.splash_screen_logo;
 
@@ -1019,7 +1136,6 @@
                 splashLogoContainer.style.display = "none";
             }
 
-            // Wait for all preloads to resolve before completing setup
             await Promise.all(preloads);
         }
 
@@ -1034,7 +1150,6 @@
                 }
             }
 
-            // 1. Splash Screen Logo (GridFS upload)
             const logoInput = document.getElementById("splash_screen_logo");
             const logoFile = logoInput ? logoInput.files[0] : null;
             if (logoFile && logoFile.size > 0) {
@@ -1043,7 +1158,6 @@
                 payloadData.splash_screen_logo = storedProductData.splash_screen_logo;
             }
 
-            // 2. Product Videos (Direct Links preserved)
             payloadData.product_videos = [];
             for (let i = 1; i <= 3; i++) {
                 const link = formData.get(`video_link_${i}`);
@@ -1058,7 +1172,6 @@
                 }
             }
 
-            // 3. Certificates (GridFS upload for documents/images)
             payloadData.certificates = [];
             for (let i = 1; i <= 10; i++) {
                 const name = formData.get(`cert_name_${i}`);
@@ -1083,7 +1196,6 @@
                 }
             }
 
-            // 4. Product Images (GridFS upload)
             payloadData.product_images = [];
             for (let i = 1; i <= 6; i++) {
                 const fileInput = document.getElementById(`img_file_${i}`);
@@ -1119,6 +1231,7 @@
                 sessionStorage.setItem("puretrace_session_data", jsonStr);
                 storedProductData = data;
                 await renderSplashAndSocials();
+                renderSecondaryCards();
                 console.log("Product information saved locally on browser!");
             } catch (err) {
                 console.error("Save error:", err);
@@ -1269,6 +1382,7 @@
                         sessionStorage.setItem("puretrace_session_data", JSON.stringify(storedProductData));
                         restoreLocalData(storedProductData);
                         await renderSplashAndSocials();
+                        renderSecondaryCards();
                         isDataFetchedFromDB = true;
                     }
 
@@ -1300,6 +1414,7 @@
                         storedProductData = JSON.parse(dataToRestore);
                         restoreLocalData(storedProductData);
                         await renderSplashAndSocials();
+                        renderSecondaryCards();
                     } catch (e) { }
                 }
             }
@@ -1310,7 +1425,6 @@
             const btnText = document.getElementById("btnText");
 
             form.addEventListener("submit", async (e) => {
-                // Prevent browser standard submission & page refresh
                 e.preventDefault();
 
                 console.log("Starting batch form submission process...");

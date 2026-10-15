@@ -154,69 +154,9 @@
             border: 1px solid var(--border);
             box-shadow: var(--shadow-md);
             padding: 2rem;
-            margin-bottom: 2rem;
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 2.5rem;
-            align-items: start;
-        }
-
-        .hero-gallery {
+            margin-bottom: 1.5rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-        }
-
-        .main-image-container {
-            width: 100%;
-            height: 340px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            overflow: hidden;
-            background-color: #f1f5f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .main-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .main-image-container img:hover {
-            transform: scale(1.03);
-        }
-
-        .thumbs-grid {
-            display: flex;
-            gap: 0.75rem;
-            overflow-x: auto;
-            padding-bottom: 0.25rem;
-        }
-
-        .thumb-item {
-            width: 64px;
-            height: 64px;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            overflow: hidden;
-            cursor: pointer;
-            flex-shrink: 0;
-            background: #f1f5f9;
-        }
-
-        .thumb-item.active {
-            border-color: var(--primary);
-        }
-
-        .thumb-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .hero-info {
@@ -303,6 +243,87 @@
             font-size: 0.9rem;
             font-weight: 600;
             color: var(--text-main);
+        }
+
+        /* Prominent Customer Care Contact Banner */
+        .customer-care-card {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.75rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.3);
+            gap: 1rem;
+        }
+
+        .cc-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .cc-icon-bg {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .cc-icon-bg svg {
+            width: 26px;
+            height: 26px;
+            fill: #ffffff;
+        }
+
+        .cc-details label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            opacity: 0.9;
+        }
+
+        .cc-details .cc-phone {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .cc-details .cc-contact-name {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 1px;
+        }
+
+        .btn-call-now {
+            background: #ffffff;
+            color: #047857;
+            padding: 0.65rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-call-now:hover {
+            transform: translateY(-2px);
+            background: #ecfdf5;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
         /* Section Block Layout */
@@ -520,28 +541,6 @@
             color: #ffffff;
         }
 
-        .btn-download {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1rem;
-            background-color: #ffffff;
-            border: 1px solid var(--border);
-            color: var(--primary);
-            border-radius: var(--radius-sm);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 700;
-            transition: all 0.2s ease;
-            margin-top: auto;
-        }
-
-        .btn-download:hover {
-            background-color: var(--primary-light);
-            border-color: var(--primary);
-        }
-
         /* Error Banner */
         .error-message {
             text-align: center;
@@ -601,13 +600,19 @@
 
         @media (max-width: 768px) {
             .hero-card {
-                grid-template-columns: 1fr;
                 padding: 1.25rem;
-                gap: 1.5rem;
             }
 
-            .main-image-container {
-                height: 260px;
+            .customer-care-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.25rem;
+                padding: 1.25rem;
+            }
+
+            .btn-call-now {
+                width: 100%;
+                justify-content: center;
             }
 
             .section-block {
@@ -650,8 +655,7 @@
 
         <!-- Top Hero Section -->
         <div class="hero-card">
-            <!-- Right: Primary Product Info -->
-            <div class="hero-info" style="grid-column: span 2;">
+            <div class="hero-info">
                 <div id="batchBadge" class="badge-batch" style="display: none;"></div>
                 <h1 id="heroTitle" class="hero-title">Product Name</h1>
 
@@ -684,6 +688,28 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Prominent Customer Care Card Banner -->
+        <div id="customerCareBanner" class="customer-care-card" style="display: none;">
+            <div class="cc-info">
+                <div class="cc-icon-bg">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                </div>
+                <div class="cc-details">
+                    <label>Customer Care Helpline</label>
+                    <div id="ccPhoneDisplay" class="cc-phone"></div>
+                    <div id="ccContactDisplay" class="cc-contact-name"></div>
+                </div>
+            </div>
+            <a id="ccCallBtn" href="#" class="btn-call-now">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                </svg>
+                Call Customer Care
+            </a>
         </div>
 
         <!-- Section 1: Detailed Specifications Table -->
@@ -740,11 +766,13 @@
             batch_id: "Batch Number",
             description: "Description",
             quantity: "Quantity",
+            quantity_unit: "Quantity Unit",
             mrp: "MRP",
             mrp_currency: "Currency of MRP",
             manufactured_by: "Manufactured By",
             marketed_by: "Marketed By",
-            mfg_date: "Month & Year of Manufacturing",
+            mfg_date: "Date of Manufacturing",
+            mfg_time: "Manufacturing Time",
             country_of_origin: "Country of Origin",
             customer_care_contact: "Customer Care Contact",
             customer_care_phone: "Customer Care Phone Number",
@@ -869,11 +897,24 @@
                 document.getElementById("heroDescription").textContent = data.description;
             }
 
-            // Populate Metadata Grid using First Line only
+            // Populate Metadata Grid
             if (data.manufactured_by) document.getElementById("metaManufacturedBy").textContent = getFirstLine(data.manufactured_by);
             if (data.marketed_by) document.getElementById("metaMarketedBy").textContent = getFirstLine(data.marketed_by);
             if (data.mfg_date) document.getElementById("metaMfgDate").textContent = data.mfg_date;
             if (data.country_of_origin) document.getElementById("metaCountry").textContent = data.country_of_origin;
+
+            // Render Prominent Customer Care Card Banner
+            const ccPhone = data.customer_care_phone;
+            const ccContact = data.customer_care_contact;
+            if (ccPhone && ccPhone.toString().trim() !== "") {
+                const cleanPhone = ccPhone.toString().trim();
+                document.getElementById("ccPhoneDisplay").textContent = cleanPhone;
+                // if (ccContact && ccContact.toString().trim() !== "") {
+                //     document.getElementById("ccContactDisplay").textContent = `Contact Person: ${ccContact.toString().trim()}`;
+                // }
+                document.getElementById("ccCallBtn").href = `tel:${cleanPhone.replace(/\s+/g, '')}`;
+                document.getElementById("customerCareBanner").style.display = "flex";
+            }
 
             // 1. Populate Detailed Specifications Table
             const tableBody = document.getElementById("specsTableBody");
@@ -887,6 +928,8 @@
                         formattedVal = `<a href="${val}" target="_blank" style="color: var(--primary); text-decoration: underline;">${val}</a>`;
                     } else if (key === "customer_care_email") {
                         formattedVal = `<a href="mailto:${val}" style="color: var(--primary); text-decoration: underline;">${val}</a>`;
+                    } else if (key === "customer_care_phone") {
+                        formattedVal = `<a href="tel:${val.toString().trim().replace(/\s+/g, '')}" style="color: var(--primary); font-weight: 700;">${val}</a>`;
                     }
 
                     tableHtml += `
@@ -947,7 +990,7 @@
                 }
             }
 
-            // 4. Render Product Images Below Videos
+            // 4. Render Product Images
             let imageList = [];
             if (data.product_images && Array.isArray(data.product_images)) {
                 imageList = data.product_images.filter(i => i.file || i.file_id || i.base64 || i.url);
@@ -1036,7 +1079,7 @@
                 document.getElementById("certificatesSection").style.display = "block";
             }
 
-            // 6. Update Footer with Company Name and Website
+            // 6. Update Footer
             const companyName = getFirstLine(data.manufactured_by || data.marketed_by || "PureTrace");
             document.getElementById("footerName").textContent = companyName;
 
@@ -1045,7 +1088,6 @@
             } else {
                 document.getElementById("footerWebsite").innerHTML = `<a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a>`;
             }
-
 
             document.getElementById("contentContainer").classList.add("visible");
             hideLoader();
