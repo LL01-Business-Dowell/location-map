@@ -1147,7 +1147,7 @@ app.get("/api/get_client_info/:qr_id", async (req, res) => {
       return res.status(400).json({ error: "QR Code ID is required" });
     }
 
-    // 1. Query the medsign_links collection in DataCube by link_id (QR ID)
+    // 1. Query medsign_links collection by link_id (QR ID)
     const filters = JSON.stringify({ link_id: String(qr_id) });
     const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_links&filters=${encodeURIComponent(filters)}&page=1&page_size=1`;
 
@@ -1176,26 +1176,38 @@ app.get("/api/get_client_info/:qr_id", async (req, res) => {
       }
     }
 
-    // Select primary batch or active detail entry
+    // Select primary active batch or first available detail entry
     const primaryBatch = Array.isArray(productDetails)
       ? (productDetails.find(b => b.status !== "draft") || productDetails[0] || {})
       : productDetails;
 
-    // Extract name
-    const clientName = record.client_name || primaryBatch.marketed_by || primaryBatch.manufactured_by || "Unknown Client";
+    // Extract Client / Brand Name
+    const clientName = record.client_name || primaryBatch.marketed_by || primaryBatch.manufactured_by || primaryBatch.product_name || "Unknown Client";
 
-    // Extract logo / splash image
-    let logoUrl = null;
+    // 2. Safely extract file_id from splash_screen_logo or product_images
     let logoFileId = null;
 
-    if (primaryBatch.product_images && Array.isArray(primaryBatch.product_images) && primaryBatch.product_images.length > 0) {
-      const firstImg = primaryBatch.product_images[0];
-      logoFileId = firstImg.file_id || firstImg.file || firstImg.id;
-    } else if (primaryBatch.img_file_1) {
-      logoFileId = primaryBatch.img_file_1;
+    if (primaryBatch.splash_screen_logo) {
+      if (typeof primaryBatch.splash_screen_logo === "object") {
+        logoFileId = primaryBatch.splash_screen_logo.file_id || primaryBatch.splash_screen_logo.id;
+      } else if (typeof primaryBatch.splash_screen_logo === "string") {
+        logoFileId = primaryBatch.splash_screen_logo;
+      }
     }
 
-    // Format logo image stream URL
+    // Fallback: If no splash_screen_logo, look inside product_images array
+    if (!logoFileId && primaryBatch.product_images && Array.isArray(primaryBatch.product_images) && primaryBatch.product_images.length > 0) {
+      const firstImg = primaryBatch.product_images[0]?.file;
+      if (typeof firstImg === "object") {
+        logoFileId = firstImg.file_id || firstImg.id;
+      } else if (typeof firstImg === "string") {
+        logoFileId = firstImg;
+      }
+    }
+
+    // 3. Format logo URL based on extracted ID or direct URL string
+    let logoUrl = null;
+
     if (logoFileId) {
       if (typeof logoFileId === "string" && (logoFileId.startsWith("http://") || logoFileId.startsWith("https://") || logoFileId.startsWith("data:"))) {
         logoUrl = logoFileId;
@@ -1204,7 +1216,7 @@ app.get("/api/get_client_info/:qr_id", async (req, res) => {
       }
     }
 
-    // Fallback logo if no image exists in product details
+    // Fallback default logo if no custom image exists
     if (!logoUrl) {
       logoUrl = "https://location-map-1.onrender.com/assets/logo.png";
     }
