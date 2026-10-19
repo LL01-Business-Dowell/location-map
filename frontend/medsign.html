@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>DoWell MedSign</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +31,7 @@
             background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
-            padding: 16px;
+            padding: 12px;
         }
 
         @keyframes gradientShift {
@@ -51,12 +51,13 @@
         .card {
             background: white;
             backdrop-filter: blur(10px);
-            padding: 24px 20px 20px;
+            padding: 16px 16px 14px;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
             max-width: 760px;
             width: 100%;
+            max-height: calc(100vh - 24px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -64,41 +65,41 @@
 
         .logo-container {
             width: 100%;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         .logo-container img {
             width: 100%;
-            max-height: 70px;
+            max-height: 50px;
             object-fit: contain;
         }
 
         .clinical-check {
             text-align: left;
             background: #f8fafc;
-            padding: 16px 20px;
+            padding: 12px 14px;
             border-radius: 14px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             border: 1px solid #e2e8f0;
         }
 
         .clinical-check h3 {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-align: center;
             color: #0f172a;
         }
 
         .check-list {
-            padding-left: 18px;
-            margin-bottom: 14px;
+            padding-left: 16px;
+            margin-bottom: 10px;
         }
 
         .check-list li {
-            margin-bottom: 8px;
-            font-size: 13.5px;
-            line-height: 1.45;
+            margin-bottom: 5px;
+            font-size: 12px;
+            line-height: 1.35;
             color: #334155;
         }
 
@@ -108,13 +109,13 @@
 
         .clinical-buttons {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
         }
 
         button {
-            padding: 11px 28px;
-            font-size: 15px;
+            padding: 9px 20px;
+            font-size: 14px;
             font-weight: 600;
             border: none;
             border-radius: 10px;
@@ -139,25 +140,25 @@
         }
 
         .feedback-box {
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .feedback-title {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             color: #475569;
         }
 
         .feedback-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
         }
 
         .feedback-btn {
-            padding: 8px 16px;
-            font-size: 14px;
+            padding: 7px 14px;
+            font-size: 13px;
             border-radius: 8px;
             border: 1px solid #c7d2fe;
             background: white;
@@ -173,9 +174,43 @@
         }
 
         .status {
-            font-size: 13px;
-            min-height: 18px;
+            font-size: 12px;
+            min-height: 14px;
             color: #64748b;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .card {
+                padding: 12px;
+                border-radius: 16px;
+            }
+
+            .logo-container img {
+                max-height: 42px;
+            }
+
+            .clinical-check {
+                padding: 10px 12px;
+            }
+
+            .clinical-check h3 {
+                font-size: 14px;
+                margin-bottom: 4px;
+            }
+
+            .check-list li {
+                font-size: 11.5px;
+                margin-bottom: 4px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -233,7 +268,7 @@
         async function init() {
             const params = new URLSearchParams(window.location.search);
             const alias = params.get("id");
-            const token = params.get("token"); // backward compat with old printed QRs
+            const token = params.get("token");
 
             if (!alias && !token) {
                 statusEl.textContent = "Invalid link.";
@@ -245,10 +280,8 @@
                 let data;
 
                 if (alias) {
-                    // New flow — resolve alias directly
                     data = await resolveAlias(alias);
                 } else {
-                    // Old flow — decrypt token
                     data = await decryptToken(token);
                 }
 
@@ -299,7 +332,6 @@
         btn.onclick = () => {
             if (!targetUrl || !qrId) return;
 
-            // Ensures targetUrl ends with '/' before appending qrId
             const baseUrl = targetUrl.endsWith('/') ? targetUrl : `${targetUrl}/`;
             window.location.href = `${baseUrl}${qrId}`;
         };
