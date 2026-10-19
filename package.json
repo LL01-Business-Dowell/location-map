@@ -1,0 +1,25 @@
+{
+  "name": "map-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm --prefix server start\" \"npx serve frontend -p 8000\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LL01-Business-Dowell/location-map.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LL01-Business-Dowell/location-map/issues"
+  },
+  "homepage": "https://github.com/LL01-Business-Dowell/location-map#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

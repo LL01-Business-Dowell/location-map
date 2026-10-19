@@ -1,4 +1,11 @@
-const PROXY_BASE = "https://location-map-a89a.onrender.com/api";
+// const PROXY_BASE = "https://location-map-a89a.onrender.com/api";
+const isLocalhost = 
+  window.location.hostname === "localhost" || 
+  window.location.hostname === "127.0.0.1";
+
+const PROXY_BASE = isLocalhost
+  ? "http://localhost:3001/api"
+  : "https://location-map-a89a.onrender.com/api";
 
 async function ensureDailyCollection(dbId) {
   const collectionName = todayCollectionName();

@@ -66,6 +66,67 @@
             transform: translateY(0);
         }
 
+        /* Filter Section Styling */
+        .filter-container {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            text-align: left;
+        }
+
+        .filter-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .filter-group input {
+            width: 100%;
+            padding: 0.65rem;
+            font-size: 0.9rem;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: #0f172a;
+            outline: none;
+        }
+
+        .filter-group input:focus {
+            border-color: #10b981;
+        }
+
+        .no-records-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #fef2f2;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+            display: none;
+        }
+
         /* Top Banner Video Container */
         .splash-video-container {
             width: 100%;
@@ -106,7 +167,7 @@
             object-fit: contain;
         }
 
-        /* Grid Action Buttons (Inspired by Image Card Grid) */
+        /* Grid Action Buttons */
         .action-cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -115,11 +176,6 @@
             margin-bottom: 0.85rem;
         }
 
-        .action-cards-grid.single-col {
-            grid-template-columns: 1fr;
-        }
-
-        /* Secondary Dynamic Links Grid */
         .secondary-cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -128,7 +184,6 @@
             margin-bottom: 1.25rem;
         }
 
-        /* Rounded Action Card Buttons */
         .action-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -149,10 +204,6 @@
             transform: translateY(-2px);
             border-color: #10b981;
             box-shadow: 0 8px 20px rgba(16, 185, 129, 0.12);
-        }
-
-        .action-card:active {
-            transform: scale(0.96);
         }
 
         .action-card-icon {
@@ -190,7 +241,6 @@
             text-align: center;
         }
 
-        /* Distinctly Styled Standalone Close Button */
         .btn-close-standalone {
             width: 100%;
             max-width: 200px;
@@ -219,11 +269,6 @@
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
         }
 
-        .btn-close-standalone:active {
-            transform: scale(0.96);
-        }
-
-        /* Social Icons & URL ID Footer */
         .social-links {
             display: flex;
             justify-content: center;
@@ -231,32 +276,6 @@
             gap: 1rem;
             margin-top: 1rem;
             margin-bottom: 0.75rem;
-        }
-
-        .social-icon {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .social-icon:hover {
-            background-color: #10b981;
-            color: #ffffff;
-            border-color: #10b981;
-        }
-
-        .social-icon svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
         }
 
         .url-id-footer {
@@ -281,10 +300,6 @@
             color: #10b981;
             text-decoration: none;
             font-weight: 600;
-        }
-
-        .brand-footer a:hover {
-            text-decoration: underline;
         }
 
         /* Modal Overlay Styles */
@@ -325,7 +340,6 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             transform: scale(0.95);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
             display: flex;
             flex-direction: column;
         }
@@ -445,7 +459,6 @@
             margin-bottom: 0.75rem;
         }
 
-        /* Modal Form Action Buttons Grid */
         .modal-actions-grid {
             margin-top: 2rem;
             display: grid;
@@ -486,7 +499,6 @@
             cursor: pointer;
         }
 
-        /* CSS Spinner Component */
         .spinner {
             width: 24px;
             height: 24px;
@@ -518,76 +530,57 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
-
-        @media (max-width: 480px) {
-            .action-cards-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.65rem;
-            }
-
-            .secondary-cards-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.65rem;
-            }
-
-            .modal-overlay {
-                padding: 0.5rem;
-            }
-
-            .modal-card {
-                padding: 1.25rem 1rem 2rem 1rem;
-                max-height: 95vh;
-            }
-
-            .brand-footer {
-                margin-top: 1.25rem;
-                padding-bottom: 1.5rem;
-            }
-        }
     </style>
 </head>
 
 <body>
 
-    <!-- Fullscreen Initial Loader -->
     <div id="pageSpinner">
         <div class="spinner"></div>
     </div>
 
-    <!-- Main Page Content -->
     <main id="mainContent">
-        <!-- Top Splash Video Container -->
-        <div id="splashVideoContainer" class="splash-video-container" style="display: none;"></div>
+        <!-- Date / Time Filter Section (Rendered when multiple active batches exist) -->
+        <div id="batchFilterContainer" class="filter-container" style="display: none;">
+            <div class="filter-title">Select Batch Details</div>
+            <div class="filter-group">
+                <label for="filterMfgDate">Manufacturing Month & Year</label>
+                <input type="month" id="filterMfgDate" onchange="handleFilterChange()" />
+            </div>
+            <div class="filter-group" id="filterTimeGroup" style="display: none;">
+                <label for="filterMfgTime">Manufacturing Time</label>
+                <input type="time" id="filterMfgTime" onchange="handleFilterChange()" />
+            </div>
+            <div id="noRecordsMsg" class="no-records-msg">No Matching records found</div>
+        </div>
 
-        <!-- Top Splash Logo Container -->
+        <div id="splashVideoContainer" class="splash-video-container" style="display: none;"></div>
         <div id="splashLogoContainer" class="splash-logo-container" style="display: none;"></div>
 
-        <!-- Main Action Cards Grid (Specifications & Voice Feedback) -->
-        <div class="action-cards-grid">
+        <div id="actionCardsGrid" class="action-cards-grid" style="display: none;">
             <button type="button" class="action-card" id="specificationsBtn" onclick="openSpecificationsPage()">
                 <div class="action-card-icon">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </div>
                 <span class="action-card-title">Specifications</span>
             </button>
 
-            <!-- Voice Feedback Button with Microphone Icon -->
             <a id="feedbackBtn" href="#" target="_blank" class="action-card">
                 <div class="action-card-icon">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                 </div>
                 <span class="action-card-title">Voice Feedback</span>
             </a>
         </div>
 
-        <!-- Secondary Dynamic Cards Grid (Website & WhatsApp - Rendered dynamically if available) -->
         <div id="secondaryCardsGrid" class="secondary-cards-grid" style="display: none;"></div>
 
-        <!-- Distinctly Styled Separate Close Button -->
         <button type="button" class="btn-close-standalone" onclick="openThankYouAndClose()">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -595,19 +588,15 @@
             Close Page
         </button>
 
-        <!-- Social Media Links -->
         <div id="socialLinksContainer" class="social-links" style="display: none;"></div>
-
-        <!-- ID Footer & Branding Text -->
         <div id="urlIdDisplay" class="url-id-footer"></div>
         <div class="brand-footer">
             <div>PureTrace @ DoWell Research</div>
             <div><a href="https://www.dowellresearch.com" target="_blank">www.dowellresearch.com</a></div>
         </div>
-
     </main>
 
-    <!-- Complete Product Form Modal -->
+    <!-- Modal Form -->
     <div id="batchModal" class="modal-overlay">
         <div class="modal-card">
             <h2>Product Registration Details</h2>
@@ -617,11 +606,8 @@
             </div>
 
             <form id="productDetailsForm">
-
-                <!-- SECTION 1: Product Specifications -->
                 <div class="section-title">1. Product Specifications</div>
                 <div class="form-grid">
-                    <!-- Mandatory Fields -->
                     <div class="form-group">
                         <label for="product_name">Product Name <span class="req">*</span></label>
                         <input type="text" id="product_name" name="product_name" required />
@@ -640,7 +626,8 @@
                     </div>
                     <div class="form-group">
                         <label for="quantity_unit">Quantity Unit <span class="req">*</span></label>
-                        <input type="text" id="quantity_unit" name="quantity_unit" placeholder="e.g. kg, pcs, ml, g" required />
+                        <input type="text" id="quantity_unit" name="quantity_unit" placeholder="e.g. kg, pcs, ml, g"
+                            required />
                     </div>
                     <div class="form-group">
                         <label for="mrp">MRP (inclusive of all taxes) <span class="req">*</span></label>
@@ -648,7 +635,8 @@
                     </div>
                     <div class="form-group">
                         <label for="mrp_currency">Currency of MRP <span class="req">*</span></label>
-                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc." required />
+                        <input type="text" id="mrp_currency" name="mrp_currency" placeholder="INR, USD, etc."
+                            required />
                     </div>
                     <div class="form-group">
                         <label for="manufactured_by">Manufactured By <span class="req">*</span></label>
@@ -658,10 +646,36 @@
                         <label for="marketed_by">Marketed By <span class="req">*</span></label>
                         <input type="text" id="marketed_by" name="marketed_by" required />
                     </div>
-                    <div class="form-group">
-                        <label for="mfg_date">Date of Manufacturing <span class="req">*</span></label>
-                        <input type="date" id="mfg_date" name="mfg_date" required />
+
+                    <!-- Date of Manufacturing: Required Month & Year, Optional Day -->
+                    <div class="form-group full-width">
+                        <label>Date of Manufacturing <span class="req">*</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                            <select id="mfg_month" required
+                                style="background-color: #09090b; color: #fff; padding: 0.7rem; border-radius: 8px; border: 1px solid #3f3f46;">
+                                <option value="">Month *</option>
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+
+                            <input type="number" id="mfg_year" min="2000" max="2099" placeholder="Year *" required
+                                style="background-color: #09090b; color: #fff; padding: 0.7rem; border-radius: 8px; border: 1px solid #3f3f46;" />
+
+                            <input type="number" id="mfg_day" min="1" max="31" placeholder="Day (Opt)"
+                                style="background-color: #09090b; color: #fff; padding: 0.7rem; border-radius: 8px; border: 1px solid #3f3f46;" />
+                        </div>
                     </div>
+
                     <div class="form-group">
                         <label for="mfg_time">Manufacturing Time (Optional)</label>
                         <input type="time" id="mfg_time" name="mfg_time" />
@@ -678,8 +692,6 @@
                         <label for="customer_care_phone">Customer Care Phone Number <span class="req">*</span></label>
                         <input type="text" id="customer_care_phone" name="customer_care_phone" required />
                     </div>
-
-                    <!-- Splash Screen Customization (Optional) -->
                     <div class="form-group">
                         <label for="splash_screen_logo">Splash Screen Logo</label>
                         <input type="file" id="splash_screen_logo" name="splash_screen_logo" accept="image/*" />
@@ -689,8 +701,6 @@
                         <input type="url" id="splash_screen_video" name="splash_screen_video"
                             placeholder="https://www.youtube.com/watch?v=..." />
                     </div>
-
-                    <!-- Optional Fields -->
                     <div class="form-group">
                         <label for="serial_number">Serial Number</label>
                         <input type="text" id="serial_number" name="serial_number" />
@@ -750,7 +760,6 @@
                     </div>
                 </div>
 
-                <!-- SECTION 2: Product Videos (Optional) -->
                 <div class="section-title">Product Videos (Optional)</div>
                 <div class="nested-card">
                     <div class="nested-card-title">Video 1</div>
@@ -795,7 +804,6 @@
                     </div>
                 </div>
 
-                <!-- SECTION 3: Social Links (Optional) -->
                 <div class="section-title">3. Social Links (Optional)</div>
                 <div class="form-grid">
                     <div class="form-group">
@@ -815,20 +823,18 @@
                     </div>
                 </div>
 
-                <!-- SECTION 4: Certificates (1 - 10) -->
                 <div class="section-title">4. Certificates (Optional)</div>
                 <div id="certificatesContainer"></div>
 
-                <!-- SECTION 5: Product Images (1 - 6) -->
                 <div class="section-title">5. Product Images (Optional)</div>
                 <div id="productImagesContainer"></div>
 
-                <!-- Action Buttons: Exit, Preview, Save, Submit -->
                 <div class="modal-actions-grid">
                     <button type="button" class="btn-danger-form" id="exitBtn" onclick="closeModal()">Exit</button>
                     <button type="button" class="btn-secondary-form" id="previewBtn"
                         onclick="openSpecificationsPage()">Preview Page</button>
-                    <button type="button" class="btn-secondary-form" id="saveBtn" onclick="saveLocally()">Save</button>
+                    <button type="button" class="btn-secondary-form" id="saveBtn"
+                        onclick="saveDraftToDB()">Save</button>
                     <button type="submit" class="btn-primary-form" id="submitBatchBtn">
                         <span id="btnText">Submit</span>
                     </button>
@@ -847,49 +853,14 @@
     <script src="api.js"></script>
 
     <script>
-        const API_BASE = "https://location-map-a89a.onrender.com/api";
-        
-        // Tab-session Memory Cache for long-running tab instances
-        let storedProductData = null;
-        const memoryCache = {
-            images: {},
-            videos: {}
-        };
+        const API_BASE = PROXY_BASE;
 
-        const fieldLabels = {
-            product_name: "Product Name",
-            batch_id: "Batch Number",
-            description: "Description",
-            quantity: "Quantity",
-            quantity_unit: "Quantity Unit",
-            mrp: "MRP",
-            mrp_currency: "Currency of MRP",
-            manufactured_by: "Manufactured By",
-            marketed_by: "Marketed By",
-            mfg_date: "Date of Manufacturing",
-            mfg_time: "Manufacturing Time",
-            country_of_origin: "Country of Origin",
-            customer_care_contact: "Customer Care Contact",
-            customer_care_phone: "Customer Care Phone",
-            splash_screen_video: "Splash Screen Video URL",
-            social_youtube: "YouTube Link",
-            social_instagram: "Instagram Link",
-            social_facebook: "Facebook Link",
-            serial_number: "Serial Number",
-            product_size: "Product Size",
-            unit_sales_price: "Unit Sales Price",
-            gst_number: "GST Number",
-            expiry_date: "Expiry Date",
-            expiry_details: "Expiry Details",
-            customer_care_email: "Customer Care Email",
-            website: "Website",
-            storage_location_manufacturer: "Storage Location (Manufacturer)",
-            storage_instructions_consumer: "Storage Instructions (Consumer)",
-            package_recycling: "Package Recycling",
-            location_coordinates: "Location Coordinates",
-            whatsapp_link: "WhatsApp Link",
-            notes: "Notes"
-        };
+        let allProductBatches = [];
+        let activeProductBatches = [];
+        let currentDraftBatch = null;
+        let storedProductData = null;
+
+        const memoryCache = { images: {}, videos: {} };
 
         const imageLabels = [
             "Product/Company Logo",
@@ -900,49 +871,32 @@
             "Product Image 5"
         ];
 
-        // Dynamic Certificates UI
+        // Setup Certificates UI
         const certContainer = document.getElementById("certificatesContainer");
         for (let i = 1; i <= 10; i++) {
             certContainer.innerHTML += `
-        <div class="nested-card">
-          <div class="nested-card-title">Certificate ${i}</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Name</label>
-              <input type="text" name="cert_name_${i}" placeholder="Certificate Name" />
-            </div>
-            <div class="form-group">
-              <label>Upload Document</label>
-              <input type="file" id="cert_file_${i}" name="cert_file_${i}" />
-            </div>
-            <div class="form-group full-width">
-              <label>Description</label>
-              <input type="text" name="cert_desc_${i}" placeholder="Certificate Description" />
-            </div>
-          </div>
-        </div>
-      `;
+                <div class="nested-card">
+                    <div class="nested-card-title">Certificate ${i}</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Name</label><input type="text" name="cert_name_${i}" placeholder="Certificate Name" /></div>
+                        <div class="form-group"><label>Upload Document</label><input type="file" id="cert_file_${i}" name="cert_file_${i}" /></div>
+                        <div class="form-group full-width"><label>Description</label><input type="text" name="cert_desc_${i}" placeholder="Certificate Description" /></div>
+                    </div>
+                </div>`;
         }
 
-        // Dynamic Product Images UI
+        // Setup Images UI
         const imgContainer = document.getElementById("productImagesContainer");
         imageLabels.forEach((label, idx) => {
             const num = idx + 1;
             imgContainer.innerHTML += `
-        <div class="nested-card">
-          <div class="nested-card-title">${num}. ${label}</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Upload Image</label>
-              <input type="file" id="img_file_${num}" name="img_file_${num}" accept="image/*" />
-            </div>
-            <div class="form-group">
-              <label>Description</label>
-              <input type="text" name="img_desc_${num}" placeholder="Image Description" />
-            </div>
-          </div>
-        </div>
-      `;
+                <div class="nested-card">
+                    <div class="nested-card-title">${num}. ${label}</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Upload Image</label><input type="file" id="img_file_${num}" name="img_file_${num}" accept="image/*" /></div>
+                        <div class="form-group"><label>Description</label><input type="text" name="img_desc_${num}" placeholder="Image Description" /></div>
+                    </div>
+                </div>`;
         });
 
         function hidePageSpinner() {
@@ -955,6 +909,7 @@
             renderSecondaryCards();
             hidePageSpinner();
             document.getElementById("mainContent").classList.add("visible");
+            document.getElementById("actionCardsGrid").style.display = "grid";
         }
 
         function showModal() {
@@ -964,7 +919,9 @@
 
         function closeModal() {
             document.getElementById("batchModal").classList.remove("active");
-            showMainContent();
+            if (storedProductData) {
+                showMainContent();
+            }
         }
 
         function openThankYouAndClose() {
@@ -975,103 +932,42 @@
         function formatEmbedVideoUrl(url) {
             if (!url) return null;
             let videoUrl = url.trim();
-
             const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-            if (ytMatch && ytMatch[1]) {
-                return { type: 'iframe', src: `https://www.youtube.com/embed/${ytMatch[1]}` };
-            }
-
-            if (videoUrl.includes("facebook.com")) {
-                const encoded = encodeURIComponent(videoUrl);
-                return { type: 'iframe', src: `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false` };
-            }
-
+            if (ytMatch && ytMatch[1]) return { type: 'iframe', src: `https://www.youtube.com/embed/${ytMatch[1]}` };
+            if (videoUrl.includes("facebook.com")) return { type: 'iframe', src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false` };
             return { type: 'video', src: videoUrl };
         }
 
         function preloadImage(url) {
             return new Promise((resolve) => {
-                if (!url) return resolve(false);
-                if (memoryCache.images[url]) return resolve(true);
-
+                if (!url || memoryCache.images[url]) return resolve(true);
                 const img = new Image();
-                img.onload = () => {
-                    memoryCache.images[url] = img;
-                    resolve(true);
-                };
+                img.onload = () => { memoryCache.images[url] = img; resolve(true); };
                 img.onerror = () => resolve(false);
                 img.src = url;
             });
         }
 
-        function preloadVideo(url) {
-            return new Promise((resolve) => {
-                if (!url) return resolve(false);
-                const formatted = formatEmbedVideoUrl(url);
-                if (!formatted) return resolve(false);
-
-                if (formatted.type === 'iframe') {
-                    resolve(true);
-                } else {
-                    if (memoryCache.videos[url]) return resolve(true);
-                    const vid = document.createElement('video');
-                    vid.onloadeddata = () => {
-                        memoryCache.videos[url] = vid;
-                        resolve(true);
-                    };
-                    vid.onerror = () => resolve(false);
-                    vid.src = formatted.src;
-                }
-            });
-        }
-
-        /* Render Website and WhatsApp Cards dynamically if present */
         function renderSecondaryCards() {
             const secondaryGrid = document.getElementById("secondaryCardsGrid");
             if (!secondaryGrid) return;
-
-            let html = "";
-            let cardCount = 0;
-
+            let html = "", cardCount = 0;
             const websiteUrl = storedProductData?.website?.trim();
             const whatsappUrl = storedProductData?.whatsapp_link?.trim();
 
             if (websiteUrl) {
                 cardCount++;
-                html += `
-                    <a href="${websiteUrl}" target="_blank" class="action-card">
-                        <div class="action-card-icon website-bg">
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                            </svg>
-                        </div>
-                        <span class="action-card-title">Website</span>
-                    </a>
-                `;
+                html += `<a href="${websiteUrl}" target="_blank" class="action-card"><div class="action-card-icon website-bg"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg></div><span class="action-card-title">Website</span></a>`;
             }
-
             if (whatsappUrl) {
                 cardCount++;
-                html += `
-                    <a href="${whatsappUrl}" target="_blank" class="action-card">
-                        <div class="action-card-icon whatsapp-bg">
-                            <svg fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                            </svg>
-                        </div>
-                        <span class="action-card-title">WhatsApp</span>
-                    </a>
-                `;
+                html += `<a href="${whatsappUrl}" target="_blank" class="action-card"><div class="action-card-icon whatsapp-bg"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg></div><span class="action-card-title">WhatsApp</span></a>`;
             }
 
             if (cardCount > 0) {
                 secondaryGrid.innerHTML = html;
                 secondaryGrid.style.display = "grid";
-                if (cardCount === 1) {
-                    secondaryGrid.style.gridTemplateColumns = "1fr";
-                } else {
-                    secondaryGrid.style.gridTemplateColumns = "repeat(2, 1fr)";
-                }
+                secondaryGrid.style.gridTemplateColumns = cardCount === 1 ? "1fr" : "repeat(2, 1fr)";
             } else {
                 secondaryGrid.style.display = "none";
             }
@@ -1079,74 +975,56 @@
 
         async function renderSplashAndSocials() {
             if (!storedProductData) return;
-
-            const preloads = [];
-
-            // 1. RENDER SPLASH VIDEO AT THE TOP
             const splashVideoContainer = document.getElementById("splashVideoContainer");
             const videoUrl = storedProductData.splash_screen_video;
 
             if (splashVideoContainer && videoUrl && videoUrl.trim() !== "") {
                 const formatted = formatEmbedVideoUrl(videoUrl);
                 if (formatted) {
-                    if (formatted.type === 'iframe') {
-                        splashVideoContainer.innerHTML = `<iframe src="${formatted.src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-                    } else {
-                        splashVideoContainer.innerHTML = `<video src="${formatted.src}" controls autoplay muted playsinline></video>`;
-                    }
+                    splashVideoContainer.innerHTML = formatted.type === 'iframe'
+                        ? `<iframe src="${formatted.src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+                        : `<video src="${formatted.src}" controls autoplay muted playsinline></video>`;
                     splashVideoContainer.style.display = "block";
-                    preloads.push(preloadVideo(videoUrl));
                 }
             } else if (splashVideoContainer) {
                 splashVideoContainer.style.display = "none";
             }
 
-            // 2. RENDER SPLASH LOGO DIRECTLY BELOW VIDEO
             const splashLogoContainer = document.getElementById("splashLogoContainer");
             const logoData = storedProductData.splash_screen_logo;
-
             if (splashLogoContainer && logoData) {
-                let imageUrl = null;
-
-                if (typeof logoData === "object" && logoData.file_id) {
-                    imageUrl = `${API_BASE}/files/stream/${logoData.file_id}`;
-                } else if (typeof logoData === "object" && logoData.file && logoData.file.file_id) {
-                    imageUrl = `${API_BASE}/files/stream/${logoData.file.file_id}`;
-                } else if (typeof logoData === "string" && logoData.trim() !== "") {
-                    imageUrl = logoData.trim();
-                }
-
+                let imageUrl = typeof logoData === "object" ? `${API_BASE}/files/stream/${logoData.file_id || logoData.file?.file_id}` : logoData.trim();
                 if (imageUrl) {
-                    splashLogoContainer.innerHTML = `<img src="${imageUrl}" alt="Splash Logo" id="splashLogoImg" />`;
+                    splashLogoContainer.innerHTML = `<img src="${imageUrl}" alt="Splash Logo" />`;
                     splashLogoContainer.style.display = "flex";
-
-                    preloads.push(preloadImage(imageUrl));
-
-                    const imgElem = document.getElementById("splashLogoImg");
-                    if (imgElem) {
-                        imgElem.onerror = function () {
-                            console.error("Failed to load splash screen logo image from URL:", imageUrl);
-                            splashLogoContainer.style.display = "none";
-                        };
-                    }
                 } else {
                     splashLogoContainer.style.display = "none";
                 }
             } else if (splashLogoContainer) {
                 splashLogoContainer.style.display = "none";
             }
-
-            await Promise.all(preloads);
         }
 
-        async function collectFormData() {
+        async function collectFormData(statusValue = "active") {
             const form = document.getElementById("productDetailsForm");
             const formData = new FormData(form);
-            const payloadData = {};
+            const payloadData = { status: statusValue };
 
             for (let [key, val] of formData.entries()) {
-                if (!(val instanceof File)) {
-                    payloadData[key] = val.trim();
+                if (!(val instanceof File)) payloadData[key] = val.trim();
+            }
+
+            // Construct mfg_date from Month, Year, and optional Day
+            const month = document.getElementById("mfg_month")?.value || "";
+            const year = document.getElementById("mfg_year")?.value || "";
+            const rawDay = document.getElementById("mfg_day")?.value || "";
+
+            if (year && month) {
+                if (rawDay && parseInt(rawDay, 10) > 0) {
+                    const dayFormatted = String(rawDay).padStart(2, "0");
+                    payloadData.mfg_date = `${year}-${month}-${dayFormatted}`;
+                } else {
+                    payloadData.mfg_date = `${year}-${month}`;
                 }
             }
 
@@ -1162,14 +1040,7 @@
             for (let i = 1; i <= 3; i++) {
                 const link = formData.get(`video_link_${i}`);
                 const desc = formData.get(`video_desc_${i}`);
-
-                if (link || desc) {
-                    payloadData.product_videos.push({
-                        id: i,
-                        link: link || "",
-                        description: desc || ""
-                    });
-                }
+                if (link || desc) payloadData.product_videos.push({ id: i, link: link || "", description: desc || "" });
             }
 
             payloadData.certificates = [];
@@ -1178,22 +1049,8 @@
                 const fileInput = document.getElementById(`cert_file_${i}`);
                 const file = fileInput ? fileInput.files[0] : null;
                 const desc = formData.get(`cert_desc_${i}`);
-
-                let fileData = null;
-                if (file && file.size > 0) {
-                    fileData = await uploadImageToGridFS(file);
-                } else if (storedProductData && storedProductData.certificates?.[i - 1]?.file) {
-                    fileData = storedProductData.certificates[i - 1].file;
-                }
-
-                if (name || desc || fileData) {
-                    payloadData.certificates.push({
-                        id: i,
-                        name: name || "",
-                        file: fileData,
-                        description: desc || ""
-                    });
-                }
+                let fileData = file && file.size > 0 ? await uploadImageToGridFS(file) : storedProductData?.certificates?.[i - 1]?.file;
+                if (name || desc || fileData) payloadData.certificates.push({ id: i, name: name || "", file: fileData, description: desc || "" });
             }
 
             payloadData.product_images = [];
@@ -1201,41 +1058,60 @@
                 const fileInput = document.getElementById(`img_file_${i}`);
                 const file = fileInput ? fileInput.files[0] : null;
                 const desc = formData.get(`img_desc_${i}`);
-                const label = imageLabels[i - 1];
-
-                let fileData = null;
-                if (file && file.size > 0) {
-                    fileData = await uploadImageToGridFS(file);
-                } else if (storedProductData && storedProductData.product_images?.[i - 1]?.file) {
-                    fileData = storedProductData.product_images[i - 1].file;
-                }
-
-                if (desc || fileData) {
-                    payloadData.product_images.push({
-                        id: i,
-                        label: label,
-                        file: fileData,
-                        description: desc || ""
-                    });
-                }
+                let fileData = file && file.size > 0 ? await uploadImageToGridFS(file) : storedProductData?.product_images?.[i - 1]?.file;
+                if (desc || fileData) payloadData.product_images.push({ id: i, label: imageLabels[i - 1], file: fileData, description: desc || "" });
             }
 
             return payloadData;
         }
 
-        async function saveLocally() {
+        async function saveDraftToDB() {
+            const form = document.getElementById("productDetailsForm");
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const saveBtn = document.getElementById("saveBtn");
+            const currentLinkId = new URLSearchParams(window.location.search).get("id") || "";
+
+            if (!currentLinkId) {
+                console.error("Missing Lot ID in URL. Please open the URL with ?id=YOUR_ID parameter.");
+                return;
+            }
+
             try {
-                const data = await collectFormData();
-                const jsonStr = JSON.stringify(data);
-                localStorage.setItem("puretrace_local_data", jsonStr);
-                sessionStorage.setItem("puretrace_session_data", jsonStr);
-                storedProductData = data;
-                await renderSplashAndSocials();
-                renderSecondaryCards();
-                console.log("Product information saved locally on browser!");
+                saveBtn.disabled = true;
+                saveBtn.textContent = "Saving Draft...";
+
+                const payloadData = await collectFormData("draft");
+                const batchId = payloadData.batch_id || "DRAFT_TEMP";
+
+                const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        link_id: currentLinkId,
+                        batch_id: batchId,
+                        product_details: payloadData
+                    })
+                });
+
+                const resData = await updateRes.json().catch(() => ({}));
+
+                if (updateRes.ok) {
+                    storedProductData = payloadData;
+                    sessionStorage.setItem("puretrace_session_data", JSON.stringify(payloadData));
+                    console.log("Draft saved successfully!");
+                } else {
+                    console.error("Failed to save draft:", resData.error || resData.details || "Bad Request");
+                }
             } catch (err) {
-                console.error("Save error:", err);
-                console.log("Failed to save data locally.");
+                console.error("Save Draft Error:", err);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Save";
             }
         }
 
@@ -1247,6 +1123,14 @@
                     form.elements[key].value = data[key];
                 }
             });
+
+            // Restore Month, Year, and optional Day
+            if (data.mfg_date) {
+                const parts = data.mfg_date.split("-");
+                if (parts[0]) document.getElementById("mfg_year").value = parts[0];
+                if (parts[1]) document.getElementById("mfg_month").value = parts[1];
+                if (parts[2]) document.getElementById("mfg_day").value = parseInt(parts[2], 10);
+            }
 
             if (data.product_videos && Array.isArray(data.product_videos)) {
                 data.product_videos.forEach((vid) => {
@@ -1269,175 +1153,172 @@
             }
         }
 
+        function updateFeedbackLink(linkId, batchId) {
+            const feedbackBtn = document.getElementById("feedbackBtn");
+            let url = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
+            if (batchId) url += `&batch_id=${encodeURIComponent(batchId)}`;
+            feedbackBtn.href = url;
+        }
+
+        // function openSpecificationsPage() {
+        //     const urlParams = new URLSearchParams(window.location.search);
+        //     const linkId = urlParams.get("id") || "";
+        //     let targetUrl = `specifications.html?id=${encodeURIComponent(linkId)}`;
+        //     if (storedProductData?.batch_id) {
+        //         targetUrl += `&batch_id=${encodeURIComponent(storedProductData.batch_id)}`;
+        //     }
+        //     window.open(targetUrl, "_blank");
+        // }
         function openSpecificationsPage() {
             const urlParams = new URLSearchParams(window.location.search);
-            const linkId = urlParams.get("id") || "";
+            let linkId = urlParams.get("id");
 
-            if (linkId) {
-                window.open(`specifications.html?id=${encodeURIComponent(linkId)}`, "_blank");
-            } else {
-                if (storedProductData) {
-                    const jsonStr = JSON.stringify(storedProductData);
-                    localStorage.setItem("puretrace_local_data", jsonStr);
-                    sessionStorage.setItem("puretrace_session_data", jsonStr);
-                    window.open("specifications.html", "_blank");
+            // Fallback to stored state if missing from URL
+            if (!linkId && storedProductData?.link_id) {
+                linkId = storedProductData.link_id;
+            }
+
+            if (!linkId) {
+                console.error("No Product ID available to open specifications page.");
+                return;
+            }
+
+            let targetUrl = `specifications.html?id=${encodeURIComponent(linkId)}`;
+
+            // Ensure the batch_id of the currently displayed/selected batch is attached
+            if (storedProductData?.batch_id) {
+                targetUrl += `&batch_id=${encodeURIComponent(storedProductData.batch_id)}`;
+            }
+
+            window.open(targetUrl, "_blank");
+        }
+
+        function handleFilterChange() {
+            const selectedDate = document.getElementById("filterMfgDate").value; // Format: YYYY-MM
+            const selectedTime = document.getElementById("filterMfgTime").value;
+            const noRecordsMsg = document.getElementById("noRecordsMsg");
+            const timeGroup = document.getElementById("filterTimeGroup");
+
+            noRecordsMsg.style.display = "none";
+            if (!selectedDate) return;
+
+            const dateMatches = activeProductBatches.filter(b => b.mfg_date && b.mfg_date.startsWith(selectedDate));
+
+            if (dateMatches.length === 0) {
+                noRecordsMsg.style.display = "block";
+                document.getElementById("actionCardsGrid").style.display = "none";
+                timeGroup.style.display = "none";
+                return;
+            }
+
+            if (dateMatches.length === 1) {
+                timeGroup.style.display = "none";
+                loadBatchDisplay(dateMatches[0]);
+                return;
+            }
+
+            timeGroup.style.display = "flex";
+
+            if (selectedTime) {
+                const timeMatches = dateMatches.filter(b => b.mfg_time === selectedTime);
+                if (timeMatches.length === 0) {
+                    noRecordsMsg.style.display = "block";
+                    document.getElementById("actionCardsGrid").style.display = "none";
                 } else {
-                    console.log("No product specifications are available to display.");
+                    loadBatchDisplay(timeMatches[0]);
                 }
             }
         }
 
-        async function captureLocationOnLoad() {
-            if (!navigator.geolocation) {
-                console.log("no location permission");
-                return;
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const qrId = urlParams.get("id") || "";
-
-            if (!qrId) {
-                console.log("No QR ID found in URL. Scan record skipped.");
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                async (pos) => {
-                    const lat = Number(pos.coords.latitude.toFixed(5));
-                    const lng = Number(pos.coords.longitude.toFixed(5));
-                    const timestamp = new Date().toISOString();
-
-                    try {
-                        if (typeof recordQrScan === "function") {
-                            await recordQrScan({
-                                document: {
-                                    qr_id: qrId,
-                                    latitude: lat,
-                                    longitude: lng,
-                                    scanned_at: timestamp,
-                                    type: "puretrace"
-                                }
-                            });
-                        }
-                    } catch (err) {
-                        console.error("Scan record failed:", err);
-                    }
-                },
-                (err) => {
-                    console.error("Geolocation denied or failed:", err);
-                },
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
+        function loadBatchDisplay(batch) {
+            storedProductData = batch;
+            sessionStorage.setItem("puretrace_session_data", JSON.stringify(batch));
+            const linkId = new URLSearchParams(window.location.search).get("id") || "";
+            updateFeedbackLink(linkId, batch.batch_id);
+            showMainContent();
         }
 
-        function updateFeedbackLink(linkId, batchId) {
-            const feedbackBtn = document.getElementById("feedbackBtn");
-            let url = `https://reviewanalysis.uxlivinglab.org/product-feedback?id=${encodeURIComponent(linkId)}`;
-
-            if (batchId) {
-                url += `&batch_id=${encodeURIComponent(batchId)}`;
-            }
-
-            feedbackBtn.href = url;
-        }
-
-        // Page Load Logic
-        (async function initBatchCheck() {
-            captureLocationOnLoad();
+        // Main Page Initialization
+        (async function initLotCheck() {
             const urlParams = new URLSearchParams(window.location.search);
             const linkId = urlParams.get("id") || "";
 
             if (linkId) {
                 document.getElementById("urlIdDisplay").textContent = `ID: ${linkId}`;
                 const modalLinkIdElem = document.getElementById("modalLinkIdDisplay");
-                if (modalLinkIdElem) {
-                    modalLinkIdElem.textContent = `ID: ${linkId}`;
-                }
+                if (modalLinkIdElem) modalLinkIdElem.textContent = `ID: ${linkId}`;
             }
 
             updateFeedbackLink(linkId, "");
 
             if (!linkId) {
-                await showMainContent();
+                showModal();
                 return;
             }
 
-            const fetchWithTimeout = (url, options, timeout = 7000) => {
-                return Promise.race([
-                    fetch(url, options),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), timeout))
-                ]);
-            };
-
-            let isDataFetchedFromDB = false;
-
             try {
-                const res = await fetchWithTimeout(`${API_BASE}/get_medsign_link/${linkId}`);
+                const res = await fetch(`${API_BASE}/get_medsign_link/${linkId}`);
                 if (res.ok) {
                     const data = await res.json();
                     const record = data?.record;
 
-                    if (record && record.product_details) {
-                        storedProductData = record.product_details;
-                        sessionStorage.setItem("puretrace_session_data", JSON.stringify(storedProductData));
-                        restoreLocalData(storedProductData);
-                        await renderSplashAndSocials();
-                        renderSecondaryCards();
-                        isDataFetchedFromDB = true;
-                    }
+                    let details = record?.product_details || [];
+                    if (!Array.isArray(details)) details = details ? [details] : [];
 
-                    const fetchedBatchId = record?.batch_id || record?.product_details?.batch_id || "";
-                    updateFeedbackLink(linkId, fetchedBatchId);
+                    allProductBatches = details;
+                    activeProductBatches = details.filter(b => b.status !== "draft");
+                    currentDraftBatch = details.find(b => b.status === "draft");
 
-                    if (!record || !record.batch_id || record.batch_id.trim() === "") {
+                    // 1. If a Draft exists, immediately open pre-filled form
+                    if (currentDraftBatch) {
+                        storedProductData = currentDraftBatch;
+                        restoreLocalData(currentDraftBatch);
                         showModal();
-                    } else {
-                        await showMainContent();
+                        hidePageSpinner();
+                        return;
                     }
-                } else {
-                    await showMainContent();
+
+                    // 2. If 0 active batches, show form for new registration
+                    if (activeProductBatches.length === 0) {
+                        showModal();
+                        hidePageSpinner();
+                        return;
+                    }
+
+                    // 3. If 1 active batch, load directly
+                    if (activeProductBatches.length === 1) {
+                        loadBatchDisplay(activeProductBatches[0]);
+                        hidePageSpinner();
+                        return;
+                    }
+
+                    // 4. If >1 active batches, render Date Filter UI
+                    document.getElementById("batchFilterContainer").style.display = "block";
+                    hidePageSpinner();
+                    document.getElementById("mainContent").classList.add("visible");
+                    return;
                 }
             } catch (err) {
-                console.warn("API check bypassed or timed out:", err);
-                await showMainContent();
-            } finally {
-                hidePageSpinner();
+                console.warn("Error checking lot record:", err);
             }
 
-            if (!isDataFetchedFromDB) {
-                const savedSession = sessionStorage.getItem("puretrace_session_data");
-                const savedLocal = localStorage.getItem("puretrace_local_data");
-                const dataToRestore = savedSession || savedLocal;
+            hidePageSpinner();
+            showModal();
 
-                if (dataToRestore) {
-                    try {
-                        storedProductData = JSON.parse(dataToRestore);
-                        restoreLocalData(storedProductData);
-                        await renderSplashAndSocials();
-                        renderSecondaryCards();
-                    } catch (e) { }
-                }
-            }
-
-            // Form Submit Action
+            // Submit Action
             const form = document.getElementById("productDetailsForm");
             const submitBtn = document.getElementById("submitBatchBtn");
             const btnText = document.getElementById("btnText");
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
-
-                console.log("Starting batch form submission process...");
                 submitBtn.disabled = true;
                 btnText.innerHTML = `<span class="spinner-btn"></span> Submitting...`;
 
                 try {
-                    const payloadData = await collectFormData();
-                    console.log("Compiled Payload:", payloadData);
+                    const payloadData = await collectFormData("active");
+                    const currentLinkId = new URLSearchParams(window.location.search).get("id") || linkId;
 
-                    const currentLinkId = new URLSearchParams(window.location.search).get("id") || linkId || "";
-
-                    console.log(`Sending POST request to ${API_BASE}/update_batch_id...`);
                     const updateRes = await fetch(`${API_BASE}/update_batch_id`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -1448,35 +1329,15 @@
                         })
                     });
 
-                    console.log("Response status code:", updateRes.status);
-
-                    if (!updateRes.ok) {
-                        const errorText = await updateRes.text();
-                        console.error(`Server returned error status ${updateRes.status}:`, errorText);
-                        console.log(`Submission failed (${updateRes.status}): ${errorText}`);
-                        return;
-                    }
-
-                    const contentType = updateRes.headers.get("content-type");
-                    if (!contentType || !contentType.includes("application/json")) {
-                        const htmlResponse = await updateRes.text();
-                        console.error("Expected JSON response but received non-JSON:", htmlResponse);
-                        console.log("Server configuration error: Received standard HTML instead of JSON.");
-                        return;
-                    }
-
-                    const result = await updateRes.json();
-                    console.log("Submission successful:", result);
+                    if (!updateRes.ok) throw new Error("Submission failed");
 
                     storedProductData = payloadData;
                     sessionStorage.setItem("puretrace_session_data", JSON.stringify(payloadData));
-                    localStorage.removeItem("puretrace_local_data");
+                    console.log("Submission successful!", payloadData);
                     closeModal();
-                    console.log("Product registration submitted successfully!");
-
+                    loadBatchDisplay(payloadData);
                 } catch (err) {
-                    console.error("Error submitting details:", err);
-                    console.log(`Frontend or Connection Error: ${err.message}`);
+                    console.error("Submission error:", err);
                 } finally {
                     submitBtn.disabled = false;
                     btnText.textContent = "Submit";
@@ -1484,7 +1345,6 @@
             });
         })();
     </script>
-
 </body>
 
 </html>

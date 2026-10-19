@@ -827,7 +827,6 @@ app.post("/api/generate_medsign_links", async (req, res) => {
 
     await ensureLinksCollection();
 
-    const batchId = "";
     const documents = [];
     const generatedUrls = [];
 
@@ -839,10 +838,10 @@ app.post("/api/generate_medsign_links", async (req, res) => {
         link_id: unique8DigitId,
         email: String(email),
         link_url: linkUrl,
-        batch_id: batchId,
+        batch_id: "",
         client_name: "",
         client_no: [],
-        product_details: {},
+        product_details: [], // Initialized as array for multi-batch storage
         created_at: new Date().toISOString(),
         status: "active"
       });
@@ -856,8 +855,6 @@ app.post("/api/generate_medsign_links", async (req, res) => {
       documents: documents
     };
 
-    console.log(`  [generate_medsign_links] Sending ${documents.length} document(s) to DataCube /crud...`);
-
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
       method: "POST",
       headers: authHeaders(),
@@ -865,8 +862,6 @@ app.post("/api/generate_medsign_links", async (req, res) => {
     });
 
     const data = await r.json();
-    console.log("  [generate_medsign_links] DataCube result:", r.status, JSON.stringify(data));
-
     if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
 
     res.json({
@@ -881,7 +876,7 @@ app.post("/api/generate_medsign_links", async (req, res) => {
   }
 });
 
-// ---------- GET LINK DETAILS BY LINK_ID ----------
+// ---------- GET LINK DETAILS BY LINK_ID (LOT ID) ----------
 app.get("/api/get_medsign_link/:link_id", async (req, res) => {
   try {
     const { link_id } = req.params;
@@ -907,12 +902,25 @@ app.get("/api/get_medsign_link/:link_id", async (req, res) => {
 
     const record = records[0];
 
-    // Safely parse product_details if stored as JSON string
+    // 1. Safely parse product_details if stored as a JSON string
     if (typeof record.product_details === "string") {
       try {
         record.product_details = JSON.parse(record.product_details);
       } catch (e) {
         console.warn("Could not parse product_details string:", e.message);
+        record.product_details = [];
+      }
+    }
+
+    // 2. Ensure product_details is always returned as an Array for Lot ID / Multiple Batches
+    if (!record.product_details) {
+      record.product_details = [];
+    } else if (!Array.isArray(record.product_details)) {
+      // Backward compatibility: Convert existing single object to a 1-item array
+      if (Object.keys(record.product_details).length > 0) {
+        record.product_details = [record.product_details];
+      } else {
+        record.product_details = [];
       }
     }
 
@@ -923,31 +931,86 @@ app.get("/api/get_medsign_link/:link_id", async (req, res) => {
   }
 });
 
-// ---------- UPDATE BATCH_ID AND PRODUCT DETAILS ----------
+// ---------- UPDATE PRODUCT DETAILS ARRAY BY LOT ID (LINK_ID) ----------
 app.post("/api/update_batch_id", async (req, res) => {
   try {
     const { link_id, batch_id, product_details } = req.body || {};
-    if (!link_id || !batch_id) {
-      return res.status(400).json({ error: "link_id and batch_id are required" });
+
+    if (!link_id) {
+      console.error("  [update_batch_id] Missing link_id");
+      return res.status(400).json({ error: "link_id (Lot ID) is required" });
     }
 
-    // console.log("Incoming req.body:", JSON.stringify(req.body, null, 2));
+    console.log(`  [update_batch_id] Processing Lot ID: ${link_id} | Batch ID: ${batch_id || product_details?.batch_id}`);
 
-    const updateData = {
-      batch_id: String(batch_id),
-      product_details: product_details || {},
-      // updated_at: new Date().toISOString()
+    // 1. Query existing document in DataCube using Lot ID (link_id)
+    const filtersParam = JSON.stringify({ link_id: String(link_id) });
+    const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_links&filters=${encodeURIComponent(filtersParam)}&page=1&page_size=1`;
+
+    const existingRes = await fetch(queryUrl, {
+      method: "GET",
+      headers: authHeaders()
+    });
+
+    let existingDetailsArray = [];
+    if (existingRes.ok) {
+      const existingJson = await existingRes.json();
+      const existingDocs = existingJson?.data || [];
+      if (existingDocs.length > 0) {
+        let rawDetails = existingDocs[0].product_details;
+
+        if (typeof rawDetails === "string") {
+          try {
+            rawDetails = JSON.parse(rawDetails);
+          } catch (e) {
+            rawDetails = [];
+          }
+        }
+
+        if (Array.isArray(rawDetails)) {
+          existingDetailsArray = rawDetails;
+        } else if (rawDetails && typeof rawDetails === "object" && Object.keys(rawDetails).length > 0) {
+          existingDetailsArray = [rawDetails];
+        }
+      }
+    }
+
+    // 2. Format and sanitize batch entry
+    const effectiveBatchId = String(batch_id || product_details?.batch_id || "DRAFT_TEMP");
+    const sanitizedProductDetails = JSON.parse(JSON.stringify(product_details || {}));
+
+    const newBatchEntry = {
+      ...sanitizedProductDetails,
+      batch_id: effectiveBatchId,
+      updated_at: new Date().toISOString()
     };
 
+    // Replace existing draft or matching batch entry, otherwise append
+    const existingIndex = existingDetailsArray.findIndex(
+      (item) => item.status === "draft" || (item.batch_id && item.batch_id === effectiveBatchId)
+    );
+
+    if (existingIndex !== -1) {
+      existingDetailsArray[existingIndex] = newBatchEntry;
+    } else {
+      existingDetailsArray.push(newBatchEntry);
+    }
+
+    // 3. Prepare payload for DataCube PUT request
     const payload = {
       database_id: DB_ID,
       collection_name: "medsign_links",
       filters: { link_id: String(link_id) },
-      update_data: updateData,
+      update_data: {
+        product_details: existingDetailsArray,
+        updated_at: new Date().toISOString()
+      },
       update_all_fields: false,
       update_many: true,
       upsert: false
     };
+
+    console.log("  [update_batch_id] Sending PUT to DataCube...");
 
     const r = await fetch(`${DATACUBE_BASE}/crud`, {
       method: "PUT",
@@ -955,31 +1018,36 @@ app.post("/api/update_batch_id", async (req, res) => {
       body: JSON.stringify(payload)
     });
 
-    // 1. Read response as raw text first
     const rawText = await r.text();
-
-    // 2. Safely parse JSON or handle HTML errors
     let data;
     try {
       data = JSON.parse(rawText);
     } catch (parseErr) {
-      console.error(`  [update_batch_id] Upstream returned non-JSON response (${r.status}):`);
-      console.error("  " + rawText.slice(0, 300)); // Log first 300 chars of HTML
+      console.error(`  [update_batch_id] Upstream non-JSON response (${r.status}): ${rawText.slice(0, 200)}`);
       return res.status(r.status || 500).json({
-        error: `DataCube returned HTML instead of JSON (${r.status})`,
+        error: `DataCube returned invalid response (${r.status})`,
         details: rawText.slice(0, 200)
       });
     }
 
     if (!r.ok) {
-      console.error(`  [update_batch_id] DataCube Error (${r.status}):`, data);
-      return res.status(r.status).json({ error: "DataCube update failed", details: data });
+      console.error(`  [update_batch_id] DataCube PUT Error (${r.status}):`, JSON.stringify(data));
+      return res.status(r.status).json({
+        error: "DataCube update rejected request",
+        details: data
+      });
     }
 
-    res.json({ success: true, updated: data });
+    console.log(`  [update_batch_id] SUCCESS! Total batches in Lot ${link_id}: ${existingDetailsArray.length}`);
+    return res.json({
+      success: true,
+      updated: data,
+      total_batches: existingDetailsArray.length
+    });
+
   } catch (err) {
-    console.error("  [update_batch_id] ERROR:", err.message);
-    res.status(500).json({ error: "Failed to update batch_id and product details" });
+    console.error("  [update_batch_id] EXCEPTION:", err.message);
+    return res.status(500).json({ error: "Failed to update batch_id and product details", details: err.message });
   }
 });
 

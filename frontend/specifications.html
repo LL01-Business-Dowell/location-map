@@ -758,8 +758,10 @@
         <img id="lightboxImg" src="" alt="Enlarged View" />
     </div>
 
+    <script src="config.js"></script>
+    <script src="api.js"></script>
     <script>
-        const API_BASE = "https://location-map-a89a.onrender.com/api";
+        const API_BASE = PROXY_BASE;
 
         const fieldLabels = {
             product_name: "Product Name",
@@ -798,7 +800,7 @@
                 window.close();
             }, 100);
             setTimeout(() => {
-                alert("Your browser security settings prevented closing this tab. Please close it manually.");
+                console.warn("Browser prevented closing tab.");
             }, 500);
         }
 
@@ -905,13 +907,9 @@
 
             // Render Prominent Customer Care Card Banner
             const ccPhone = data.customer_care_phone;
-            const ccContact = data.customer_care_contact;
             if (ccPhone && ccPhone.toString().trim() !== "") {
                 const cleanPhone = ccPhone.toString().trim();
                 document.getElementById("ccPhoneDisplay").textContent = cleanPhone;
-                // if (ccContact && ccContact.toString().trim() !== "") {
-                //     document.getElementById("ccContactDisplay").textContent = `Contact Person: ${ccContact.toString().trim()}`;
-                // }
                 document.getElementById("ccCallBtn").href = `tel:${cleanPhone.replace(/\s+/g, '')}`;
                 document.getElementById("customerCareBanner").style.display = "flex";
             }
@@ -1096,14 +1094,27 @@
         async function fetchProductData() {
             const urlParams = new URLSearchParams(window.location.search);
             const linkId = urlParams.get("id");
+            const selectedBatchId = urlParams.get("batch_id");
+
+            // 1. Fallback to active session storage if available
+            const sessionDataStr = sessionStorage.getItem("puretrace_session_data");
+            let sessionData = null;
+            if (sessionDataStr) {
+                try {
+                    sessionData = JSON.parse(sessionDataStr);
+                } catch (e) { }
+            }
+
+            // If sessionData directly matches the requested batch, render it immediately
+            if (sessionData && (!selectedBatchId || String(sessionData.batch_id) === String(selectedBatchId))) {
+                renderData(sessionData);
+                return;
+            }
 
             if (!linkId) {
-                const savedLocal = localStorage.getItem("puretrace_local_data");
-                if (savedLocal) {
-                    try {
-                        renderData(JSON.parse(savedLocal));
-                        return;
-                    } catch (e) { }
+                if (sessionData) {
+                    renderData(sessionData);
+                    return;
                 }
                 showError("No Product ID specified in the URL.");
                 return;
@@ -1113,10 +1124,27 @@
                 const res = await fetch(`${API_BASE}/get_medsign_link/${linkId}`);
                 if (res.ok) {
                     const responseData = await res.json();
-                    if (responseData?.record?.product_details) {
-                        renderData(responseData.record.product_details);
+                    const record = responseData?.record;
+
+                    let detailsArray = record?.product_details || [];
+                    if (!Array.isArray(detailsArray)) detailsArray = detailsArray ? [detailsArray] : [];
+
+                    let targetBatch = null;
+
+                    // Match requested batch_id from URL
+                    if (selectedBatchId) {
+                        targetBatch = detailsArray.find(b => String(b.batch_id) === String(selectedBatchId));
+                    }
+
+                    // Fallback to first non-draft batch or first array element
+                    if (!targetBatch) {
+                        targetBatch = detailsArray.find(b => b.status !== "draft") || detailsArray[0];
+                    }
+
+                    if (targetBatch) {
+                        renderData(targetBatch);
                     } else {
-                        showError("No product specifications available for this ID.");
+                        showError("No product specifications available for this batch.");
                     }
                 } else {
                     showError("Failed to load specifications from database.");

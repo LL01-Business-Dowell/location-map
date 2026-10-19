@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>DoWell MedSign</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,9 +17,13 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
         body {
-            margin: 0;
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -27,7 +31,7 @@
             background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
-            padding: 20px;
+            padding: 16px;
         }
 
         @keyframes gradientShift {
@@ -47,128 +51,81 @@
         .card {
             background: white;
             backdrop-filter: blur(10px);
-            padding: 32px 20px;
-            border-radius: 24px;
+            padding: 24px 20px 20px;
+            border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
-            max-width: 900px;
+            max-width: 760px;
             width: 100%;
-        }
-
-        h2 {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        p {
-            font-size: 17px;
-            color: #64748b;
-            margin-bottom: 20px;
-        }
-
-        .iframe-container {
-            width: 100%;
-            height: 380px;
-            border-radius: 16px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 14px 36px;
-            font-size: 17px;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            cursor: pointer;
-        }
-
-        button:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-        }
-
-        .feedback-btn {
-            padding: 10px 18px;
-            border-radius: 10px;
-            border: 1px solid #c7d2fe;
-            background: white;
-            font-weight: 600;
-            cursor: pointer;
-            color: black;
-        }
-
-        .feedback-btn.selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-
-        .status {
-            margin-top: 12px;
-            font-size: 14px;
-            min-height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .logo-container {
-            color: white;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .logo-container img {
             width: 100%;
-            max-height: 120px;
+            max-height: 70px;
             object-fit: contain;
-        }
-
-        .iframe-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .clinical-check {
             text-align: left;
             background: #f8fafc;
-            padding: 20px;
-            border-radius: 16px;
-            margin: 20px 0;
+            padding: 16px 20px;
+            border-radius: 14px;
+            margin-bottom: 12px;
             border: 1px solid #e2e8f0;
         }
 
         .clinical-check h3 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .confirm-text {
-            font-size: 15px;
             margin-bottom: 10px;
-            color: #334155;
+            text-align: center;
+            color: #0f172a;
         }
 
         .check-list {
-            padding-left: 20px;
-            margin-bottom: 16px;
+            padding-left: 18px;
+            margin-bottom: 14px;
         }
 
         .check-list li {
             margin-bottom: 8px;
-            font-size: 14px;
-            color: #475569;
+            font-size: 13.5px;
+            line-height: 1.45;
+            color: #334155;
+        }
+
+        .check-list li:last-child {
+            margin-bottom: 0;
         }
 
         .clinical-buttons {
             display: flex;
             gap: 12px;
             justify-content: center;
+        }
+
+        button {
+            padding: 11px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:disabled {
+            background: #94a3b8 !important;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         .confirm-btn {
@@ -180,6 +137,46 @@
             background: #ef4444;
             color: white;
         }
+
+        .feedback-box {
+            margin-bottom: 8px;
+        }
+
+        .feedback-title {
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .feedback-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #c7d2fe;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            color: #1e293b;
+        }
+
+        .feedback-btn.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .status {
+            font-size: 13px;
+            min-height: 18px;
+            color: #64748b;
+        }
     </style>
 </head>
 
@@ -189,23 +186,14 @@
             <img src="assets/logo.png" alt="Medsign Logo">
         </div>
 
-        <div class="iframe-container">
-            <img src="assets/banner.png" alt="Medsign Banner">
-        </div>
-
         <div class="clinical-check">
-            <h3>Important Safety Information</h3>
+            <h3>Important Safety & Usage Information</h3>
 
             <ul class="check-list">
-                <li><b>Understand Your Doctor:</b> This audio helps you understand your Doctor’s handwriting
-                    and instructions.</li>
-                <li><b>The Label/Prescription is Boss:</b> Always follow the printed instructions on your
-                    medicine strip, box, or paper prescription.</li>
-                <li><b>Stop if Different:</b> If the voice says something different than what is written on the
-                    medicine or your prescription paper, DO NOT take the medicine. Talk to your chemist or
-                    doctor immediately.</li>
-                <li><b>For You Only:</b> This audio and medicine are for you. Sharing medicine with others is
-                    dangerous.</li>
+                <li><b>Audio Guidance Only:</b> This recording supplements your clinician’s instructions to improve clarity and accessibility. It does not replace your official prescription.</li>
+                <li><b>Follow Printed Instructions:</b> Always adhere to the dosage, timing, and directions printed on your official prescription document and/or medication packaging.</li>
+                <li><b>Report Discrepancies Immediately:</b> If the audio instructions differ from your original consultation or medication label, do not take the medicine. Immediately contact your pharmacist or prescribing clinician.</li>
+                <li><b>For Your Use Only:</b> This prescription and audio guidance are intended solely for you. Sharing prescription medication with others can cause serious harm.</li>
             </ul>
 
             <div class="clinical-buttons">
@@ -214,11 +202,11 @@
             </div>
         </div>
 
-        <div id="feedbackBox" style="margin: 16px 0;">
-            <p style="margin-bottom: 10px; font-weight: 600;">
+        <div class="feedback-box" id="feedbackBox">
+            <p class="feedback-title">
                 Would you recommend our product to your friends?
             </p>
-            <div style="display: flex; gap: 12px; justify-content: center;">
+            <div class="feedback-buttons">
                 <button class="feedback-btn" data-value="Yes">Yes</button>
                 <button class="feedback-btn" data-value="Maybe">Maybe</button>
                 <button class="feedback-btn" data-value="No">No</button>
