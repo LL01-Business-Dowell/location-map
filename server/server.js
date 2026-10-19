@@ -1137,6 +1137,91 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
   }
 });
 
+// ---------- PUBLIC API: GET CLIENT NAME & LOGO BY QR CODE ID ----------
+app.get("/api/get_client_info/:qr_id", async (req, res) => {
+  console.log("  [get_client_info] qr_id:", req.params.qr_id);
+  try {
+    const { qr_id } = req.params;
+
+    if (!qr_id) {
+      return res.status(400).json({ error: "QR Code ID is required" });
+    }
+
+    // 1. Query the medsign_links collection in DataCube by link_id (QR ID)
+    const filters = JSON.stringify({ link_id: String(qr_id) });
+    const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_links&filters=${encodeURIComponent(filters)}&page=1&page_size=1`;
+
+    const r = await fetch(queryUrl, {
+      method: "GET",
+      headers: authHeaders()
+    });
+
+    const data = await r.json();
+    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+
+    const records = data?.data || [];
+    if (records.length === 0) {
+      return res.status(404).json({ error: "QR Code ID not found" });
+    }
+
+    const record = records[0];
+
+    // Safely parse product_details if stored as JSON string
+    let productDetails = record.product_details || [];
+    if (typeof productDetails === "string") {
+      try {
+        productDetails = JSON.parse(productDetails);
+      } catch (e) {
+        productDetails = [];
+      }
+    }
+
+    // Select primary batch or active detail entry
+    const primaryBatch = Array.isArray(productDetails)
+      ? (productDetails.find(b => b.status !== "draft") || productDetails[0] || {})
+      : productDetails;
+
+    // Extract name
+    const clientName = record.client_name || primaryBatch.marketed_by || primaryBatch.manufactured_by || "Unknown Client";
+
+    // Extract logo / splash image
+    let logoUrl = null;
+    let logoFileId = null;
+
+    if (primaryBatch.product_images && Array.isArray(primaryBatch.product_images) && primaryBatch.product_images.length > 0) {
+      const firstImg = primaryBatch.product_images[0];
+      logoFileId = firstImg.file_id || firstImg.file || firstImg.id;
+    } else if (primaryBatch.img_file_1) {
+      logoFileId = primaryBatch.img_file_1;
+    }
+
+    // Format logo image stream URL
+    if (logoFileId) {
+      if (typeof logoFileId === "string" && (logoFileId.startsWith("http://") || logoFileId.startsWith("https://") || logoFileId.startsWith("data:"))) {
+        logoUrl = logoFileId;
+      } else {
+        logoUrl = `https://location-map-a89a.onrender.com/api/files/stream/${logoFileId}`;
+      }
+    }
+
+    // Fallback logo if no image exists in product details
+    if (!logoUrl) {
+      logoUrl = "https://location-map-1.onrender.com/assets/logo.png";
+    }
+
+    res.json({
+      success: true,
+      qr_id: String(qr_id),
+      client_name: clientName,
+      splash_logo_url: logoUrl
+    });
+
+  } catch (err) {
+    console.error("  [get_client_info] ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch client information", details: err.message });
+  }
+});
+
 // ===== START SERVER FOR RENDER =====
 app.listen(PORT, () => {
   console.log(`✓ QR Manager Server running on port ${PORT}`);
