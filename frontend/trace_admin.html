@@ -4,315 +4,290 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PureTrace Admin - Supply Chain Data Entry</title>
+    <title>PureTrace Admin - Supply Chain Control Panel</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        :root {
-            --primary-color: #2E7D32;
-            --primary-light: #E8F5E9;
-            --bg-color: #F4F6F5;
-            --card-bg: #FFFFFF;
-            --text-main: #333333;
-            --text-muted: #666666;
-            --border-color: #E0E0E0;
-            --danger-color: #D32F2F;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            padding: 20px;
-            position: relative;
-        }
-
-        /* Full Screen Loader */
-        .loader-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            transition: opacity 0.3s ease;
-        }
-
-        .spinner {
-            width: 42px;
-            height: 42px;
-            border: 4px solid var(--border-color);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-        }
-
-        .loader-text {
-            margin-top: 14px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .header {
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-
-        .header h2 {
-            font-size: 18px;
-            color: var(--primary-color);
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .admin-form-panel {
-            background: #FAFAFA;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-        }
-
-        .form-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .form-step-block {
-            background: #FFFFFF;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        .form-step-block h4 {
-            font-size: 12px;
-            color: var(--primary-color);
-            margin-bottom: 6px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 6px;
-            align-items: center;
-        }
-
-        input {
-            padding: 8px;
-            font-size: 12px;
-            border: 1px solid #CCC;
-            border-radius: 4px;
-            outline: none;
-            width: 100%;
-        }
-
-        input:focus {
-            border-color: var(--primary-color);
-        }
-
-        .btn-add {
-            background: var(--primary-light);
-            color: var(--primary-color);
-            border: 1px dashed var(--primary-color);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .btn-remove {
-            background: #FFEBEE;
-            color: var(--danger-color);
-            border: 1px solid var(--danger-color);
-            padding: 6px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-
-        .btn-submit:disabled {
-            background: #94A3B8;
-            cursor: not-allowed;
-        }
-
-        .status-message {
-            display: none;
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .status-message.success {
-            background: #E8F5E9;
-            color: #2E7D32;
-            border: 1px solid #A5D6A7;
-        }
-
-        .status-message.error {
-            background: #FFEBEE;
-            color: #C62828;
-            border: 1px solid #EF9A9A;
-        }
-
-        .view-link-box {
-            display: none;
-            margin-top: 12px;
-            padding: 10px;
-            background: var(--primary-light);
-            border: 1px solid var(--primary-color);
-            border-radius: 6px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .view-link-box a {
-            color: var(--primary-color);
-            font-weight: bold;
-            text-decoration: underline;
-        }
+        .modal { transition: opacity 0.25s ease; }
+        body { background-color: #f8fafc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     </style>
 </head>
 
-<body>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col relative">
 
-    <div class="container">
-        <!-- Loader Overlay -->
-        <div class="loader-overlay" id="loader">
-            <div class="spinner"></div>
-            <div class="loader-text">Loading Trace Form...</div>
+    <!-- Loader Overlay -->
+    <div class="fixed inset-0 bg-white/95 z-50 flex flex-col justify-center items-center transition-opacity duration-300" id="loader">
+        <div class="w-12 h-12 border-4 border-slate-200 border-t-emerald-600 rounded-full animate-spin"></div>
+        <div class="mt-3 text-sm font-semibold text-emerald-800">Loading...</div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-emerald-800 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-seedling text-xl"></i></div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">PureTrace DPP Admin</h1>
+                    <p class="text-xs text-emerald-200">Supply Chain Lifecycle Configuration Control Panel</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="bg-emerald-700 text-emerald-100 text-xs px-3 py-1.5 rounded-full font-medium" id="batch-id-display">Loading QR ID...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 py-6 w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left Column: Dynamic Supply Chain Control Panel -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-route text-emerald-600 mr-2"></i>Supply Chain Lifecycle Configuration</h2>
+                    <span class="text-xs text-slate-500">Multi-Entry GPS & Date Logging</span>
+                </div>
+                <p class="text-sm text-slate-600 mb-6">Configure multiple locations, dates, and parameters across the lifecycle stages.</p>
+
+                <!-- Product Specs & Batch Info -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-tag mr-1"></i> Product & Batch Overview</h3>
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Product Name</label>
+                            <input type="text" id="proc-product" oninput="updateLivePreview()" class="w-full p-2 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-600" placeholder="Product Name (e.g. Organic Salted Chips - 50g)" />
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">Batch ID</label>
+                                <input type="text" id="proc-batch" oninput="updateLivePreview()" class="w-full p-2 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-600" placeholder="Batch ID (e.g. BATCH-2026-0918)" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1">MRP</label>
+                                <input type="text" id="proc-mrp" class="w-full p-2 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-600" placeholder="MRP (e.g. 100)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: FARM & SOURCING -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-seedling mr-1"></i> Step 1: Farm & Sourcing Entries</h3>
+                    <div id="farm-list" class="space-y-3 mb-3"></div>
+                    <button type="button" onclick="addFarmEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Another Farm</button>
+                </div>
+
+                <!-- STEP 2: PROCESSING & PACKAGING -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-industry mr-1"></i> Step 2: Processing & Packing Facilities</h3>
+                    <div id="facility-list" class="space-y-3 mb-3"></div>
+                    <button type="button" onclick="addFacilityEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Processing Facility</button>
+                </div>
+
+                <!-- STEP 3: TRANSIT WAYPOINTS -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-truck-fast mr-1"></i> Step 3: Transit Waypoints</h3>
+                    <div id="transit-list" class="space-y-3 mb-3"></div>
+                    <button type="button" onclick="addTransitEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Transit Waypoint</button>
+                </div>
+
+                <!-- STEP 5: END-OF-LIFE -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-6">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-recycle mr-1"></i> Step 4: End-of-Life & Recycling</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Material Specification</label>
+                            <input type="text" id="disp-material" oninput="updateLivePreview()" class="w-full p-2 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-600" placeholder="Material (e.g. Monolayer Recyclable Film)" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Disposal Action</label>
+                            <input type="text" id="disp-action" oninput="updateLivePreview()" class="w-full p-2 text-xs border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-600" placeholder="Disposal Action (e.g. Dry Waste Bin)" />
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="btn-save-db" onclick="saveSupplyChainToDB()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-4 rounded-lg text-sm shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rocket"></i>
+                    <span>Submit</span>
+                </button>
+
+                <!-- Inline Status Banner -->
+                <div id="status-message" class="hidden mt-3 p-3 rounded-lg text-xs font-bold text-center"></div>
+
+                <!-- View Live Link Box -->
+                <div class="hidden mt-4 p-3 bg-emerald-100 border border-emerald-600 rounded-lg text-center text-xs text-emerald-900 font-medium" id="view-link-box">
+                    ✓ Data saved! <a id="passport-url" href="#" target="_blank" class="font-bold underline text-emerald-800 hover:text-emerald-950">View Live Product Passport ➔</a>
+                </div>
+            </div>
         </div>
 
-        <div class="header">
-            <h2>📝 Supply Chain Entry Form</h2>
-            <p class="subtitle" id="batch-id-display">Loading QR ID...</p>
+        <!-- Right Column: Consumer Mobile Passport View Preview -->
+        <div class="space-y-6">
+            <div class="bg-slate-900 p-4 rounded-2xl shadow-xl border-4 border-slate-800 text-white max-w-sm mx-auto w-full sticky top-6">
+                <div class="flex justify-between items-center mb-3 text-xs text-slate-400 border-b border-slate-800 pb-2">
+                    <span>📱 App-Free 3-Sec Scan Preview</span>
+                    <span>10:41 AM</span>
+                </div>
+                <div class="bg-white text-slate-800 p-4 rounded-xl space-y-4 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <div>
+                            <h3 id="view-product" class="font-bold text-sm text-slate-900">Product Name</h3>
+                            <p id="view-batch" class="text-[11px] text-slate-500">Batch ID: -</p>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">🟢 Verified</span>
+                    </div>
+
+                    <!-- Progress Train Route Visualizer -->
+                    <div class="flex justify-between items-center my-3 px-2">
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">1</div>
+                        <div class="flex-1 h-1 bg-emerald-700"></div>
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">2</div>
+                        <div class="flex-1 h-1 bg-emerald-700"></div>
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">3</div>
+                        <div class="flex-1 h-1 bg-emerald-700"></div>
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">4</div>
+                    </div>
+
+                    <!-- Milestone 1: Farm -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 1: Farm & Sourcing</span>
+                            <button type="button" onclick="openMapModal('Step 1: Farm Locations', farmCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step1" class="text-slate-600 leading-tight">No farm entries</div>
+                    </div>
+
+                    <!-- Milestone 2: Facility -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 2: Processing & Packing</span>
+                            <button type="button" onclick="openMapModal('Step 2: Processing Facilities', facilityCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step2" class="text-slate-600 leading-tight">No facility entries</div>
+                    </div>
+
+                    <!-- Milestone 3: Transit -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 3: Transit & Logistics</span>
+                            <button type="button" onclick="openMapModal('Step 3: Transit Waypoints', transitCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step3" class="text-slate-600 leading-tight">No transit waypoints</div>
+                    </div>
+
+                    <!-- Milestone 4: End of Life -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <span class="font-bold text-emerald-800 block mb-1">Step 4: End-of-Life & Disposal</span>
+                        <div id="view-step4" class="text-slate-600 leading-tight">&bull; Material: N/A<br>&bull; Action: N/A</div>
+                    </div>
+
+                    <!-- Voice Feedback Section -->
+                    <div class="border-t border-slate-100 pt-3 space-y-2">
+                        <h4 class="text-xs font-bold text-slate-700"><i class="fa-solid fa-microphone text-emerald-600 mr-1"></i> Direct Voice Feedback</h4>
+                        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center space-y-2">
+                            <div class="flex items-center justify-center space-x-2 text-slate-600 text-xs">
+                                <button type="button" onclick="toggleRecord()" id="recordBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white w-7 h-7 rounded-full flex items-center justify-center transition shadow"><i class="fa-solid fa-microphone text-xs" id="recIcon"></i></button>
+                                <span id="recordStatus" class="font-medium text-[11px]">Tap to record voice note</span>
+                            </div>
+                            <div class="w-full bg-slate-200 h-1 rounded-full overflow-hidden hidden" id="audioWave">
+                                <div class="bg-emerald-600 h-full w-3/4 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="admin-form-panel" id="admin-form-panel">
-            <div class="form-title">Configure Passport Steps</div>
+    </main>
 
-            <!-- Product Specs & Batch Info -->
-            <div class="form-step-block">
-                <h4>🏷️ Product & Batch Overview</h4>
-                <div class="input-row">
-                    <input type="text" id="proc-product" placeholder="Product Name (e.g. Organic Salted Chips - 50g)" />
-                </div>
-                <div class="input-row">
-                    <input type="text" id="proc-batch" placeholder="Batch ID (e.g. BATCH-2026-0918)" style="flex: 1;" />
-                    <input type="text" id="proc-mrp" placeholder="MRP (e.g. 100)" style="flex: 1;" />
-                </div>
+    <!-- Modal: View Coordinates Map -->
+    <div id="map-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 modal">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col border border-slate-100">
+            <div class="bg-emerald-800 text-white px-5 py-3.5 flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-sm tracking-wide">Geo-Location Map</h3>
+                <button type="button" onclick="closeMapModal()" class="text-emerald-200 hover:text-white hover:bg-emerald-700/50 w-7 h-7 rounded-full flex items-center justify-center transition text-base font-bold">&times;</button>
             </div>
-
-            <!-- STEP 1: Farm & Sourcing (Array) -->
-            <div class="form-step-block">
-                <h4>🌱 Step 1: Farm & Sourcing Entries</h4>
-                <div id="farm-list"></div>
-                <button type="button" class="btn-add" onclick="addFarmEntry()">+ Add Another Farm</button>
+            <div class="p-4 flex-grow">
+                <div id="modal-map" class="w-full h-80 rounded-xl border border-slate-200 shadow-inner"></div>
             </div>
-
-            <!-- STEP 2: Processing Facilities (Array) -->
-            <div class="form-step-block">
-                <h4>🏭 Step 2: Processing & Packing Facilities</h4>
-                <div id="facility-list"></div>
-                <button type="button" class="btn-add" onclick="addFacilityEntry()">+ Add Processing Facility</button>
-            </div>
-
-            <!-- STEP 3: Transit Waypoints (Array) -->
-            <div class="form-step-block">
-                <h4>🚚 Step 3: Transit Waypoints</h4>
-                <div id="transit-list"></div>
-                <button type="button" class="btn-add" onclick="addTransitEntry()">+ Add Transit Waypoint</button>
-            </div>
-
-            <!-- ========================================================================= -->
-            <!-- STEP 4: Retail / Shelf GPS (TEMPORARILY DISABLED AS SCANNED GPS IS AUTO) -->
-            <!-- 
-            <div class="form-step-block">
-                <h4>🛒 Step 4: Fork / Retail Shelf (Store & Expiry)</h4>
-                <div class="input-row">
-                    <input type="text" id="retail-store" placeholder="Store Name / Location" style="flex: 2;" />
-                    <input type="text" id="retail-expiry" placeholder="Best Before Date" style="flex: 1;" />
-                </div>
-            </div>
-            -->
-            <!-- ========================================================================= -->
-
-            <!-- STEP 5: End-of-Life Disposal -->
-            <div class="form-step-block">
-                <h4>♻️ Step 4: End-of-Life & Recycling</h4>
-                <div class="input-row">
-                    <input type="text" id="disp-material" placeholder="Material (e.g. Monolayer Recyclable Film)" style="flex: 1;" />
-                    <input type="text" id="disp-action" placeholder="Disposal Action (e.g. Dry Waste Bin)" style="flex: 1;" />
-                </div>
-            </div>
-
-            <button type="button" class="btn-submit" id="btn-save-db" onclick="saveSupplyChainToDB()">🚀 Save Information to Database</button>
-
-            <!-- Inline Status Banner -->
-            <div id="status-message" class="status-message"></div>
-
-            <div class="view-link-box" id="view-link-box">
-                ✓ Data saved! <a id="passport-url" href="#" target="_blank">View Live Product Passport ➔</a>
+            <div class="bg-slate-50 px-5 py-3 flex justify-end">
+                <button type="button" onclick="closeMapModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs rounded-lg font-semibold transition">Close</button>
             </div>
         </div>
     </div>
 
+    <!-- Interactive Map Picker Modal -->
+    <div id="picker-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 modal">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden flex flex-col border border-slate-100">
+            
+            <!-- Modal Header -->
+            <div class="bg-emerald-800 text-white px-5 py-3.5 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-map-location-dot text-emerald-300 text-base"></i>
+                    <h3 class="font-bold text-sm tracking-wide">Interactive Location Picker</h3>
+                </div>
+                <button type="button" onclick="closePickerModal()" class="text-emerald-200 hover:text-white hover:bg-emerald-700/50 w-7 h-7 rounded-full flex items-center justify-center transition text-base font-bold">&times;</button>
+            </div>
+            
+            <!-- Modal Content Area -->
+            <div class="p-5 flex-grow space-y-3 bg-slate-50/50">
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="map-search-query" onkeydown="if(event.key === 'Enter') searchMapLocation()" class="w-full pl-8 pr-24 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent shadow-sm" placeholder="Search region, town, or landmark (e.g. Wayanad, Kerala)..." />
+                    <button type="button" onclick="searchMapLocation()" id="btn-map-search" class="absolute right-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-sm transition flex items-center gap-1">
+                        <span>Search</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
+                    <span><i class="fa-solid fa-hand-pointer text-emerald-600 mr-1"></i>Click anywhere on map to position pin</span>
+                    <span class="text-slate-400">Lat, Long Coordinates</span>
+                </div>
+
+                <div id="picker-map" class="w-full h-80 rounded-xl border border-slate-200 shadow-inner overflow-hidden"></div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-white border-t border-slate-100 px-5 py-3.5 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-center">
+                <div class="flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg w-full sm:w-auto">
+                    <i class="fa-solid fa-crosshairs text-emerald-700 text-xs"></i>
+                    <span id="selected-coords-preview" class="text-xs font-bold text-emerald-800">No location selected</span>
+                </div>
+
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                    <button type="button" onclick="closePickerModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-lg font-semibold transition border border-slate-200">
+                        <i class="fa-solid fa-xmark mr-1"></i> Cancel
+                    </button>
+                    <button type="button" onclick="confirmPickedCoords()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs rounded-lg font-bold shadow-md transition flex items-center">
+                        <i class="fa-solid fa-check mr-1.5"></i> Confirm Coordinates
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        &copy; 2026 DoWell UX Living Lab &bull; PureTrace Digital Product Passports. All rights reserved.
+    </footer>
+
+    <!-- Script Logic -->
     <script src="config.js"></script>
     <script>
         const API_BASE = typeof PROXY_BASE !== "undefined" ? PROXY_BASE : "https://location-map-a89a.onrender.com/api";
         let qrId = "";
+        let pickerMap = null, pickerMarker = null, modalMap = null;
+        let farmCoords = [], facilityCoords = [], transitCoords = [];
+        let activeGeoInput = null;
+        let tempPickedLat = 11.4121, tempPickedLng = 76.6950;
+        let isRecording = false;
 
         function showLoader() {
             const loader = document.getElementById("loader");
@@ -332,23 +307,22 @@
         function showStatus(text, isError = false) {
             const box = document.getElementById("status-message");
             box.innerText = text;
-            box.className = `status-message ${isError ? 'error' : 'success'}`;
-            box.style.display = "block";
+            box.className = `mt-3 p-3 rounded-lg text-xs font-bold text-center block ${isError ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'}`;
         }
 
         function hideStatus() {
-            document.getElementById("status-message").style.display = "none";
+            const box = document.getElementById("status-message");
+            box.style.display = "none";
         }
 
         function clearEmptyForm() {
             document.getElementById("proc-product").value = "";
             document.getElementById("proc-batch").value = "";
             document.getElementById("proc-mrp").value = "";
-            
-            /* Step 4 Disabled Safely */
+
             if (document.getElementById("retail-store")) document.getElementById("retail-store").value = "";
             if (document.getElementById("retail-expiry")) document.getElementById("retail-expiry").value = "";
-            
+
             document.getElementById("disp-material").value = "";
             document.getElementById("disp-action").value = "";
 
@@ -359,46 +333,300 @@
             addFarmEntry();
             addFacilityEntry();
             addTransitEntry();
+            updateLivePreview();
+        }
+
+        // Live Preview Renderer
+        function updateLivePreview() {
+            document.getElementById('view-product').innerText = document.getElementById('proc-product').value || "Product Name";
+            document.getElementById('view-batch').innerText = "Batch ID: " + (document.getElementById('proc-batch').value || "-");
+
+            // Farms
+            let farmHtml = "";
+            farmCoords = [];
+            document.querySelectorAll('.farm-row').forEach(row => {
+                let name = row.querySelector('.farm-input')?.value;
+                let date = row.querySelector('.farm-date-input')?.value;
+                if (name) {
+                    farmHtml += `&bull; ${name} ${date ? `(${date})` : ''}<br>`;
+                    let geo = row.querySelector('.farm-geo-input')?.value;
+                    let coords = (geo || "").split(',').map(n => parseFloat(n.trim()));
+                    if (coords.length === 2 && !isNaN(coords[0])) {
+                        farmCoords.push({ latlng: coords, title: name });
+                    }
+                }
+            });
+            document.getElementById('view-step1').innerHTML = farmHtml || "No farm entries";
+
+            // Facilities
+            let facilityHtml = "";
+            facilityCoords = [];
+            document.querySelectorAll('.facility-row').forEach(row => {
+                let name = row.querySelector('.facility-input')?.value;
+                let time = row.querySelector('.facility-time-input')?.value;
+                let geo = row.querySelector('.facility-geo-input')?.value;
+                if (name) {
+                    facilityHtml += `&bull; ${name} ${time ? `(${time})` : ''}<br>`;
+                    let coords = (geo || "").split(',').map(n => parseFloat(n.trim()));
+                    if (coords.length === 2 && !isNaN(coords[0])) {
+                        facilityCoords.push({ latlng: coords, title: name });
+                    }
+                }
+            });
+            document.getElementById('view-step2').innerHTML = facilityHtml || "No facility entries";
+
+            // Transit
+            let transitHtml = "";
+            transitCoords = [];
+            document.querySelectorAll('.transit-row').forEach(row => {
+                let hub = row.querySelector('.transit-input')?.value;
+                let cond = row.querySelector('.transit-cond-input')?.value;
+                let geo = row.querySelector('.transit-geo-input')?.value;
+                if (hub) {
+                    transitHtml += `&bull; ${hub} ${cond ? `[${cond}]` : ''}<br>`;
+                    let coords = (geo || "").split(',').map(n => parseFloat(n.trim()));
+                    if (coords.length === 2 && !isNaN(coords[0])) {
+                        transitCoords.push({ latlng: coords, title: hub });
+                    }
+                }
+            });
+            document.getElementById('view-step3').innerHTML = transitHtml || "No transit waypoints";
+
+            // Disposal
+            let mat = document.getElementById('disp-material').value || "N/A";
+            let act = document.getElementById('disp-action').value || "N/A";
+            document.getElementById('view-step4').innerHTML = `&bull; Material: ${mat}<br>&bull; Action: ${act}`;
+        }
+
+        // Standardize date to YYYY-MM-DD for <input type="date">
+        function formatDateForInput(dateStr) {
+            if (!dateStr) return "";
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+            const parsed = new Date(dateStr);
+            if (!isNaN(parsed.getTime())) {
+                return parsed.toISOString().split("T")[0];
+            }
+            return "";
         }
 
         // Dynamic Field Row Builders
         function addFarmEntry(name = "", date = "", geo = "") {
             const container = document.getElementById('farm-list');
             const div = document.createElement('div');
-            div.className = 'input-row farm-row';
+            div.className = 'farm-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2';
+            const formattedDate = formatDateForInput(date);
             div.innerHTML = `
-                <input type="text" class="farm-input" placeholder="Farm / Cooperative" value="${name}" style="flex: 2;" />
-                <input type="text" class="farm-date-input" placeholder="Harvest Date" value="${date}" style="flex: 1;" />
-                <input type="text" class="farm-geo-input" placeholder="Lat, Long" value="${geo}" style="flex: 1.2;" />
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+                <div class="flex gap-2">
+                    <input type="text" oninput="updateLivePreview()" class="farm-input flex-[2] p-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-emerald-600" placeholder="Farm / Cooperative" value="${name}" />
+                    <input type="date" onchange="updateLivePreview()" oninput="updateLivePreview()" class="farm-date-input flex-[1] p-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-emerald-600" value="${formattedDate}" />
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" oninput="updateLivePreview()" class="farm-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50 focus:outline-none focus:border-emerald-600" placeholder="Lat, Long" value="${geo}" />
+                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                    <button type="button" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2.5 py-2 rounded text-xs font-semibold" onclick="this.closest('.farm-row').remove(); updateLivePreview();">✕</button>
+                </div>
             `;
             container.appendChild(div);
+            updateLivePreview();
         }
 
         function addFacilityEntry(name = "", time = "", geo = "") {
             const container = document.getElementById('facility-list');
             const div = document.createElement('div');
-            div.className = 'input-row facility-row';
+            div.className = 'facility-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2';
             div.innerHTML = `
-                <input type="text" class="facility-input" placeholder="Facility Name" value="${name}" style="flex: 2;" />
-                <input type="text" class="facility-time-input" placeholder="Packing Time" value="${time}" style="flex: 1;" />
-                <input type="text" class="facility-geo-input" placeholder="Lat, Long" value="${geo}" style="flex: 1.2;" />
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+                <div class="flex gap-2">
+                    <input type="text" oninput="updateLivePreview()" class="facility-input flex-[2] p-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-emerald-600" placeholder="Facility Name" value="${name}" />
+                    <input type="text" oninput="updateLivePreview()" class="facility-time-input flex-[1] p-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-emerald-600" placeholder="Packing Time" value="${time}" />
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" oninput="updateLivePreview()" class="facility-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50 focus:outline-none focus:border-emerald-600" placeholder="Lat, Long" value="${geo}" />
+                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                    <button type="button" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2.5 py-2 rounded text-xs font-semibold" onclick="this.closest('.facility-row').remove(); updateLivePreview();">✕</button>
+                </div>
             `;
             container.appendChild(div);
+            updateLivePreview();
         }
 
         function addTransitEntry(hub = "", cond = "", geo = "") {
             const container = document.getElementById('transit-list');
             const div = document.createElement('div');
-            div.className = 'input-row transit-row';
+            div.className = 'transit-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2';
             div.innerHTML = `
-                <input type="text" class="transit-input" placeholder="Logistics Hub" value="${hub}" style="flex: 2;" />
-                <input type="text" class="transit-cond-input" placeholder="Condition" value="${cond}" style="flex: 1;" />
-                <input type="text" class="transit-geo-input" placeholder="Lat, Long" value="${geo}" style="flex: 1.2;" />
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+                <div class="flex gap-2">
+                    <input type="text" oninput="updateLivePreview()" class="transit-input flex-[2] p-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-emerald-600" placeholder="Logistics Hub" value="${hub}" />
+                    <input type="text" oninput="updateLivePreview()" class="transit-cond-input flex-[1] p-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-emerald-600" placeholder="Condition" value="${cond}" />
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" oninput="updateLivePreview()" class="transit-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50 focus:outline-none focus:border-emerald-600" placeholder="Lat, Long" value="${geo}" />
+                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                    <button type="button" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2.5 py-2 rounded text-xs font-semibold" onclick="this.closest('.transit-row').remove(); updateLivePreview();">✕</button>
+                </div>
             `;
             container.appendChild(div);
+            updateLivePreview();
+        }
+
+        // Search Region on Map
+        async function searchMapLocation() {
+            const query = document.getElementById("map-search-query").value.trim();
+            if (!query) return;
+
+            const btnSearch = document.getElementById("btn-map-search");
+            btnSearch.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>Searching...</span>`;
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const results = await res.json();
+
+                if (results && results.length > 0) {
+                    const lat = parseFloat(results[0].lat);
+                    const lon = parseFloat(results[0].lon);
+
+                    tempPickedLat = lat.toFixed(6);
+                    tempPickedLng = lon.toFixed(6);
+
+                    if (pickerMap) {
+                        pickerMap.setView([lat, lon], 12);
+                        if (pickerMarker) {
+                            pickerMarker.setLatLng([lat, lon]);
+                        } else {
+                            pickerMarker = L.marker([lat, lon]).addTo(pickerMap);
+                        }
+                    }
+
+                    document.getElementById('selected-coords-preview').innerText = `${tempPickedLat}, ${tempPickedLng}`;
+                } else {
+                    alert("Region or location not found. Try refining your search query.");
+                }
+            } catch (err) {
+                console.error("Geocoding failed:", err);
+            } finally {
+                btnSearch.innerHTML = `<span>Search</span>`;
+            }
+        }
+
+        // Map Picker Controls
+        function openPickerFor(btn) {
+            const parentRow = btn.closest('.farm-row, .facility-row, .transit-row');
+            if (parentRow) {
+                activeGeoInput = parentRow.querySelector('.farm-geo-input, .facility-geo-input, .transit-geo-input');
+            }
+
+            let currentVal = activeGeoInput ? activeGeoInput.value : "11.4121, 76.6950";
+            let parts = currentVal.split(',').map(s => parseFloat(s.trim()));
+            let initLat = (parts.length === 2 && !isNaN(parts[0])) ? parts[0] : 11.4121;
+            let initLng = (parts.length === 2 && !isNaN(parts[1])) ? parts[1] : 76.6950;
+
+            document.getElementById('map-search-query').value = "";
+            document.getElementById('picker-modal').classList.remove('hidden');
+
+            setTimeout(() => {
+                if (!pickerMap) {
+                    pickerMap = L.map('picker-map').setView([initLat, initLng], 10);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 18,
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(pickerMap);
+
+                    pickerMap.on('click', function (e) {
+                        tempPickedLat = e.latlng.lat.toFixed(6);
+                        tempPickedLng = e.latlng.lng.toFixed(6);
+                        if (pickerMarker) {
+                            pickerMarker.setLatLng(e.latlng);
+                        } else {
+                            pickerMarker = L.marker(e.latlng).addTo(pickerMap);
+                        }
+                        document.getElementById('selected-coords-preview').innerText = `${tempPickedLat}, ${tempPickedLng}`;
+                    });
+                } else {
+                    pickerMap.invalidateSize();
+                    pickerMap.setView([initLat, initLng], 10);
+                }
+
+                if (pickerMarker) {
+                    pickerMap.removeLayer(pickerMarker);
+                }
+                pickerMarker = L.marker([initLat, initLng]).addTo(pickerMap);
+                tempPickedLat = initLat;
+                tempPickedLng = initLng;
+                document.getElementById('selected-coords-preview').innerText = `${initLat}, ${initLng}`;
+            }, 200);
+        }
+
+        function closePickerModal() {
+            document.getElementById('picker-modal').classList.add('hidden');
+        }
+
+        function confirmPickedCoords() {
+            if (activeGeoInput) {
+                activeGeoInput.value = `${tempPickedLat}, ${tempPickedLng}`;
+                updateLivePreview();
+            }
+            closePickerModal();
+        }
+
+        function openMapModal(title, coordinates) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('map-modal').classList.remove('hidden');
+
+            setTimeout(() => {
+                if (!modalMap) {
+                    modalMap = L.map('modal-map').setView([10.5, 76.5], 7);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 18,
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(modalMap);
+                } else {
+                    modalMap.invalidateSize();
+                }
+
+                modalMap.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) {
+                        modalMap.removeLayer(layer);
+                    }
+                });
+
+                let bounds = [];
+                coordinates.forEach(item => {
+                    L.marker(item.latlng).addTo(modalMap).bindPopup(`<b>${item.title}</b>`);
+                    bounds.push(item.latlng);
+                });
+
+                if (bounds.length > 0) {
+                    modalMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+                }
+            }, 200);
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.add('hidden');
+        }
+
+        function toggleRecord() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('recordBtn');
+            const icon = document.getElementById('recIcon');
+            const status = document.getElementById('recordStatus');
+            const wave = document.getElementById('audioWave');
+
+            if (isRecording) {
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.add('bg-red-600', 'hover:bg-red-700');
+                icon.className = "fa-solid fa-stop text-xs";
+                status.innerText = "Recording voice feedback...";
+                wave.classList.remove('hidden');
+            } else {
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                icon.className = "fa-solid fa-microphone text-xs";
+                status.innerText = "Voice note saved successfully! ✓";
+                wave.classList.add('hidden');
+                setTimeout(() => {
+                    status.innerText = "Tap to record voice note";
+                }, 3000);
+            }
         }
 
         // Fetch Existing Saved Trace Record
@@ -415,7 +643,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const selectedBatchId = urlParams.get("batch_id");
 
-            document.getElementById("batch-id-display").innerText = `QR ID: ${qrId}${selectedBatchId ? ` | Batch: ${selectedBatchId}` : ''}`;
+            document.getElementById("batch-id-display").innerText = `Lot ID: ${qrId}${selectedBatchId ? ` | Batch ID: ${selectedBatchId}` : ''}`;
 
             try {
                 const res = await fetch(`${API_BASE}/get_medsign_link/${qrId}`);
@@ -454,7 +682,6 @@
                     document.getElementById("proc-batch").value = primaryTrace.batch_id || "";
                     document.getElementById("proc-mrp").value = primaryTrace.mrp || "";
 
-                    /* Step 4 Disabled Safely */
                     if (document.getElementById("retail-store")) document.getElementById("retail-store").value = primaryTrace.retail_store || "";
                     if (document.getElementById("retail-expiry")) document.getElementById("retail-expiry").value = primaryTrace.expiry_date || "";
 
@@ -508,6 +735,7 @@
                 console.error("Error populating form:", err);
                 clearEmptyForm();
             } finally {
+                updateLivePreview();
                 hideLoader();
             }
         }
@@ -562,7 +790,6 @@
                     farm_entries: farmEntries,
                     facility_entries: facilityEntries,
                     transit_entries: transitEntries,
-                    /* Step 4 Disabled - Defaulting to fallback strings */
                     retail_store: document.getElementById("retail-store") ? document.getElementById("retail-store").value : "",
                     expiry_date: document.getElementById("retail-expiry") ? document.getElementById("retail-expiry").value : "",
                     package_recycling: document.getElementById("disp-material").value,
@@ -584,7 +811,7 @@
                 }
 
                 showStatus("✓ Supply chain trace arrays saved successfully!");
-                
+
                 const passportLink = document.getElementById("passport-url");
                 passportLink.href = `trace.html?id=${qrId}&batch_id=${encodeURIComponent(batchVal)}`;
                 document.getElementById("view-link-box").style.display = "block";
@@ -594,7 +821,7 @@
                 showStatus("Failed to save trace data: " + err.message, true);
             } finally {
                 btnSave.disabled = false;
-                btnSave.innerText = "🚀 Save Information to Database";
+                btnSave.innerText = "Submit";
             }
         }
 

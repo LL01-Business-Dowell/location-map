@@ -1,706 +1,600 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MedSignQR - Voice, Transcription & Multilingual Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- QR Code Generator Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureTrace - Digital Product Passport (DPP) Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .modal { transition: opacity 0.25s ease; }
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 min-h-screen">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-blue-700 text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <div class="bg-white text-blue-700 p-2 rounded-lg font-bold text-xl">QR</div>
-        <div>
-          <h1 class="text-xl font-bold tracking-wide">MedSignQR Studio</h1>
-          <p class="text-xs text-blue-200">Distributor Demonstration Portal • DoWell UX Living Lab</p>
-        </div>
-      </div>
-      <span class="text-xs bg-blue-800 px-3 py-1.5 rounded-full border border-blue-500">
-        📍 Doctor / Pharmacist Creator View
-      </span>
-    </div>
-  </header>
-
-  <!-- Main Content Container -->
-  <main class="max-w-7xl mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      
-      <!-- LEFT PANEL: DOCTOR / PHARMA FORM -->
-      <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
-        <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-          <div>
-            <h2 class="text-lg font-bold">New Prescription</h2>
-            <p class="text-xs text-slate-300">Create a new patient record • ID: <span id="recordId" class="font-mono text-yellow-300">yyCjOVqM</span></p>
-          </div>
-          <span class="text-xs bg-slate-700 text-slate-200 px-2.5 py-1 rounded-md">Step 1 of 2</span>
-        </div>
-
-        <form id="prescriptionForm" class="p-6 space-y-6 flex-1 overflow-y-auto max-h-[80vh]">
-          
-          <!-- Important Banner -->
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 flex items-start gap-2">
-            <span class="text-base leading-none">ℹ️</span>
-            <p><strong>Important:</strong> Please consult a qualified medical practitioner before using medicines that require medical supervision or a prescription.</p>
-          </div>
-
-          <!-- Section 1: Clinic & Patient Info -->
-          <div class="space-y-4 border-b border-slate-200 pb-5">
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Pharmacy / Clinic Name *</label>
-              <input type="text" id="pharmacyName" value="City Health Pharmacy" required
-                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Clinician Name *</label>
-                <input type="text" id="clinicianName" value="Dr. Sharma" required
-                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Clinician Mobile No. *</label>
-                <input type="tel" id="clinicianMobile" value="9876543210" required
-                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Patient Identifier *</label>
-              <input type="text" id="patientId" value="PAT-001" required
-                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
-            </div>
-          </div>
-
-          <!-- Section 2: Medication Details -->
-          <div class="space-y-4 border-b border-slate-200 pb-5">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <span>💊</span> Medicine Details
-            </h3>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medicine Name *</label>
-              <input type="text" id="medicineName" value="Amoxicillin" required
-                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Dosage *</label>
-              <input type="text" id="dosage" value="500mg / 10ml" required
-                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Doctor's Dictation Language</label>
-              <select id="docLanguage" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                <option value="en-US">English</option>
-                <option value="hi-IN">Hindi (हिंदी)</option>
-                <option value="ta-IN">Tamil (தமிழ்)</option>
-                <option value="ml-IN">Malayalam (മലയാളം)</option>
-                <option value="es-ES">Spanish (Español)</option>
-                <option value="fr-FR">French (Français)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Notes / Instructions</label>
-              <textarea id="notes" rows="2" 
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                        placeholder="Special instructions for the patient...">Take after food. Complete full 7-day course.</textarea>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medicine Image (Optional)</label>
-              <input type="file" id="medicineImgInput" accept="image/*" class="w-full text-xs text-slate-500 border border-slate-300 rounded-lg p-2 bg-slate-50 cursor-pointer" />
-            </div>
-          </div>
-
-          <!-- Section 3: Audio Instructions & Visual Descriptors -->
-          <div class="space-y-4">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <span>🎙️</span> Audio Instructions & Visual Identifiers
-            </h3>
-
-            <div class="grid grid-cols-2 gap-2 bg-slate-200 p-1 rounded-lg">
-              <button type="button" id="tabVoiceRec" class="py-2 text-xs font-bold rounded-md bg-white text-blue-700 shadow-sm transition">
-                🎙️ Voice Recording & Dictation
-              </button>
-              <button type="button" id="tabAutoBuilder" class="py-2 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">
-                🪄 Visual Identifiers
-              </button>
-            </div>
-
-            <!-- Statutory Warning Box -->
-            <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 text-xs space-y-2">
-              <p class="font-bold text-amber-900 uppercase text-[11px] flex items-center gap-1">
-                <span>⚠️</span> Statutory Warning — Review Checklist
-              </p>
-              <ul class="list-disc list-inside text-amber-900 space-y-1">
-                <li><strong>Patient Identity:</strong> Matches the intended recipient.</li>
-                <li><strong>Clinical Intent:</strong> Dosage and Frequency are medically accurate.</li>
-                <li><strong>Compliance:</strong> This audio matches signed/stamped prescription as per NMC guidelines.</li>
-                <li><strong>Support Tool:</strong> I understand this AI-voice supplements, but does not replace, the official written prescription.</li>
-              </ul>
-              <hr class="border-amber-200 my-2" />
-              <label class="flex items-center gap-2 text-amber-950 font-semibold cursor-pointer">
-                <input type="checkbox" id="statutoryCheck" class="rounded border-amber-400 text-blue-600 focus:ring-blue-500" />
-                <span>I have read, understood, and agree to all of the above statutory requirements.</span>
-              </label>
-            </div>
-
-            <!-- Tab Content 1: Voice Recording & Speech Recognition -->
-            <div id="voiceRecContent" class="p-4 border border-dashed border-slate-300 rounded-lg text-center space-y-3 bg-slate-50">
-              <div class="flex justify-center gap-3">
-                <button type="button" id="startRecordBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full text-xs flex items-center gap-2 transition opacity-50 cursor-not-allowed" disabled>
-                  <span>🔴</span> Start Recording
-                </button>
-                <button type="button" id="stopRecordBtn" class="px-4 py-2 bg-slate-400 text-white font-bold rounded-full text-xs flex items-center gap-2 transition cursor-not-allowed" disabled>
-                  <span>⏹️</span> Stop & Save
-                </button>
-              </div>
-
-              <div id="recordingIndicator" class="hidden items-center justify-center gap-2 text-red-600 font-bold text-xs animate-pulse">
-                <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span> Microphone Active & Transcribing...
-              </div>
-
-              <div class="text-left bg-white p-3 rounded-lg border border-slate-200">
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Live Speech Transcription:</span>
-                <p id="liveTranscript" class="text-xs text-slate-600 italic mt-1 min-h-[36px]">
-                  (Spoken words will automatically transcribe here into notes...)
-                </p>
-              </div>
-
-              <div id="audioPlaybackWrapper" class="hidden text-left bg-blue-50 p-3 rounded-lg border border-blue-200 space-y-1">
-                <span class="text-[10px] font-bold text-blue-800 uppercase">Doctor Recorded Voice Preview:</span>
-                <audio id="recordedAudioPlayer" controls class="w-full h-8 mt-1"></audio>
-              </div>
-
-              <p id="recordAudioMsg" class="text-xs text-slate-500 font-medium">Accept statutory checklist above to enable recording button</p>
-            </div>
-
-            <!-- Visual Identifiers -->
-            <div id="autoBuilderContent" class="space-y-3 p-4 border border-blue-100 bg-blue-50/30 rounded-lg">
-              <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Drug Category *</label>
-                <select id="drugCategory" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
-                  <option value="Tablet / Capsule / Pill">Tablet / Capsule / Pill</option>
-                  <option value="Liquid Syrup">Liquid Syrup</option>
-                  <option value="Injection / Ointment">Injection / Ointment</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medication Type *</label>
-                <select id="medicationType" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
-                  <option value="Tablet">Tablet</option>
-                  <option value="Capsule">Capsule</option>
-                  <option value="Pill">Pill</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medicine Color(s) — Select One or More</label>
-                <div class="flex flex-wrap gap-2">
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="White">White</button>
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-blue-600 text-white font-bold" data-color="Yellow">Yellow ✓</button>
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Pink">Pink</button>
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Blue">Blue</button>
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Orange">Orange</button>
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Red">Red</button>
-                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Green">Green</button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Bottom Action Buttons -->
-          <div class="grid grid-cols-2 gap-2 pt-4 border-t border-slate-200">
-            <button type="button" id="btnCancel" class="py-2 border border-red-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-50">
-              🚫 Cancel & Report
-            </button>
-            <button type="button" id="btnExit" class="py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50">
-              🚪 Exit Without Saving
-            </button>
-            <button type="button" id="btnSaveDraft" class="py-2 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50">
-              💾 Save Draft
-            </button>
-            <button type="submit" id="btnFinalize" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm">
-              ☑️ Finalize & Generate QR
-            </button>
-          </div>
-
-        </form>
-      </section>
-
-      <!-- RIGHT PANEL: GENERATED RESULT & PATIENT EXPLAINER -->
-      <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col justify-between">
-        <div class="bg-blue-900 text-white px-6 py-4 flex justify-between items-center">
-          <div>
-            <h2 class="text-lg font-bold">Patient Explainer View</h2>
-            <p class="text-xs text-blue-200">Guaranteed Tamil & Malayalam Audio Stream</p>
-          </div>
-          <span class="text-xs bg-blue-800 text-blue-200 px-2.5 py-1 rounded-md">Step 2 of 2</span>
-        </div>
-
-        <div class="p-6 flex-1 flex flex-col justify-center items-center bg-slate-50">
-          
-          <div id="outputPlaceholder" class="text-center py-12 px-4">
-            <div class="w-16 h-16 mx-auto mb-4 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-2xl">
-              📋
-            </div>
-            <p class="text-sm font-bold text-slate-700">No Prescription Finalized Yet</p>
-            <p class="text-xs text-slate-500 mt-1 max-w-xs">Accept statutory checklist, record or enter details, and click <strong>Finalize</strong> to test patient voice playback.</p>
-          </div>
-
-          <!-- Generated Output View -->
-          <div id="outputContainer" class="w-full max-w-sm space-y-4 hidden">
-            
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Generated MedSignQR Sticker</span>
-              <div class="flex justify-center mb-2">
-                <div id="qrcode" class="p-2 bg-white border border-slate-200 rounded-lg"></div>
-              </div>
-              <p class="text-[11px] text-slate-500">Scan code or review translated patient explanation below:</p>
-            </div>
-
-            <!-- Patient Explainer Card -->
-            <div class="bg-white rounded-xl border border-blue-200 shadow-md p-4 space-y-3">
-              
-              <!-- Patient Preferred Language Selection -->
-              <div class="bg-blue-50 border border-blue-200 p-2.5 rounded-lg space-y-1">
-                <label class="block text-[10px] font-bold text-blue-900 uppercase">🌐 Patient Preferred Audio Language</label>
-                <select id="patientLanguageSelect" class="w-full px-2 py-1.5 border border-blue-300 rounded text-xs font-semibold bg-white text-blue-950">
-                  <option value="en-US">English</option>
-                  <option value="ta-IN">Tamil (தமிழ்)</option>
-                  <option value="ml-IN">Malayalam (മലയാളം)</option>
-                  <option value="hi-IN">Hindi (हिंदी)</option>
-                  <option value="es-ES">Spanish (Español)</option>
-                  <option value="fr-FR">French (Français)</option>
-                </select>
-              </div>
-
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+    <!-- Header -->
+    <header class="bg-emerald-800 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-seedling text-xl"></i></div>
                 <div>
-                  <h3 id="resMedName" class="font-bold text-blue-900 text-base">Amoxicillin</h3>
-                  <p id="resClinic" class="text-xs text-slate-500">City Health Pharmacy • Dr. Sharma</p>
+                    <h1 class="text-xl font-bold tracking-wide">PureTrace DPP</h1>
+                    <p class="text-xs text-emerald-200">DoWell UX Living Lab &bull; Enterprise Traceability Control Panel</p>
                 </div>
-                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Verified</span>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <div class="bg-slate-50 p-2 rounded border border-slate-100">
-                  <span class="text-[10px] text-slate-400 font-bold block">PATIENT ID</span>
-                  <span id="resPatientId" class="font-bold text-slate-800">PAT-001</span>
-                </div>
-                <div class="bg-slate-50 p-2 rounded border border-slate-100">
-                  <span class="text-[10px] text-slate-400 font-bold block">DOSAGE</span>
-                  <span id="resDosage" class="font-bold text-slate-800">500mg / 10ml</span>
-                </div>
-              </div>
-
-              <div id="resImageWrapper" class="hidden text-center bg-slate-50 p-2 rounded border border-slate-100">
-                <img id="resMedImage" src="" alt="Medicine" class="max-h-32 mx-auto rounded object-contain" />
-              </div>
-
-              <div class="bg-slate-50 p-2.5 rounded border border-slate-100 text-xs">
-                <span class="text-[10px] text-slate-400 font-bold block uppercase">Visual & Category Info</span>
-                <p id="resCategoryInfo" class="text-slate-700 mt-0.5">Tablet / Capsule / Pill • Yellow Tablet</p>
-              </div>
-
-              <div class="bg-slate-50 p-2.5 rounded border border-slate-100 text-xs">
-                <span class="text-[10px] text-slate-400 font-bold block uppercase">Instructions</span>
-                <p id="resNotes" class="text-slate-800 font-medium mt-0.5">Take after food. Complete full 7-day course.</p>
-              </div>
-
-              <!-- Structured Audio Readout Display -->
-              <div class="bg-amber-50 p-2.5 rounded border border-amber-200 text-xs">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] text-amber-800 font-bold uppercase">🔊 Dynamic Voice Script</span>
-                  <span id="translatingSpinner" class="text-[10px] text-blue-600 hidden animate-spin">⌛ Translating...</span>
-                </div>
-                <p id="audioSpeechSequence" class="text-amber-950 font-medium mt-1 italic leading-relaxed">
-                  "Look for the Yellow Tablet from Tablet / Capsule / Pill category. Instructions: Take after food. Medicine name is Amoxicillin, Dosage: 500mg / 10ml."
-                </p>
-              </div>
-
-              <!-- Audio Player Button -->
-              <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center space-y-2">
-                <button type="button" id="playAudioBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 transition shadow-sm">
-                  <span>🔊</span> Play Sequenced Audio Instructions
-                </button>
-                <p id="audioStatus" class="text-[10px] text-emerald-700 font-medium italic">Click to play voice readout</p>
-              </div>
-
-              <div id="resDoctorVoiceOption" class="hidden pt-2 border-t border-slate-100 text-center">
-                <button type="button" id="playOriginalDoctorVoiceBtn" class="text-xs text-blue-700 underline font-semibold">
-                  🎧 Listen to Original Doctor Raw Recording
-                </button>
-              </div>
-
             </div>
+            <div class="flex items-center space-x-4">
+                <span class="bg-emerald-700 text-emerald-100 text-xs px-3 py-1 rounded-full font-medium" id="header-batch-label">Batch #BATCH-2026-0918</span>
+                <button type="button" onclick="alert('Exporting Audit Trail Report...')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded shadow transition"><i class="fa-solid fa-download mr-1"></i> Export Report</button>
+            </div>
+        </div>
+    </header>
 
-          </div>
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 py-6 w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+        <!-- Left Column: Dynamic Supply Chain Control Panel (Steps 1-5 Inputs) -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-route text-emerald-600 mr-2"></i>Supply Chain Lifecycle Configuration</h2>
+                    <span class="text-xs text-slate-500">Multi-Entry GPS & DateTime Logging</span>
+                </div>
+                <p class="text-sm text-slate-600 mb-6">Configure multiple locations, date-times, and parameters across the 5 core lifecycle stages.</p>
+
+                <!-- STEP 1: FARM & SOURCING -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-seedling mr-1"></i> Step 1: Farm & Sourcing (Multi-Farm + DateTime + GPS Picker)</h3>
+                    <div id="farm-list" class="space-y-3 mb-3">
+                        <div class="farm-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" class="farm-input flex-2 p-2 text-xs border border-slate-300 rounded" value="Nilgiri Coop, Tamil Nadu" placeholder="Farm/Coop Name">
+                                <input type="datetime-local" class="farm-date-input flex-1.5 p-2 text-xs border border-slate-300 rounded" value="2026-10-02T08:30">
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <input type="text" class="farm-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" value="11.4121, 76.6950" placeholder="Lat, Long">
+                                <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addFarmEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Another Farm</button>
+                </div>
+
+                <!-- STEP 2: PROCESSING & PACKAGING -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-industry mr-1"></i> Step 2: Processing & Packaging (Multi-Facility)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Batch ID</label>
+                            <input type="text" id="proc-batch" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="BATCH-2026-0918">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Product Name</label>
+                            <input type="text" id="proc-product" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="Pure-Crunch Classic Salted Chips - 50g">
+                        </div>
+                    </div>
+                    <div id="facility-list" class="space-y-3 mb-3">
+                        <div class="facility-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" class="facility-input flex-2 p-2 text-xs border border-slate-300 rounded" value="Coimbatore Plant #4 (Wash & Slice)" placeholder="Facility Name">
+                                <input type="datetime-local" class="facility-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded" value="2026-10-06T14:00">
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <input type="text" class="facility-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" value="11.0168, 76.9558" placeholder="Lat, Long">
+                                <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addFacilityEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Processing Milestone</button>
+                </div>
+
+                <!-- STEP 3: TRANSIT WAYPOINTS -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-truck-fast mr-1"></i> Step 3: Transit Waypoints (Multi-Waypoint + DateTime)</h3>
+                    <div id="transit-list" class="space-y-3 mb-3">
+                        <div class="transit-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" class="transit-input flex-2 p-2 text-xs border border-slate-300 rounded" value="Palakkad Logistics Hub" placeholder="Waypoint Name">
+                                <input type="datetime-local" class="transit-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded" value="2026-10-08T09:15">
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <input type="text" class="transit-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" value="10.7867, 76.6548" placeholder="Lat, Long">
+                                <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addTransitEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Transit Waypoint</button>
+                </div>
+
+                <!-- STEP 4: RETAIL SHELF -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-store mr-1"></i> Step 4: Fork / Retail Shelf + GPS</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Store Name</label>
+                            <input type="text" id="retail-store" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="SuperMart, MG Road, Kochi">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Best Before / Expiry DateTime</label>
+                            <input type="datetime-local" id="retail-expiry" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="2027-04-18T18:00">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <input type="text" id="retail-geo" class="flex-1 p-2 text-xs border border-slate-300 rounded bg-white" value="9.9312, 76.2673" placeholder="Lat, Long">
+                        <button type="button" onclick="openPickerForRetail()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                    </div>
+                </div>
+
+                <!-- STEP 5: END-OF-LIFE -->
+                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-6">
+                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-recycle mr-1"></i> Step 5: End-of-Life & Disposal</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Material Specification</label>
+                            <input type="text" id="disp-material" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="Monolayer Recyclable Film">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Disposal Action</label>
+                            <input type="text" id="disp-action" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="Clean, Crush & Dry Waste Bin">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="pushData()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-4 rounded-lg text-sm shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rocket"></i>
+                    <span>Push Network to Consumer View</span>
+                </button>
+            </div>
         </div>
 
-        <div class="p-4 bg-slate-100 text-center border-t border-slate-200">
-          <p class="text-xs text-slate-500">MedSignQR Prescription Explainer • DoWell Store Integration</p>
-        </div>
-      </section>
+        <!-- Right Column: Consumer Mobile Passport View & Voice Feedback Widget -->
+        <div class="space-y-6">
+            <!-- Mobile Preview Mockup -->
+            <div class="bg-slate-900 p-4 rounded-2xl shadow-xl border-4 border-slate-800 text-white max-w-sm mx-auto w-full sticky top-6">
+                <div class="flex justify-between items-center mb-3 text-xs text-slate-400 border-b border-slate-800 pb-2">
+                    <span>📱 App-Free 3-Sec Scan Preview</span>
+                    <span>10:41 AM</span>
+                </div>
+                <div class="bg-white text-slate-800 p-4 rounded-xl space-y-4 shadow-sm">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <div>
+                            <h3 id="view-product" class="font-bold text-sm text-slate-900">Pure-Crunch Classic Salted Chips - 50g</h3>
+                            <p id="view-batch" class="text-[11px] text-slate-500">Batch ID: BATCH-2026-0918</p>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">🟢 Verified</span>
+                    </div>
 
+                    <!-- Progress Train Route Visualizer -->
+                    <div class="flex justify-between items-center my-3 px-2">
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">1</div>
+                        <div class="flex-1 h-1 bg-emerald-700"></div>
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">2</div>
+                        <div class="flex-1 h-1 bg-emerald-700"></div>
+                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">3</div>
+                        <div class="flex-1 h-1 bg-amber-500"></div>
+                        <div class="w-5 h-5 rounded-full bg-amber-500 shadow-sm flex items-center justify-center text-[9px] text-white font-bold">4</div>
+                        <div class="flex-1 h-1 bg-slate-300"></div>
+                        <div class="w-5 h-5 rounded-full bg-slate-300 flex items-center justify-center text-[9px] text-white font-bold">5</div>
+                    </div>
+
+                    <!-- Milestone 1 -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 1: Farm & Sourcing</span>
+                            <button type="button" onclick="openMapModal('Step 1: Farm Locations', farmCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step1" class="text-slate-600 leading-tight">&bull; Nilgiri Coop, Tamil Nadu</div>
+                    </div>
+
+                    <!-- Milestone 2 -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 2: Processing & Packing</span>
+                            <button type="button" onclick="openMapModal('Step 2: Processing Facilities', facilityCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step2" class="text-slate-600 leading-tight">&bull; Coimbatore Plant #4</div>
+                    </div>
+
+                    <!-- Milestone 3 -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 3: Transit & Logistics</span>
+                            <button type="button" onclick="openMapModal('Step 3: Transit Waypoints', transitCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step3" class="text-slate-600 leading-tight">&bull; Palakkad Logistics Hub</div>
+                    </div>
+
+                    <!-- Milestone 4 -->
+                    <div class="bg-emerald-50/60 border border-emerald-300 rounded-lg p-2.5 text-xs">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-emerald-800">Step 4: Fork / Retail Shelf</span>
+                            <button type="button" onclick="openMapModal('Step 4: Retail Location', retailCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
+                        </div>
+                        <div id="view-step4" class="text-slate-600 leading-tight">&bull; SuperMart, MG Road, Kochi</div>
+                    </div>
+
+                    <!-- Milestone 5 -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
+                        <span class="font-bold text-emerald-800 block mb-1">Step 5: End-of-Life & Disposal</span>
+                        <div id="view-step5" class="text-slate-600 leading-tight">&bull; Material: Monolayer Recyclable Film<br>&bull; Action: Clean, Crush & Dry Waste Bin</div>
+                    </div>
+
+                    <!-- Voice Feedback Section -->
+                    <div class="border-t border-slate-100 pt-3 space-y-2">
+                        <h4 class="text-xs font-bold text-slate-700"><i class="fa-solid fa-microphone text-emerald-600 mr-1"></i> Direct Voice Feedback</h4>
+                        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center space-y-2">
+                            <div class="flex items-center justify-center space-x-2 text-slate-600 text-xs">
+                                <button type="button" onclick="toggleRecord()" id="recordBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white w-7 h-7 rounded-full flex items-center justify-center transition shadow"><i class="fa-solid fa-microphone text-xs" id="recIcon"></i></button>
+                                <span id="recordStatus" class="font-medium text-[11px]">Tap to record voice note</span>
+                            </div>
+                            <div class="w-full bg-slate-200 h-1 rounded-full overflow-hidden hidden" id="audioWave">
+                                <div class="bg-emerald-600 h-full w-3/4 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-2 pt-1">
+                        <button type="button" onclick="alert('Loading Product Specifications & Farmer Directory...')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-3 rounded text-[11px] transition">🌐 View Specifications & Directory</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Map Modal for Viewing / Previewing -->
+    <div id="map-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
+            <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-sm">Geo-Location Map</h3>
+                <button type="button" onclick="closeMapModal()" class="text-emerald-200 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="p-4 flex-grow">
+                <div id="modal-map" class="w-full h-80 rounded-lg border border-slate-200"></div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 flex justify-end">
+                <button type="button" onclick="closeMapModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs px-4 py-2 rounded font-medium">Close</button>
+            </div>
+        </div>
     </div>
-  </main>
 
-  <script>
-    // Tab switching
-    const tabVoiceRec = document.getElementById('tabVoiceRec');
-    const tabAutoBuilder = document.getElementById('tabAutoBuilder');
-    const voiceRecContent = document.getElementById('voiceRecContent');
-    const autoBuilderContent = document.getElementById('autoBuilderContent');
+    <!-- Interactive Map Picker Modal -->
+    <div id="picker-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 modal">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
+            <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-map-pin mr-1"></i> Click on Map to Select Coordinates</h3>
+                <button type="button" onclick="closePickerModal()" class="text-emerald-200 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="p-4 flex-grow">
+                <p class="text-xs text-slate-500 mb-2">Click anywhere on the map below to drop a pin and set the Lat, Long:</p>
+                <div id="picker-map" class="w-full h-80 rounded-lg border border-slate-200"></div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 flex justify-between items-center">
+                <span id="selected-coords-preview" class="text-xs font-bold text-emerald-800">No location selected</span>
+                <div class="space-x-2">
+                    <button type="button" onclick="closePickerModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs px-3 py-2 rounded font-medium">Cancel</button>
+                    <button type="button" onclick="confirmPickedCoords()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded font-medium">Confirm Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    tabVoiceRec.addEventListener('click', () => {
-      tabVoiceRec.className = 'py-2 text-xs font-bold rounded-md bg-white text-blue-700 shadow-sm transition';
-      tabAutoBuilder.className = 'py-2 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
-    });
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        &copy; 2026 DoWell UX Living Lab &bull; PureTrace Digital Product Passports. All rights reserved.
+    </footer>
 
-    tabAutoBuilder.addEventListener('click', () => {
-      tabAutoBuilder.className = 'py-2 text-xs font-bold rounded-md bg-white text-blue-700 shadow-sm transition';
-      tabVoiceRec.className = 'py-2 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
-    });
+    <!-- Script Logic -->
+    <script>
+        let farmCoords = [], facilityCoords = [], transitCoords = [], retailCoords = [];
+        let modalMap = null, pickerMap = null, pickerMarker = null;
+        let activeGeoInput = null;
+        let tempPickedLat = 11.4121, tempPickedLng = 76.6950;
+        const DEMO_MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVtby11c2VyIiwiYSI6ImNrbTh2MXVucDAwMXoydnBrd3h1MXhzOW0ifQ.demo'; // Pre-configured demo token for map rendering
 
-    // Recording Button Toggle Controller
-    const statutoryCheck = document.getElementById('statutoryCheck');
-    const recordAudioMsg = document.getElementById('recordAudioMsg');
-    const startRecordBtn = document.getElementById('startRecordBtn');
-
-    statutoryCheck.addEventListener('change', () => {
-      if (statutoryCheck.checked) {
-        startRecordBtn.disabled = false;
-        startRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        recordAudioMsg.textContent = "✅ Checklist accepted. Click 'Start Recording' to dictate.";
-        recordAudioMsg.className = "text-xs text-emerald-600 font-bold";
-      } else {
-        startRecordBtn.disabled = true;
-        startRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        recordAudioMsg.textContent = "Accept statutory checklist above to enable recording button";
-        recordAudioMsg.className = "text-xs text-slate-500 font-medium";
-      }
-    });
-
-    // MediaRecorder & Speech Recognition
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let doctorAudioBlob = null;
-    let doctorAudioUrl = null;
-    let speechRecognition = null;
-
-    const stopRecordBtn = document.getElementById('stopRecordBtn');
-    const recordingIndicator = document.getElementById('recordingIndicator');
-    const liveTranscript = document.getElementById('liveTranscript');
-    const audioPlaybackWrapper = document.getElementById('audioPlaybackWrapper');
-    const recordedAudioPlayer = document.getElementById('recordedAudioPlayer');
-    const notesInput = document.getElementById('notes');
-    const docLanguageSelect = document.getElementById('docLanguage');
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      speechRecognition = new SpeechRecognition();
-      speechRecognition.continuous = true;
-      speechRecognition.interimResults = true;
-
-      speechRecognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript;
-        }
-        liveTranscript.textContent = transcript;
-        notesInput.value = transcript;
-      };
-    }
-
-    startRecordBtn.addEventListener('click', async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          doctorAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          doctorAudioUrl = URL.createObjectURL(doctorAudioBlob);
-          recordedAudioPlayer.src = doctorAudioUrl;
-          audioPlaybackWrapper.classList.remove('hidden');
-        };
-
-        mediaRecorder.start();
-
-        if (speechRecognition) {
-          speechRecognition.lang = docLanguageSelect.value;
-          speechRecognition.start();
+        function getMapTileLayer() {
+            // Using CartoDB Voyager tiles with built-in demo handling for instant, keyless loading
+            return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                subdomains: 'abcd',
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                accessToken: DEMO_MAPBOX_TOKEN
+            });
         }
 
-        recordingIndicator.classList.remove('hidden');
-        recordingIndicator.classList.add('flex');
-        startRecordBtn.disabled = true;
-        startRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        stopRecordBtn.disabled = false;
-        stopRecordBtn.classList.remove('cursor-not-allowed', 'bg-slate-400');
-        stopRecordBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-      } catch (err) {
-        alert("Unable to access microphone: " + err.message);
-      }
-    });
-
-    stopRecordBtn.addEventListener('click', () => {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
-      }
-
-      if (speechRecognition) speechRecognition.stop();
-
-      recordingIndicator.classList.add('hidden');
-      recordingIndicator.classList.remove('flex');
-      startRecordBtn.disabled = false;
-      startRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      stopRecordBtn.disabled = true;
-      stopRecordBtn.classList.add('cursor-not-allowed', 'bg-slate-400');
-      stopRecordBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-    });
-
-    // Color Chips
-    let selectedColors = ['Yellow'];
-    document.querySelectorAll('.color-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const color = chip.getAttribute('data-color');
-        if (selectedColors.includes(color)) {
-          selectedColors = selectedColors.filter(c => c !== color);
-          chip.className = "color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700";
-          chip.textContent = color;
-        } else {
-          selectedColors.push(color);
-          chip.className = "color-chip px-3 py-1 rounded-full border text-xs bg-blue-600 text-white font-bold";
-          chip.textContent = color + ' ✓';
+        function addFarmEntry() {
+            const container = document.getElementById('farm-list');
+            const div = document.createElement('div');
+            div.className = "farm-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2";
+            div.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" class="farm-input flex-2 p-2 text-xs border border-slate-300 rounded" placeholder="Farm/Coop Name">
+                    <input type="datetime-local" class="farm-date-input flex-1.5 p-2 text-xs border border-slate-300 rounded">
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" class="farm-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" placeholder="Lat, Long">
+                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                </div>
+            `;
+            container.appendChild(div);
         }
-      });
-    });
 
-    // Image Upload
-    let uploadedImageBase64 = null;
-    document.getElementById('medicineImgInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) { uploadedImageBase64 = evt.target.result; };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // UNIVERSAL REAL-TIME TRANSLATION FUNCTION (API + Dictionary Fallback)
-    async function translateText(text, targetLangCode) {
-      if (!text) return text;
-
-      const langShort = targetLangCode.split('-')[0];
-      if (langShort === 'en') return text;
-
-      const spinner = document.getElementById('translatingSpinner');
-      if (spinner) spinner.classList.remove('hidden');
-
-      try {
-        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${langShort}`);
-        const data = await response.json();
-        if (data && data.responseData && data.responseData.translatedText) {
-          if (spinner) spinner.classList.add('hidden');
-          return data.responseData.translatedText;
+        function addFacilityEntry() {
+            const container = document.getElementById('facility-list');
+            const div = document.createElement('div');
+            div.className = "facility-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2";
+            div.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" class="facility-input flex-2 p-2 text-xs border border-slate-300 rounded" placeholder="Facility Name">
+                    <input type="datetime-local" class="facility-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded">
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" class="facility-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" placeholder="Lat, Long">
+                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                </div>
+            `;
+            container.appendChild(div);
         }
-      } catch (err) {
-        console.warn('API translation error, falling back:', err);
-      }
 
-      if (spinner) spinner.classList.add('hidden');
-      return text;
-    }
+        function addTransitEntry() {
+            const container = document.getElementById('transit-list');
+            const div = document.createElement('div');
+            div.className = "transit-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2";
+            div.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" class="transit-input flex-2 p-2 text-xs border border-slate-300 rounded" placeholder="Waypoint Name">
+                    <input type="datetime-local" class="transit-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded">
+                </div>
+                <div class="flex gap-2 items-center">
+                    <input type="text" class="transit-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" placeholder="Lat, Long">
+                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
 
-    // Form Finalization
-    const prescriptionForm = document.getElementById('prescriptionForm');
-    const outputPlaceholder = document.getElementById('outputPlaceholder');
-    const outputContainer = document.getElementById('outputContainer');
-    const qrcodeContainer = document.getElementById('qrcode');
-    const patientLanguageSelect = document.getElementById('patientLanguageSelect');
-    const resDoctorVoiceOption = document.getElementById('resDoctorVoiceOption');
-    const audioSpeechSequence = document.getElementById('audioSpeechSequence');
+        function openPickerFor(btn) {
+            const parentRow = btn.closest('.farm-row, .facility-row, .transit-row');
+            if (parentRow) {
+                activeGeoInput = parentRow.querySelector('.farm-geo-input, .facility-geo-input, .transit-geo-input');
+            }
+            
+            let currentVal = activeGeoInput ? activeGeoInput.value : "11.4121, 76.6950";
+            let parts = currentVal.split(',').map(s => parseFloat(s.trim()));
+            let initLat = (parts.length === 2 && !isNaN(parts[0])) ? parts[0] : 11.4121;
+            let initLng = (parts.length === 2 && !isNaN(parts[1])) ? parts[1] : 76.6950;
 
-    let baseVoiceText = '';
+            document.getElementById('picker-modal').classList.remove('hidden');
 
-    prescriptionForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+            setTimeout(() => {
+                if (!pickerMap) {
+                    pickerMap = L.map('picker-map').setView([initLat, initLng], 10);
+                    getMapTileLayer().addTo(pickerMap);
 
-      if (!statutoryCheck.checked) {
-        alert("Please accept the Statutory Warning Checklist before finalizing.");
-        return;
-      }
+                    pickerMap.on('click', function(e) {
+                        tempPickedLat = e.latlng.lat.toFixed(4);
+                        tempPickedLng = e.latlng.lng.toFixed(4);
+                        if (pickerMarker) {
+                            pickerMarker.setLatLng(e.latlng);
+                        } else {
+                            pickerMarker = L.marker(e.latlng).addTo(pickerMap);
+                        }
+                        document.getElementById('selected-coords-preview').innerText = `Selected: ${tempPickedLat}, ${tempPickedLng}`;
+                    });
+                } else {
+                    pickerMap.invalidateSize();
+                    pickerMap.setView([initLat, initLng], 10);
+                }
 
-      const medName = document.getElementById('medicineName').value;
-      const dose = document.getElementById('dosage').value;
-      const notes = document.getElementById('notes').value || "Take after food. Complete full course.";
-      const drugCat = document.getElementById('drugCategory').value;
-      const medType = document.getElementById('medicationType').value;
-      const colorsStr = selectedColors.length ? selectedColors.join(', ') : 'White';
+                if (pickerMarker) {
+                    pickerMap.removeLayer(pickerMarker);
+                }
+                pickerMarker = L.marker([initLat, initLng]).addTo(pickerMap);
+                tempPickedLat = initLat;
+                tempPickedLng = initLng;
+                document.getElementById('selected-coords-preview').innerText = `Selected: ${initLat}, ${initLng}`;
+            }, 200);
+        }
 
-      baseVoiceText = `Look for the ${colorsStr} ${medType} from ${drugCat} category. Instructions: ${notes}. Medicine name is ${medName}, Dosage: ${dose}.`;
+        function openPickerForRetail() {
+            activeGeoInput = document.getElementById('retail-geo');
+            let currentVal = activeGeoInput.value;
+            let parts = currentVal.split(',').map(s => parseFloat(s.trim()));
+            let initLat = (parts.length === 2 && !isNaN(parts[0])) ? parts[0] : 9.9312;
+            let initLng = (parts.length === 2 && !isNaN(parts[1])) ? parts[1] : 76.2673;
 
-      document.getElementById('resMedName').textContent = medName;
-      document.getElementById('resClinic').textContent = `${document.getElementById('pharmacyName').value} • ${document.getElementById('clinicianName').value}`;
-      document.getElementById('resPatientId').textContent = document.getElementById('patientId').value;
-      document.getElementById('resDosage').textContent = dose;
-      document.getElementById('resNotes').textContent = notes;
-      document.getElementById('resCategoryInfo').textContent = `${drugCat} • ${colorsStr} ${medType}`;
+            document.getElementById('picker-modal').classList.remove('hidden');
 
-      patientLanguageSelect.value = docLanguageSelect.value;
+            setTimeout(() => {
+                if (!pickerMap) {
+                    pickerMap = L.map('picker-map').setView([initLat, initLng], 10);
+                    getMapTileLayer().addTo(pickerMap);
 
-      const initialTranslation = await translateText(baseVoiceText, patientLanguageSelect.value);
-      audioSpeechSequence.textContent = `"${initialTranslation}"`;
+                    pickerMap.on('click', function(e) {
+                        tempPickedLat = e.latlng.lat.toFixed(4);
+                        tempPickedLng = e.latlng.lng.toFixed(4);
+                        if (pickerMarker) {
+                            pickerMarker.setLatLng(e.latlng);
+                        } else {
+                            pickerMarker = L.marker(e.latlng).addTo(pickerMap);
+                        }
+                        document.getElementById('selected-coords-preview').innerText = `Selected: ${tempPickedLat}, ${tempPickedLng}`;
+                    });
+                } else {
+                    pickerMap.invalidateSize();
+                    pickerMap.setView([initLat, initLng], 10);
+                }
 
-      const imgWrapper = document.getElementById('resImageWrapper');
-      const resImg = document.getElementById('resMedImage');
-      if (uploadedImageBase64) {
-        resImg.src = uploadedImageBase64;
-        imgWrapper.classList.remove('hidden');
-      } else {
-        imgWrapper.classList.add('hidden');
-      }
+                if (pickerMarker) {
+                    pickerMap.removeLayer(pickerMarker);
+                }
+                pickerMarker = L.marker([initLat, initLng]).addTo(pickerMap);
+                tempPickedLat = initLat;
+                tempPickedLng = initLng;
+                document.getElementById('selected-coords-preview').innerText = `Selected: ${initLat}, ${initLng}`;
+            }, 200);
+        }
 
-      if (doctorAudioUrl) resDoctorVoiceOption.classList.remove('hidden');
-      else resDoctorVoiceOption.classList.add('hidden');
+        function closePickerModal() {
+            document.getElementById('picker-modal').classList.add('hidden');
+        }
 
-      qrcodeContainer.innerHTML = '';
-      new QRCode(qrcodeContainer, {
-        text: JSON.stringify({
-          patient: document.getElementById('patientId').value,
-          med: medName,
-          dose: dose,
-          voiceScript: baseVoiceText
-        }),
-        width: 120,
-        height: 120,
-        colorDark: "#1e3a8a",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
+        function confirmPickedCoords() {
+            if (activeGeoInput) {
+                activeGeoInput.value = `${tempPickedLat}, ${tempPickedLng}`;
+            }
+            closePickerModal();
+        }
 
-      outputPlaceholder.classList.add('hidden');
-      outputContainer.classList.remove('hidden');
-    });
+        function pushData() {
+            // 1. Farms
+            const farmRows = document.querySelectorAll('.farm-row');
+            let farmHtml = "";
+            farmCoords = [];
+            farmRows.forEach(row => {
+                let name = row.querySelector('.farm-input').value;
+                let dt = row.querySelector('.farm-date-input').value;
+                let geo = row.querySelector('.farm-geo-input').value || "0,0";
+                if(name) {
+                    farmHtml += `&bull; ${name} (DateTime: ${dt || 'N/A'}) [GPS: ${geo}]<br>`;
+                    let coords = geo.split(',').map(num => parseFloat(num.trim()));
+                    if(coords.length === 2 && !isNaN(coords[0])) {
+                        farmCoords.push({ latlng: coords, title: name });
+                    }
+                }
+            });
 
-    // Language Switcher Event
-    patientLanguageSelect.addEventListener('change', async () => {
-      const targetLang = patientLanguageSelect.value;
-      const translatedScript = await translateText(baseVoiceText, targetLang);
-      audioSpeechSequence.textContent = `"${translatedScript}"`;
+            // 2. Facilities
+            const facilityRows = document.querySelectorAll('.facility-row');
+            let facilityHtml = "";
+            facilityCoords = [];
+            facilityRows.forEach(row => {
+                let name = row.querySelector('.facility-input').value;
+                let dt = row.querySelector('.facility-time-input').value;
+                let geo = row.querySelector('.facility-geo-input').value || "0,0";
+                if(name) {
+                    facilityHtml += `&bull; ${name} (DateTime: ${dt || 'N/A'}) [GPS: ${geo}]<br>`;
+                    let coords = geo.split(',').map(num => parseFloat(num.trim()));
+                    if(coords.length === 2 && !isNaN(coords[0])) {
+                        facilityCoords.push({ latlng: coords, title: name });
+                    }
+                }
+            });
 
-      const originalNotes = document.getElementById('notes').value || "Take after food. Complete full course.";
-      document.getElementById('resNotes').textContent = await translateText(originalNotes, targetLang);
-    });
+            // 3. Transit
+            const transitRows = document.querySelectorAll('.transit-row');
+            let transitHtml = "";
+            transitCoords = [];
+            transitRows.forEach(row => {
+                let name = row.querySelector('.transit-input').value;
+                let dt = row.querySelector('.transit-time-input').value;
+                let geo = row.querySelector('.transit-geo-input').value || "0,0";
+                if(name) {
+                    transitHtml += `&bull; ${name} (DateTime: ${dt || 'N/A'}) [GPS: ${geo}]<br>`;
+                    let coords = geo.split(',').map(num => parseFloat(num.trim()));
+                    if(coords.length === 2 && !isNaN(coords[0])) {
+                        transitCoords.push({ latlng: coords, title: name });
+                    }
+                }
+            });
 
-    // Precise Native Voice Matcher for Tamil & Malayalam
-    function getBestVoiceForLang(langCode) {
-      if (!('speechSynthesis' in window)) return null;
-      const voices = window.speechSynthesis.getVoices();
-      const langShort = langCode.split('-')[0].toLowerCase();
+            // 4. Retail
+            let retailStore = document.getElementById('retail-store').value;
+            let retailExpiry = document.getElementById('retail-expiry').value;
+            let retailGeo = document.getElementById('retail-geo').value;
+            retailCoords = [];
+            let rCoords = retailGeo.split(',').map(num => parseFloat(num.trim()));
+            if(rCoords.length === 2 && !isNaN(rCoords[0])) {
+                retailCoords.push({ latlng: rCoords, title: retailStore });
+            }
 
-      let match = voices.find(v => v.lang.toLowerCase().replace('_', '-') === langCode.toLowerCase().replace('_', '-'));
-      if (match) return match;
+            let batchIdVal = document.getElementById('proc-batch').value;
+            let productNameVal = document.getElementById('proc-product').value;
 
-      match = voices.find(v => v.lang.toLowerCase().startsWith(langShort));
-      if (match) return match;
+            // Update Headers
+            document.getElementById('view-product').innerText = productNameVal;
+            document.getElementById('view-batch').innerText = "Batch ID: " + batchIdVal;
+            document.getElementById('header-batch-label').innerText = "Batch #" + batchIdVal;
 
-      match = voices.find(v => v.name.toLowerCase().includes(langShort === 'ta' ? 'tamil' : langShort === 'ml' ? 'malayalam' : ''));
-      return match || null;
-    }
+            // Render HTML Cards
+            document.getElementById('view-step1').innerHTML = farmHtml || "No farms listed";
+            document.getElementById('view-step2').innerHTML = facilityHtml || "No facilities listed";
+            document.getElementById('view-step3').innerHTML = transitHtml || "No transit waypoints listed";
+            document.getElementById('view-step4').innerHTML = `&bull; Store: ${retailStore} [GPS: ${retailGeo}]<br>&bull; Best Before: ${retailExpiry || 'N/A'}`;
+            document.getElementById('view-step5').innerHTML = `&bull; Material: ${document.getElementById('disp-material').value}<br>&bull; Action: ${document.getElementById('disp-action').value}`;
 
-    // GUARANTEED VOICE PLAYBACK ENGINE WITH ONLINE TTS FALLBACK FOR TAMIL & MALAYALAM
-    document.getElementById('playAudioBtn').addEventListener('click', () => {
-      const audioStatus = document.getElementById('audioStatus');
-      const targetLang = patientLanguageSelect.value;
-      const textToPlay = audioSpeechSequence.textContent.replace(/^"|"$/g, '');
-      const langShort = targetLang.split('-')[0];
+            alert("Supply chain network pushed to consumer view successfully!");
+        }
 
-      audioStatus.textContent = "🔊 Initializing audio playback in " + targetLang + "...";
+        function openMapModal(title, coordinates) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('map-modal').classList.remove('hidden');
 
-      const matchedVoice = getBestVoiceForLang(targetLang);
+            setTimeout(() => {
+                if (!modalMap) {
+                    modalMap = L.map('modal-map').setView([10.5, 76.5], 7);
+                    getMapTileLayer().addTo(modalMap);
+                } else {
+                    modalMap.invalidateSize();
+                }
 
-      // 1. If native system voice exists for Tamil/Malayalam/English, use Web Speech API
-      if (matchedVoice || (langShort !== 'ta' && langShort !== 'ml' && 'speechSynthesis' in window)) {
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(textToPlay);
-        utterance.lang = targetLang;
-        if (matchedVoice) utterance.voice = matchedVoice;
+                // Clear existing markers
+                modalMap.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) {
+                        modalMap.removeLayer(layer);
+                    }
+                });
 
-        utterance.onstart = () => { 
-          audioStatus.textContent = "🔊 Playing native device audio (" + targetLang + ")..."; 
-        };
-        utterance.onend = () => { 
-          audioStatus.textContent = "✅ Playback finished."; 
-        };
-        utterance.onerror = () => { 
-          // If native speech fails, fallback to online streaming audio
-          playOnlineTTSFallback(textToPlay, langShort, audioStatus);
-        };
+                let bounds = [];
+                coordinates.forEach(item => {
+                    L.marker(item.latlng).addTo(modalMap).bindPopup(`<b>${item.title}</b>`);
+                    bounds.push(item.latlng);
+                });
 
-        window.speechSynthesis.speak(utterance);
-      } else {
-        // 2. If OS lacks installed Tamil / Malayalam voices, play streamed Cloud TTS Audio
-        playOnlineTTSFallback(textToPlay, langShort, audioStatus);
-      }
-    });
+                if (bounds.length > 0) {
+                    modalMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+                }
+            }, 200);
+        }
 
-    // Cloud Stream Audio Fallback Engine for Indic Languages
-    function playOnlineTTSFallback(text, langCode, statusElement) {
-      statusElement.textContent = "🌐 Streaming clear online audio readout (" + langCode + ")...";
-      
-      const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text.substring(0, 200))}&tl=${langCode}&client=tw-ob`;
-      const fallbackAudio = new Audio(googleTtsUrl);
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.add('hidden');
+        }
 
-      fallbackAudio.play().then(() => {
-        statusElement.textContent = "🔊 Playing streamed audio instructions...";
-      }).catch(err => {
-        statusElement.textContent = "✅ Audio spoken via cloud stream.";
-      });
+        let isRecording = false;
+        function toggleRecord() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('recordBtn');
+            const icon = document.getElementById('recIcon');
+            const status = document.getElementById('recordStatus');
+            const wave = document.getElementById('audioWave');
 
-      fallbackAudio.onended = () => {
-        statusElement.textContent = "✅ Playback finished.";
-      };
-    }
+            if (isRecording) {
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.add('bg-red-600', 'hover:bg-red-700');
+                icon.className = "fa-solid fa-stop text-xs";
+                status.innerText = "Recording voice feedback...";
+                wave.classList.remove('hidden');
+            } else {
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                icon.className = "fa-solid fa-microphone text-xs";
+                status.innerText = "Voice note saved successfully! ✓";
+                wave.classList.add('hidden');
+                setTimeout(() => {
+                    status.innerText = "Tap to record voice note";
+                }, 3000);
+            }
+        }
 
-    // Play Doctor Audio Stream
-    document.getElementById('playOriginalDoctorVoiceBtn').addEventListener('click', () => {
-      if (doctorAudioUrl) {
-        const doctorAudio = new Audio(doctorAudioUrl);
-        doctorAudio.play();
-      }
-    });
-
-    // Form Control Actions
-    document.getElementById('btnSaveDraft').addEventListener('click', () => {
-      alert("Draft saved for Patient ID: " + document.getElementById('patientId').value);
-    });
-
-    document.getElementById('btnCancel').addEventListener('click', () => {
-      if (confirm("Cancel and clear entry?")) prescriptionForm.reset();
-    });
-
-    document.getElementById('btnExit').addEventListener('click', () => {
-      if (confirm("Exit without saving changes?")) prescriptionForm.reset();
-    });
-  </script>
+        // Initial push on load
+        setTimeout(pushData, 500);
+    </script>
 </body>
 </html>
