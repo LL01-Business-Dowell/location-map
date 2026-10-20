@@ -1137,19 +1137,122 @@ app.get("/api/files/stream/:file_id", async (req, res) => {
   }
 });
 
-// ---------- PUBLIC API: GET CLIENT NAME & LOGO BY QR CODE ID ----------
-app.get("/api/get_client_info/:qr_id", async (req, res) => {
-  console.log("  [get_client_info] qr_id:", req.params.qr_id);
+// ---------- SAVE TRACE DETAILS (MULTI-BATCH ARRAY SUPPORT) ----------
+app.post("/api/save_trace_details", async (req, res) => {
+  console.log("  [save_trace_details] link_id:", req.body?.link_id, "| batch_id:", req.body?.batch_id);
   try {
-    const { qr_id } = req.params;
+    const { link_id, batch_id, trace_details } = req.body || {};
 
-    if (!qr_id) {
-      return res.status(400).json({ error: "QR Code ID is required" });
+    if (!link_id) {
+      return res.status(400).json({ error: "link_id (Lot ID) is required" });
     }
 
-    // 1. Query medsign_links collection by link_id (QR ID)
-    const filters = JSON.stringify({ link_id: String(qr_id) });
-    const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_links&filters=${encodeURIComponent(filters)}&page=1&page_size=1`;
+    const effectiveBatchId = String(batch_id || trace_details?.batch_id || "BATCH-" + link_id);
+
+    // 1. Fetch existing document from DataCube
+    const filtersParam = JSON.stringify({ link_id: String(link_id) });
+    const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_links&filters=${encodeURIComponent(filtersParam)}&page=1&page_size=1`;
+
+    const existingRes = await fetch(queryUrl, {
+      method: "GET",
+      headers: authHeaders()
+    });
+
+    let existingTraceArray = [];
+    if (existingRes.ok) {
+      const existingJson = await existingRes.json();
+      const existingDocs = existingJson?.data || [];
+      if (existingDocs.length > 0) {
+        let rawTrace = existingDocs[0].trace_details;
+
+        // Parse JSON string if stored as string
+        if (typeof rawTrace === "string") {
+          try { rawTrace = JSON.parse(rawTrace); } catch (e) { rawTrace = []; }
+        }
+
+        // Standardize single object into array if legacy format exists
+        if (Array.isArray(rawTrace)) {
+          existingTraceArray = rawTrace;
+        } else if (rawTrace && typeof rawTrace === "object" && Object.keys(rawTrace).length > 0) {
+          existingTraceArray = [rawTrace];
+        }
+      }
+    }
+
+    // 2. Prepare new trace entry for this batch
+    const newTraceEntry = {
+      ...(trace_details || {}),
+      batch_id: effectiveBatchId,
+      updated_at: new Date().toISOString()
+    };
+
+    // 3. Search for matching batch entry in array
+    const existingIndex = existingTraceArray.findIndex(
+      (item) => item.batch_id === effectiveBatchId
+    );
+
+    if (existingIndex !== -1) {
+      // Update existing batch entry
+      existingTraceArray[existingIndex] = newTraceEntry;
+    } else {
+      // Append as new batch entry under same Lot ID
+      existingTraceArray.push(newTraceEntry);
+    }
+
+    // 4. Update DataCube record
+    const payload = {
+      database_id: DB_ID,
+      collection_name: "medsign_links",
+      filters: { link_id: String(link_id) },
+      update_data: {
+        trace_details: existingTraceArray,
+        updated_at: new Date().toISOString()
+      },
+      update_all_fields: false,
+      update_many: true,
+      upsert: false
+    };
+
+    const r = await fetch(`${DATACUBE_BASE}/crud`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await r.json();
+    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
+
+    res.json({
+      success: true,
+      link_id: String(link_id),
+      total_batches: existingTraceArray.length,
+      trace_details: existingTraceArray
+    });
+
+  } catch (err) {
+    console.error("  [save_trace_details] ERROR:", err.message);
+    res.status(500).json({ error: "Failed to save trace details", details: err.message });
+  }
+});
+
+// ---------- GET LATEST SCAN LOCATION BY QR_ID ----------
+app.get("/api/get_latest_scan/:qr_id", async (req, res) => {
+  const { qr_id } = req.params;
+  console.log(`\n  [get_latest_scan] Fetching latest scan for QR ID: ${qr_id}`);
+
+  if (!qr_id) {
+    return res.status(400).json({ error: "qr_id parameter is required" });
+  }
+
+  try {
+    const filtersParam = JSON.stringify({
+      qr_id: String(qr_id),
+      type: "puretrace"
+    });
+
+    const queryUrl = `${DATACUBE_BASE}/crud/?database_id=${DB_ID}&collection_name=medsign_qr_scan&filters=${encodeURIComponent(filtersParam)}&page=1&page_size=50`;
+    
+    console.log(`  [get_latest_scan] Querying DataCube URL: ${queryUrl}`);
 
     const r = await fetch(queryUrl, {
       method: "GET",
@@ -1157,80 +1260,50 @@ app.get("/api/get_client_info/:qr_id", async (req, res) => {
     });
 
     const data = await r.json();
-    if (!r.ok) throw new Error(`DataCube error: ${JSON.stringify(data)}`);
-
-    const records = data?.data || [];
-    if (records.length === 0) {
-      return res.status(404).json({ error: "QR Code ID not found" });
+    if (!r.ok) {
+      console.error(`  [get_latest_scan] DataCube Error (${r.status}):`, JSON.stringify(data));
+      throw new Error(`DataCube returned status ${r.status}`);
     }
 
-    const record = records[0];
+    let scans = data?.data || data?.records || [];
+    console.log(`  [get_latest_scan] Total raw documents returned: ${scans.length}`);
 
-    // Safely parse product_details if stored as JSON string
-    let productDetails = record.product_details || [];
-    if (typeof productDetails === "string") {
-      try {
-        productDetails = JSON.parse(productDetails);
-      } catch (e) {
-        productDetails = [];
-      }
+    // Filter strictly by qr_id and type
+    scans = scans.filter(s => String(s.qr_id) === String(qr_id) && s.type === "puretrace");
+    console.log(`  [get_latest_scan] Documents after filtering: ${scans.length}`);
+
+    if (scans.length === 0) {
+      console.warn(`  [get_latest_scan] No matching scan entries found for QR ID: ${qr_id}`);
+      return res.json({ success: true, latest_scan: null });
     }
 
-    // Select primary active batch or first available detail entry
-    const primaryBatch = Array.isArray(productDetails)
-      ? (productDetails.find(b => b.status !== "draft") || productDetails[0] || {})
-      : productDetails;
+    // Sort descending by scanned_at timestamp to ensure latest record
+    scans.sort((a, b) => new Date(b.scanned_at || 0) - new Date(a.scanned_at || 0));
 
-    // Extract Client / Brand Name
-    const clientName = record.client_name || primaryBatch.marketed_by || primaryBatch.manufactured_by || primaryBatch.product_name || "Unknown Client";
+    const latest = scans[0];
+    let lat = latest.latitude || "";
+    let lng = latest.longitude || "";
 
-    // 2. Safely extract file_id from splash_screen_logo or product_images
-    let logoFileId = null;
-
-    if (primaryBatch.splash_screen_logo) {
-      if (typeof primaryBatch.splash_screen_logo === "object") {
-        logoFileId = primaryBatch.splash_screen_logo.file_id || primaryBatch.splash_screen_logo.id;
-      } else if (typeof primaryBatch.splash_screen_logo === "string") {
-        logoFileId = primaryBatch.splash_screen_logo;
-      }
+    if ((!lat || !lng) && latest.location_coordinates) {
+      const parts = latest.location_coordinates.split(",").map(p => p.trim());
+      lat = parts[0] || "";
+      lng = parts[1] || "";
     }
 
-    // Fallback: If no splash_screen_logo, look inside product_images array
-    if (!logoFileId && primaryBatch.product_images && Array.isArray(primaryBatch.product_images) && primaryBatch.product_images.length > 0) {
-      const firstImg = primaryBatch.product_images[0]?.file;
-      if (typeof firstImg === "object") {
-        logoFileId = firstImg.file_id || firstImg.id;
-      } else if (typeof firstImg === "string") {
-        logoFileId = firstImg;
-      }
-    }
+    const result = {
+      qr_id: latest.qr_id,
+      latitude: lat,
+      longitude: lng,
+      location_coordinates: (lat && lng) ? `${lat}, ${lng}` : (latest.location_coordinates || ""),
+      scanned_at: latest.scanned_at ? new Date(latest.scanned_at).toLocaleString() : "Recently Scanned"
+    };
 
-    // 3. Format logo URL based on extracted ID or direct URL string
-    let logoUrl = null;
-
-    if (logoFileId) {
-      if (typeof logoFileId === "string" && (logoFileId.startsWith("http://") || logoFileId.startsWith("https://") || logoFileId.startsWith("data:"))) {
-        logoUrl = logoFileId;
-      } else {
-        logoUrl = `https://location-map-a89a.onrender.com/api/files/stream/${logoFileId}`;
-      }
-    }
-
-    // Fallback default logo if no custom image exists
-    if (!logoUrl) {
-      logoUrl = "https://location-map-1.onrender.com/assets/logo.png";
-    }
-
-    res.json({
-      success: true,
-      qr_id: String(qr_id),
-      client_name: clientName,
-      splash_logo_url: logoUrl
-    });
+    console.log("  [get_latest_scan] ✓ Latest Scan Resolved:", result);
+    return res.json({ success: true, latest_scan: result });
 
   } catch (err) {
-    console.error("  [get_client_info] ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch client information", details: err.message });
+    console.error("  [get_latest_scan] EXCEPTION:", err.message);
+    res.status(500).json({ error: "Failed to fetch scan location", details: err.message });
   }
 });
 

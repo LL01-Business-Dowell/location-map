@@ -845,3 +845,43 @@ async function createMedSignLinks(email, count = 1) {
 
   return await res.json(); // returns { success: true, links: [...], inserted_ids: [...] }
 }
+
+// ── saveTraceDetails ──────────────────────────────────────────────────
+// Pushes supply chain passport steps to dedicated /api/save_trace_details endpoint
+
+async function saveTraceDetails({ link_id, batch_id, trace_details }) {
+  if (!link_id) {
+    throw new Error("link_id (QR Code ID) is required.");
+  }
+
+  const payload = {
+    link_id: String(link_id),
+    batch_id: String(batch_id || trace_details?.batch_id || "BATCH-" + link_id),
+    trace_details: {
+      status: "active",
+      product_name: trace_details?.product_name || "PureTrace Product",
+      batch_id: String(batch_id || trace_details?.batch_id || "BATCH-" + link_id),
+      mrp: String(trace_details?.mrp || ""),
+      manufactured_by: trace_details?.manufactured_by || "", // Step 1: Farm
+      marketed_by: trace_details?.marketed_by || "",         // Step 2: Processing Plant
+      mfg_date: trace_details?.mfg_date || "",               // Harvest / Packing Date
+      expiry_date: trace_details?.expiry_date || "",         // Step 4: Expiry Date
+      location_coordinates: trace_details?.location_coordinates || "", // Step 4: Live Scan GPS
+      package_recycling: trace_details?.package_recycling || "",       // Step 5: Disposal Info
+      updated_at: new Date().toISOString()
+    }
+  };
+
+  const res = await fetch(`${PROXY_BASE}/save_trace_details`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || `Failed to save trace details (${res.status})`);
+  }
+
+  return res.json();
+}

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PureTrace - Digital Product Passport</title>
+
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --primary-light: #E8F5E9;
+            --bg-color: #F4F6F5;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #E0E0E0;
+            --accent-orange: #FF9800;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            position: relative;
+        }
+
+        /* Full Screen Loader */
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loader-text {
+            margin-top: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            gap: 8px;
+        }
+
+        .header h2 {
+            font-size: 17px;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .badge {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .route-tracker {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 18px 0;
+            padding: 0 4px;
+        }
+
+        .node {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #BDBDBD;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .node.completed {
+            background: var(--primary-color);
+        }
+
+        .node.active {
+            background: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+        }
+
+        .track-line {
+            flex: 1;
+            height: 3px;
+            background: #BDBDBD;
+            margin: 0 2px;
+        }
+
+        .track-line.completed {
+            background: var(--primary-color);
+        }
+
+        .milestone-card {
+            background: #FAFAFA;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .milestone-card.active-card {
+            border-color: var(--primary-color);
+            background: #F1F8F5;
+        }
+
+        .milestone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 6px;
+        }
+
+        .milestone-title {
+            font-weight: bold;
+            font-size: 13px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .btn-map {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .milestone-details {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .entry-group {
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .entry-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .live-tag {
+            background: #E0F2FE;
+            color: #0284C7;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 14px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        #modal-map {
+            width: 100%;
+            height: 260px;
+            border-radius: 6px;
+            border: 1px solid #CCC;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="loader-overlay" id="loader">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading Product Passport...</div>
+        </div>
+
+        <div class="header">
+            <div>
+                <h2 id="product-name">PureTrace Passport</h2>
+                <p class="subtitle" id="batch-id-display">Fetching passport data...</p>
+            </div>
+            <div class="badge">🟢 Verified Authentic</div>
+        </div>
+
+        <div class="route-tracker" id="route-tracker"></div>
+        <div id="milestones-container"></div>
+    </div>
+
+    <div id="map-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Geo-Map View</h3>
+                <button class="modal-close" onclick="closeMapModal()">✕</button>
+            </div>
+            <div id="modal-map"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        const API_BASE = typeof PROXY_BASE !== "undefined" ? PROXY_BASE : "https://location-map-a89a.onrender.com/api";
+        const MASTER_DATABASE_ID = "69985c0844ca8a1af7fd639e";
+        const COLLECTION_SCAN_NAME = "medsign_qr_scan";
+
+        let modalMap = null;
+        let qrId = "";
+        let stepCoordsMap = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+        let primaryTraceData = null;
+        let lastKnownScanTime = "";
+
+        function showLoader() {
+            const loader = document.getElementById("loader");
+            if (loader) loader.style.display = "flex";
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById("loader");
+            if (loader) loader.style.display = "none";
+        }
+
+        function getQrIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get("id") || "";
+        }
+
+        async function fetchLatestScanLocation(targetQrId) {
+            try {
+                const filters = JSON.stringify({
+                    qr_id: String(targetQrId),
+                    type: "puretrace"
+                });
+
+                const queryUrl = `${API_BASE}/crud?database_id=${MASTER_DATABASE_ID}&collection_name=${COLLECTION_SCAN_NAME}&filters=${encodeURIComponent(filters)}&page=1&page_size=50`;
+
+                const res = await fetch(queryUrl, { method: "GET" });
+                if (!res.ok) return null;
+
+                const json = await res.json();
+                let scans = json.data || json.records || [];
+
+                scans = scans.filter(s => String(s.qr_id) === String(targetQrId) && s.type === "puretrace");
+
+                if (scans.length > 0) {
+                    scans.sort((a, b) => new Date(b.scanned_at || 0) - new Date(a.scanned_at || 0));
+                    const latest = scans[0];
+
+                    let lat = latest.latitude || "";
+                    let lng = latest.longitude || "";
+
+                    if ((!lat || !lng) && latest.location_coordinates) {
+                        const parts = latest.location_coordinates.split(",").map(p => p.trim());
+                        lat = parts[0] || "";
+                        lng = parts[1] || "";
+                    }
+
+                    return {
+                        coords: (lat && lng) ? `${lat}, ${lng}` : (latest.location_coordinates || ""),
+                        timestamp: latest.scanned_at ? new Date(latest.scanned_at).toLocaleString() : "Recently Scanned",
+                        rawTimestamp: latest.scanned_at || ""
+                    };
+                }
+            } catch (err) {
+                console.error("[Frontend] Polling scan error:", err);
+            }
+            return null;
+        }
+
+        async function fetchPassportData() {
+            showLoader();
+            qrId = getQrIdFromUrl();
+            if (!qrId) {
+                document.getElementById("product-name").innerText = "No QR ID Specified";
+                document.getElementById("batch-id-display").innerText = "Please provide ?id= in URL";
+                hideLoader();
+                return;
+            }
+
+            document.getElementById("batch-id-display").innerText = `QR ID: ${qrId}`;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedBatchId = urlParams.get("batch_id");
+
+            try {
+                const [passportRes, latestScan] = await Promise.all([
+                    fetch(`${API_BASE}/get_medsign_link/${qrId}`),
+                    fetchLatestScanLocation(qrId)
+                ]);
+
+                if (!passportRes.ok) throw new Error("Passport record not found");
+
+                const json = await passportRes.json();
+                const record = json.record || {};
+
+                let traceArray = record.trace_details;
+                if (typeof traceArray === "string") {
+                    try { traceArray = JSON.parse(traceArray); } catch (e) { traceArray = []; }
+                }
+
+                if (traceArray && !Array.isArray(traceArray)) {
+                    traceArray = Object.keys(traceArray).length > 0 ? [traceArray] : [];
+                }
+
+                if (Array.isArray(traceArray) && traceArray.length > 0) {
+                    if (selectedBatchId) {
+                        primaryTraceData = traceArray.find(b => b.batch_id === selectedBatchId);
+                    }
+                    if (!primaryTraceData) {
+                        primaryTraceData = traceArray.find(b => b.status !== "draft") || traceArray[0];
+                    }
+                } else {
+                    primaryTraceData = {};
+                }
+
+                if (primaryTraceData && Object.keys(primaryTraceData).length > 0) {
+                    document.getElementById("product-name").innerText = primaryTraceData.product_name || "PureTrace Tracked Product";
+
+                    if (latestScan && latestScan.coords) {
+                        primaryTraceData.latest_scan_coords = latestScan.coords;
+                        primaryTraceData.latest_scan_time = latestScan.timestamp;
+                        lastKnownScanTime = latestScan.rawTimestamp;
+                    }
+
+                    renderMilestones(primaryTraceData);
+                } else {
+                    document.getElementById("product-name").innerText = "Trace Data Unavailable";
+                    renderMilestones({});
+                }
+
+                startRealtimeScanPolling(qrId);
+
+            } catch (err) {
+                console.error("[Frontend] Error loading trace record:", err);
+                document.getElementById("product-name").innerText = "Trace Data Unavailable";
+                renderMilestones({});
+            } finally {
+                hideLoader();
+            }
+        }
+
+        function startRealtimeScanPolling(targetQrId) {
+            setInterval(async () => {
+                const latestScan = await fetchLatestScanLocation(targetQrId);
+                if (latestScan && latestScan.coords) {
+                    if (latestScan.rawTimestamp !== lastKnownScanTime) {
+                        lastKnownScanTime = latestScan.rawTimestamp;
+
+                        if (primaryTraceData) {
+                            primaryTraceData.latest_scan_coords = latestScan.coords;
+                            primaryTraceData.latest_scan_time = latestScan.timestamp;
+                            renderMilestones(primaryTraceData);
+                        }
+                    }
+                }
+            }, 3000);
+        }
+
+        // Render Milestones (Processes Arrays for Steps 1, 2, and 3)
+        function renderMilestones(batchData) {
+            let trackerHtml = "";
+            let milestonesHtml = "";
+
+            let latestScanLocation = batchData.latest_scan_coords || batchData.location_coordinates || "";
+            let latestScanTime = batchData.latest_scan_time || batchData.updated_at || batchData.mfg_date || "N/A";
+
+            // --- STEP 1: Process Farms Array ---
+            let step1Details = "";
+            let step1Coords = [];
+            const farmEntries = Array.isArray(batchData.farm_entries) && batchData.farm_entries.length > 0
+                ? batchData.farm_entries
+                : (batchData.manufactured_by ? [{ name: batchData.manufactured_by, date: batchData.mfg_date, geo: batchData.location_coordinates }] : []);
+
+            if (farmEntries.length > 0) {
+                farmEntries.forEach((f, i) => {
+                    step1Details += `<div class="entry-group">• <strong>Farm ${farmEntries.length > 1 ? (i + 1) : ''}:</strong> ${f.name || 'N/A'}<br>&nbsp;&nbsp;<strong>Harvest Date:</strong> ${f.date || 'N/A'}</div>`;
+                    if (f.geo) step1Coords.push(...parseCoords(f.geo, f.name || "Farm"));
+                });
+            } else {
+                step1Details = "• <strong>Origin:</strong> Pending Data Entry";
+            }
+
+            // --- STEP 2: Process Facilities Array ---
+            let step2Details = "";
+            let step2Coords = [];
+            const facilityEntries = Array.isArray(batchData.facility_entries) && batchData.facility_entries.length > 0
+                ? batchData.facility_entries
+                : (batchData.marketed_by ? [{ name: batchData.marketed_by, time: "", geo: "" }] : []);
+
+            if (facilityEntries.length > 0) {
+                facilityEntries.forEach((fac, i) => {
+                    step2Details += `<div class="entry-group">• <strong>Facility ${facilityEntries.length > 1 ? (i + 1) : ''}:</strong> ${fac.name || 'N/A'}${fac.time ? `<br>&nbsp;&nbsp;<strong>Packing Time:</strong> ${fac.time}` : ''}</div>`;
+                    if (fac.geo) step2Coords.push(...parseCoords(fac.geo, fac.name || "Facility"));
+                });
+                
+                const currency = batchData.mrp_currency || "₹";
+                step2Details += `• <strong>Batch ID:</strong> ${batchData.batch_id || 'N/A'}<br>`;
+                step2Details += `• <strong>MRP:</strong> ${batchData.mrp ? currency + " " + batchData.mrp : "N/A"}`;
+            } else {
+                step2Details = "• <strong>Facility:</strong> Pending Data Entry";
+            }
+
+            // --- STEP 3: Process Transit Hubs Array ---
+            let step3Details = "";
+            let step3Coords = [];
+            const transitEntries = Array.isArray(batchData.transit_entries) && batchData.transit_entries.length > 0
+                ? batchData.transit_entries
+                : [];
+
+            if (transitEntries.length > 0) {
+                transitEntries.forEach((t, i) => {
+                    step3Details += `<div class="entry-group">• <strong>Waypoint ${i + 1}:</strong> ${t.hub || 'N/A'}<br>&nbsp;&nbsp;<strong>Condition:</strong> ${t.condition || 'Ambient'}</div>`;
+                    if (t.geo) step3Coords.push(...parseCoords(t.geo, t.hub || `Waypoint ${i + 1}`));
+                });
+            } else {
+                step3Details = "• <strong>Logistics Route:</strong> Hub ➔ Central Retail Warehouse<br>• <strong>Condition:</strong> Ambient Temperature Controlled";
+            }
+
+            // --- STAGES CONFIGURATION ---
+            const stages = [
+                {
+                    id: 1,
+                    title: "Farm & Sourcing",
+                    status: "Completed",
+                    detailsHtml: step1Details,
+                    coords: step1Coords
+                },
+                {
+                    id: 2,
+                    title: "Processing & Packing",
+                    status: "Completed",
+                    detailsHtml: step2Details,
+                    coords: step2Coords
+                },
+                {
+                    id: 3,
+                    title: "Transit Waypoints",
+                    status: "Completed",
+                    detailsHtml: step3Details,
+                    coords: step3Coords
+                },
+                {
+                    id: 4,
+                    title: "Fork / Retail Shelf",
+                    status: "Current Location (Latest Scan)",
+                    isLiveScan: true,
+                    detailsHtml: `• <strong>Store Location:</strong> ${batchData.retail_store || 'Retail Outlet'}<br>• <strong>Scan GPS Location:</strong> ${latestScanLocation || 'Location Not Registered Yet'}<br>• <strong>Last Scanned At:</strong> ${latestScanTime}<br>• <strong>Best Before:</strong> ${batchData.expiry_date || 'N/A'}`,
+                    coords: parseCoords(latestScanLocation, "Current Retail Shelf")
+                },
+                {
+                    id: 5,
+                    title: "Disposal & End-of-Life",
+                    status: "Pending Consumer Action",
+                    detailsHtml: `• <strong>Material:</strong> ${batchData.package_recycling || 'N/A'}<br>• <strong>Instruction:</strong> ${batchData.disposal_action || 'Clean, Crush & Drop in Dry Waste Bin'}`,
+                    coords: []
+                }
+            ];
+
+            stages.forEach((stage, index) => {
+                const stepNum = index + 1;
+                let statusClass = stepNum < 4 ? "completed" : (stepNum === 4 ? "active" : "");
+
+                trackerHtml += `<div class="node ${statusClass}">${stepNum}</div>`;
+                if (index < stages.length - 1) {
+                    const lineClass = stepNum < 4 ? "completed" : "";
+                    trackerHtml += `<div class="track-line ${lineClass}"></div>`;
+                }
+
+                stepCoordsMap[stepNum] = stage.coords;
+
+                const isActiveCard = stepNum === 4 ? "active-card" : "";
+                const hasMapBtn = stage.coords.length > 0
+                    ? `<button class="btn-map" onclick="openMapModal('Step ${stepNum}: ${stage.title}', stepCoordsMap[${stepNum}])">📍 Map (${stage.coords.length})</button>`
+                    : "";
+
+                milestonesHtml += `
+                    <div class="milestone-card ${isActiveCard}">
+                        <div class="milestone-header">
+                            <span class="milestone-title">
+                                Step ${stepNum}: ${stage.title}
+                                ${stage.isLiveScan ? '<span class="live-tag">LIVE SCAN</span>' : ''}
+                            </span>
+                            ${hasMapBtn}
+                        </div>
+                        <div class="milestone-details">${stage.detailsHtml}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById("route-tracker").innerHTML = trackerHtml;
+            document.getElementById("milestones-container").innerHTML = milestonesHtml;
+        }
+
+        function parseCoords(coordStr, titleLabel = "Scanned Location") {
+            if (!coordStr) return [];
+            const parts = coordStr.split(",").map(p => parseFloat(p.trim()));
+            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                return [{ latlng: [parts[0], parts[1]], title: titleLabel }];
+            }
+            return [];
+        }
+
+        function openMapModal(title, coordinates) {
+            document.getElementById("modal-title").innerText = title;
+            document.getElementById("map-modal").style.display = "flex";
+
+            setTimeout(() => {
+                if (!modalMap) {
+                    modalMap = L.map("modal-map").setView([10.5, 76.5], 8);
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                        maxZoom: 18,
+                        attribution: "© OpenStreetMap"
+                    }).addTo(modalMap);
+                } else {
+                    modalMap.invalidateSize();
+                }
+
+                modalMap.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) modalMap.removeLayer(layer);
+                });
+
+                let bounds = [];
+                coordinates.forEach(item => {
+                    L.marker(item.latlng).addTo(modalMap).bindPopup(`<b>${item.title}</b>`).openPopup();
+                    bounds.push(item.latlng);
+                });
+
+                if (bounds.length > 0) {
+                    modalMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+                }
+            }, 200);
+        }
+
+        function closeMapModal() {
+            document.getElementById("map-modal").style.display = "none";
+        }
+
+        fetchPassportData();
+    </script>
+</body>
+
+</html>

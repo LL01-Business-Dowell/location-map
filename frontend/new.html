@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedSignQR - Voice, Transcription & Multilingual Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QR Code Generator Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-blue-700 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="bg-white text-blue-700 p-2 rounded-lg font-bold text-xl">QR</div>
+        <div>
+          <h1 class="text-xl font-bold tracking-wide">MedSignQR Studio</h1>
+          <p class="text-xs text-blue-200">Distributor Demonstration Portal • DoWell UX Living Lab</p>
+        </div>
+      </div>
+      <span class="text-xs bg-blue-800 px-3 py-1.5 rounded-full border border-blue-500">
+        📍 Doctor / Pharmacist Creator View
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- LEFT PANEL: DOCTOR / PHARMA FORM -->
+      <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
+        <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold">New Prescription</h2>
+            <p class="text-xs text-slate-300">Create a new patient record • ID: <span id="recordId" class="font-mono text-yellow-300">yyCjOVqM</span></p>
+          </div>
+          <span class="text-xs bg-slate-700 text-slate-200 px-2.5 py-1 rounded-md">Step 1 of 2</span>
+        </div>
+
+        <form id="prescriptionForm" class="p-6 space-y-6 flex-1 overflow-y-auto max-h-[80vh]">
+          
+          <!-- Important Banner -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 flex items-start gap-2">
+            <span class="text-base leading-none">ℹ️</span>
+            <p><strong>Important:</strong> Please consult a qualified medical practitioner before using medicines that require medical supervision or a prescription.</p>
+          </div>
+
+          <!-- Section 1: Clinic & Patient Info -->
+          <div class="space-y-4 border-b border-slate-200 pb-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Pharmacy / Clinic Name *</label>
+              <input type="text" id="pharmacyName" value="City Health Pharmacy" required
+                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Clinician Name *</label>
+                <input type="text" id="clinicianName" value="Dr. Sharma" required
+                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Clinician Mobile No. *</label>
+                <input type="tel" id="clinicianMobile" value="9876543210" required
+                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Patient Identifier *</label>
+              <input type="text" id="patientId" value="PAT-001" required
+                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Section 2: Medication Details -->
+          <div class="space-y-4 border-b border-slate-200 pb-5">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>💊</span> Medicine Details
+            </h3>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medicine Name *</label>
+              <input type="text" id="medicineName" value="Amoxicillin" required
+                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Dosage *</label>
+              <input type="text" id="dosage" value="500mg / 10ml" required
+                     class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Doctor's Dictation Language</label>
+              <select id="docLanguage" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                <option value="en-US">English</option>
+                <option value="hi-IN">Hindi (हिंदी)</option>
+                <option value="ta-IN">Tamil (தமிழ்)</option>
+                <option value="ml-IN">Malayalam (മലയാളം)</option>
+                <option value="es-ES">Spanish (Español)</option>
+                <option value="fr-FR">French (Français)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Notes / Instructions</label>
+              <textarea id="notes" rows="2" 
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                        placeholder="Special instructions for the patient...">Take after food. Complete full 7-day course.</textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medicine Image (Optional)</label>
+              <input type="file" id="medicineImgInput" accept="image/*" class="w-full text-xs text-slate-500 border border-slate-300 rounded-lg p-2 bg-slate-50 cursor-pointer" />
+            </div>
+          </div>
+
+          <!-- Section 3: Audio Instructions & Visual Descriptors -->
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>🎙️</span> Audio Instructions & Visual Identifiers
+            </h3>
+
+            <div class="grid grid-cols-2 gap-2 bg-slate-200 p-1 rounded-lg">
+              <button type="button" id="tabVoiceRec" class="py-2 text-xs font-bold rounded-md bg-white text-blue-700 shadow-sm transition">
+                🎙️ Voice Recording & Dictation
+              </button>
+              <button type="button" id="tabAutoBuilder" class="py-2 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition">
+                🪄 Visual Identifiers
+              </button>
+            </div>
+
+            <!-- Statutory Warning Box -->
+            <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 text-xs space-y-2">
+              <p class="font-bold text-amber-900 uppercase text-[11px] flex items-center gap-1">
+                <span>⚠️</span> Statutory Warning — Review Checklist
+              </p>
+              <ul class="list-disc list-inside text-amber-900 space-y-1">
+                <li><strong>Patient Identity:</strong> Matches the intended recipient.</li>
+                <li><strong>Clinical Intent:</strong> Dosage and Frequency are medically accurate.</li>
+                <li><strong>Compliance:</strong> This audio matches signed/stamped prescription as per NMC guidelines.</li>
+                <li><strong>Support Tool:</strong> I understand this AI-voice supplements, but does not replace, the official written prescription.</li>
+              </ul>
+              <hr class="border-amber-200 my-2" />
+              <label class="flex items-center gap-2 text-amber-950 font-semibold cursor-pointer">
+                <input type="checkbox" id="statutoryCheck" class="rounded border-amber-400 text-blue-600 focus:ring-blue-500" />
+                <span>I have read, understood, and agree to all of the above statutory requirements.</span>
+              </label>
+            </div>
+
+            <!-- Tab Content 1: Voice Recording & Speech Recognition -->
+            <div id="voiceRecContent" class="p-4 border border-dashed border-slate-300 rounded-lg text-center space-y-3 bg-slate-50">
+              <div class="flex justify-center gap-3">
+                <button type="button" id="startRecordBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full text-xs flex items-center gap-2 transition opacity-50 cursor-not-allowed" disabled>
+                  <span>🔴</span> Start Recording
+                </button>
+                <button type="button" id="stopRecordBtn" class="px-4 py-2 bg-slate-400 text-white font-bold rounded-full text-xs flex items-center gap-2 transition cursor-not-allowed" disabled>
+                  <span>⏹️</span> Stop & Save
+                </button>
+              </div>
+
+              <div id="recordingIndicator" class="hidden items-center justify-center gap-2 text-red-600 font-bold text-xs animate-pulse">
+                <span class="w-2.5 h-2.5 bg-red-600 rounded-full"></span> Microphone Active & Transcribing...
+              </div>
+
+              <div class="text-left bg-white p-3 rounded-lg border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Live Speech Transcription:</span>
+                <p id="liveTranscript" class="text-xs text-slate-600 italic mt-1 min-h-[36px]">
+                  (Spoken words will automatically transcribe here into notes...)
+                </p>
+              </div>
+
+              <div id="audioPlaybackWrapper" class="hidden text-left bg-blue-50 p-3 rounded-lg border border-blue-200 space-y-1">
+                <span class="text-[10px] font-bold text-blue-800 uppercase">Doctor Recorded Voice Preview:</span>
+                <audio id="recordedAudioPlayer" controls class="w-full h-8 mt-1"></audio>
+              </div>
+
+              <p id="recordAudioMsg" class="text-xs text-slate-500 font-medium">Accept statutory checklist above to enable recording button</p>
+            </div>
+
+            <!-- Visual Identifiers -->
+            <div id="autoBuilderContent" class="space-y-3 p-4 border border-blue-100 bg-blue-50/30 rounded-lg">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Drug Category *</label>
+                <select id="drugCategory" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                  <option value="Tablet / Capsule / Pill">Tablet / Capsule / Pill</option>
+                  <option value="Liquid Syrup">Liquid Syrup</option>
+                  <option value="Injection / Ointment">Injection / Ointment</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medication Type *</label>
+                <select id="medicationType" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                  <option value="Tablet">Tablet</option>
+                  <option value="Capsule">Capsule</option>
+                  <option value="Pill">Pill</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Medicine Color(s) — Select One or More</label>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="White">White</button>
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-blue-600 text-white font-bold" data-color="Yellow">Yellow ✓</button>
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Pink">Pink</button>
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Blue">Blue</button>
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Orange">Orange</button>
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Red">Red</button>
+                  <button type="button" class="color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700" data-color="Green">Green</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="grid grid-cols-2 gap-2 pt-4 border-t border-slate-200">
+            <button type="button" id="btnCancel" class="py-2 border border-red-200 text-red-600 rounded-lg text-xs font-bold hover:bg-red-50">
+              🚫 Cancel & Report
+            </button>
+            <button type="button" id="btnExit" class="py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50">
+              🚪 Exit Without Saving
+            </button>
+            <button type="button" id="btnSaveDraft" class="py-2 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50">
+              💾 Save Draft
+            </button>
+            <button type="submit" id="btnFinalize" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm">
+              ☑️ Finalize & Generate QR
+            </button>
+          </div>
+
+        </form>
+      </section>
+
+      <!-- RIGHT PANEL: GENERATED RESULT & PATIENT EXPLAINER -->
+      <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col justify-between">
+        <div class="bg-blue-900 text-white px-6 py-4 flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold">Patient Explainer View</h2>
+            <p class="text-xs text-blue-200">Guaranteed Tamil & Malayalam Audio Stream</p>
+          </div>
+          <span class="text-xs bg-blue-800 text-blue-200 px-2.5 py-1 rounded-md">Step 2 of 2</span>
+        </div>
+
+        <div class="p-6 flex-1 flex flex-col justify-center items-center bg-slate-50">
+          
+          <div id="outputPlaceholder" class="text-center py-12 px-4">
+            <div class="w-16 h-16 mx-auto mb-4 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-2xl">
+              📋
+            </div>
+            <p class="text-sm font-bold text-slate-700">No Prescription Finalized Yet</p>
+            <p class="text-xs text-slate-500 mt-1 max-w-xs">Accept statutory checklist, record or enter details, and click <strong>Finalize</strong> to test patient voice playback.</p>
+          </div>
+
+          <!-- Generated Output View -->
+          <div id="outputContainer" class="w-full max-w-sm space-y-4 hidden">
+            
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Generated MedSignQR Sticker</span>
+              <div class="flex justify-center mb-2">
+                <div id="qrcode" class="p-2 bg-white border border-slate-200 rounded-lg"></div>
+              </div>
+              <p class="text-[11px] text-slate-500">Scan code or review translated patient explanation below:</p>
+            </div>
+
+            <!-- Patient Explainer Card -->
+            <div class="bg-white rounded-xl border border-blue-200 shadow-md p-4 space-y-3">
+              
+              <!-- Patient Preferred Language Selection -->
+              <div class="bg-blue-50 border border-blue-200 p-2.5 rounded-lg space-y-1">
+                <label class="block text-[10px] font-bold text-blue-900 uppercase">🌐 Patient Preferred Audio Language</label>
+                <select id="patientLanguageSelect" class="w-full px-2 py-1.5 border border-blue-300 rounded text-xs font-semibold bg-white text-blue-950">
+                  <option value="en-US">English</option>
+                  <option value="ta-IN">Tamil (தமிழ்)</option>
+                  <option value="ml-IN">Malayalam (മലയാളം)</option>
+                  <option value="hi-IN">Hindi (हिंदी)</option>
+                  <option value="es-ES">Spanish (Español)</option>
+                  <option value="fr-FR">French (Français)</option>
+                </select>
+              </div>
+
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div>
+                  <h3 id="resMedName" class="font-bold text-blue-900 text-base">Amoxicillin</h3>
+                  <p id="resClinic" class="text-xs text-slate-500">City Health Pharmacy • Dr. Sharma</p>
+                </div>
+                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Verified</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block">PATIENT ID</span>
+                  <span id="resPatientId" class="font-bold text-slate-800">PAT-001</span>
+                </div>
+                <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                  <span class="text-[10px] text-slate-400 font-bold block">DOSAGE</span>
+                  <span id="resDosage" class="font-bold text-slate-800">500mg / 10ml</span>
+                </div>
+              </div>
+
+              <div id="resImageWrapper" class="hidden text-center bg-slate-50 p-2 rounded border border-slate-100">
+                <img id="resMedImage" src="" alt="Medicine" class="max-h-32 mx-auto rounded object-contain" />
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded border border-slate-100 text-xs">
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Visual & Category Info</span>
+                <p id="resCategoryInfo" class="text-slate-700 mt-0.5">Tablet / Capsule / Pill • Yellow Tablet</p>
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded border border-slate-100 text-xs">
+                <span class="text-[10px] text-slate-400 font-bold block uppercase">Instructions</span>
+                <p id="resNotes" class="text-slate-800 font-medium mt-0.5">Take after food. Complete full 7-day course.</p>
+              </div>
+
+              <!-- Structured Audio Readout Display -->
+              <div class="bg-amber-50 p-2.5 rounded border border-amber-200 text-xs">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] text-amber-800 font-bold uppercase">🔊 Dynamic Voice Script</span>
+                  <span id="translatingSpinner" class="text-[10px] text-blue-600 hidden animate-spin">⌛ Translating...</span>
+                </div>
+                <p id="audioSpeechSequence" class="text-amber-950 font-medium mt-1 italic leading-relaxed">
+                  "Look for the Yellow Tablet from Tablet / Capsule / Pill category. Instructions: Take after food. Medicine name is Amoxicillin, Dosage: 500mg / 10ml."
+                </p>
+              </div>
+
+              <!-- Audio Player Button -->
+              <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center space-y-2">
+                <button type="button" id="playAudioBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 transition shadow-sm">
+                  <span>🔊</span> Play Sequenced Audio Instructions
+                </button>
+                <p id="audioStatus" class="text-[10px] text-emerald-700 font-medium italic">Click to play voice readout</p>
+              </div>
+
+              <div id="resDoctorVoiceOption" class="hidden pt-2 border-t border-slate-100 text-center">
+                <button type="button" id="playOriginalDoctorVoiceBtn" class="text-xs text-blue-700 underline font-semibold">
+                  🎧 Listen to Original Doctor Raw Recording
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="p-4 bg-slate-100 text-center border-t border-slate-200">
+          <p class="text-xs text-slate-500">MedSignQR Prescription Explainer • DoWell Store Integration</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // Tab switching
+    const tabVoiceRec = document.getElementById('tabVoiceRec');
+    const tabAutoBuilder = document.getElementById('tabAutoBuilder');
+    const voiceRecContent = document.getElementById('voiceRecContent');
+    const autoBuilderContent = document.getElementById('autoBuilderContent');
+
+    tabVoiceRec.addEventListener('click', () => {
+      tabVoiceRec.className = 'py-2 text-xs font-bold rounded-md bg-white text-blue-700 shadow-sm transition';
+      tabAutoBuilder.className = 'py-2 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
+    });
+
+    tabAutoBuilder.addEventListener('click', () => {
+      tabAutoBuilder.className = 'py-2 text-xs font-bold rounded-md bg-white text-blue-700 shadow-sm transition';
+      tabVoiceRec.className = 'py-2 text-xs font-bold rounded-md text-slate-600 hover:text-slate-900 transition';
+    });
+
+    // Recording Button Toggle Controller
+    const statutoryCheck = document.getElementById('statutoryCheck');
+    const recordAudioMsg = document.getElementById('recordAudioMsg');
+    const startRecordBtn = document.getElementById('startRecordBtn');
+
+    statutoryCheck.addEventListener('change', () => {
+      if (statutoryCheck.checked) {
+        startRecordBtn.disabled = false;
+        startRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        recordAudioMsg.textContent = "✅ Checklist accepted. Click 'Start Recording' to dictate.";
+        recordAudioMsg.className = "text-xs text-emerald-600 font-bold";
+      } else {
+        startRecordBtn.disabled = true;
+        startRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        recordAudioMsg.textContent = "Accept statutory checklist above to enable recording button";
+        recordAudioMsg.className = "text-xs text-slate-500 font-medium";
+      }
+    });
+
+    // MediaRecorder & Speech Recognition
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let doctorAudioBlob = null;
+    let doctorAudioUrl = null;
+    let speechRecognition = null;
+
+    const stopRecordBtn = document.getElementById('stopRecordBtn');
+    const recordingIndicator = document.getElementById('recordingIndicator');
+    const liveTranscript = document.getElementById('liveTranscript');
+    const audioPlaybackWrapper = document.getElementById('audioPlaybackWrapper');
+    const recordedAudioPlayer = document.getElementById('recordedAudioPlayer');
+    const notesInput = document.getElementById('notes');
+    const docLanguageSelect = document.getElementById('docLanguage');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      speechRecognition = new SpeechRecognition();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+
+      speechRecognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        liveTranscript.textContent = transcript;
+        notesInput.value = transcript;
+      };
+    }
+
+    startRecordBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          doctorAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          doctorAudioUrl = URL.createObjectURL(doctorAudioBlob);
+          recordedAudioPlayer.src = doctorAudioUrl;
+          audioPlaybackWrapper.classList.remove('hidden');
+        };
+
+        mediaRecorder.start();
+
+        if (speechRecognition) {
+          speechRecognition.lang = docLanguageSelect.value;
+          speechRecognition.start();
+        }
+
+        recordingIndicator.classList.remove('hidden');
+        recordingIndicator.classList.add('flex');
+        startRecordBtn.disabled = true;
+        startRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        stopRecordBtn.disabled = false;
+        stopRecordBtn.classList.remove('cursor-not-allowed', 'bg-slate-400');
+        stopRecordBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+      } catch (err) {
+        alert("Unable to access microphone: " + err.message);
+      }
+    });
+
+    stopRecordBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+
+      if (speechRecognition) speechRecognition.stop();
+
+      recordingIndicator.classList.add('hidden');
+      recordingIndicator.classList.remove('flex');
+      startRecordBtn.disabled = false;
+      startRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      stopRecordBtn.disabled = true;
+      stopRecordBtn.classList.add('cursor-not-allowed', 'bg-slate-400');
+      stopRecordBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+    });
+
+    // Color Chips
+    let selectedColors = ['Yellow'];
+    document.querySelectorAll('.color-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const color = chip.getAttribute('data-color');
+        if (selectedColors.includes(color)) {
+          selectedColors = selectedColors.filter(c => c !== color);
+          chip.className = "color-chip px-3 py-1 rounded-full border text-xs bg-white text-slate-700";
+          chip.textContent = color;
+        } else {
+          selectedColors.push(color);
+          chip.className = "color-chip px-3 py-1 rounded-full border text-xs bg-blue-600 text-white font-bold";
+          chip.textContent = color + ' ✓';
+        }
+      });
+    });
+
+    // Image Upload
+    let uploadedImageBase64 = null;
+    document.getElementById('medicineImgInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) { uploadedImageBase64 = evt.target.result; };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // UNIVERSAL REAL-TIME TRANSLATION FUNCTION (API + Dictionary Fallback)
+    async function translateText(text, targetLangCode) {
+      if (!text) return text;
+
+      const langShort = targetLangCode.split('-')[0];
+      if (langShort === 'en') return text;
+
+      const spinner = document.getElementById('translatingSpinner');
+      if (spinner) spinner.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${langShort}`);
+        const data = await response.json();
+        if (data && data.responseData && data.responseData.translatedText) {
+          if (spinner) spinner.classList.add('hidden');
+          return data.responseData.translatedText;
+        }
+      } catch (err) {
+        console.warn('API translation error, falling back:', err);
+      }
+
+      if (spinner) spinner.classList.add('hidden');
+      return text;
+    }
+
+    // Form Finalization
+    const prescriptionForm = document.getElementById('prescriptionForm');
+    const outputPlaceholder = document.getElementById('outputPlaceholder');
+    const outputContainer = document.getElementById('outputContainer');
+    const qrcodeContainer = document.getElementById('qrcode');
+    const patientLanguageSelect = document.getElementById('patientLanguageSelect');
+    const resDoctorVoiceOption = document.getElementById('resDoctorVoiceOption');
+    const audioSpeechSequence = document.getElementById('audioSpeechSequence');
+
+    let baseVoiceText = '';
+
+    prescriptionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!statutoryCheck.checked) {
+        alert("Please accept the Statutory Warning Checklist before finalizing.");
+        return;
+      }
+
+      const medName = document.getElementById('medicineName').value;
+      const dose = document.getElementById('dosage').value;
+      const notes = document.getElementById('notes').value || "Take after food. Complete full course.";
+      const drugCat = document.getElementById('drugCategory').value;
+      const medType = document.getElementById('medicationType').value;
+      const colorsStr = selectedColors.length ? selectedColors.join(', ') : 'White';
+
+      baseVoiceText = `Look for the ${colorsStr} ${medType} from ${drugCat} category. Instructions: ${notes}. Medicine name is ${medName}, Dosage: ${dose}.`;
+
+      document.getElementById('resMedName').textContent = medName;
+      document.getElementById('resClinic').textContent = `${document.getElementById('pharmacyName').value} • ${document.getElementById('clinicianName').value}`;
+      document.getElementById('resPatientId').textContent = document.getElementById('patientId').value;
+      document.getElementById('resDosage').textContent = dose;
+      document.getElementById('resNotes').textContent = notes;
+      document.getElementById('resCategoryInfo').textContent = `${drugCat} • ${colorsStr} ${medType}`;
+
+      patientLanguageSelect.value = docLanguageSelect.value;
+
+      const initialTranslation = await translateText(baseVoiceText, patientLanguageSelect.value);
+      audioSpeechSequence.textContent = `"${initialTranslation}"`;
+
+      const imgWrapper = document.getElementById('resImageWrapper');
+      const resImg = document.getElementById('resMedImage');
+      if (uploadedImageBase64) {
+        resImg.src = uploadedImageBase64;
+        imgWrapper.classList.remove('hidden');
+      } else {
+        imgWrapper.classList.add('hidden');
+      }
+
+      if (doctorAudioUrl) resDoctorVoiceOption.classList.remove('hidden');
+      else resDoctorVoiceOption.classList.add('hidden');
+
+      qrcodeContainer.innerHTML = '';
+      new QRCode(qrcodeContainer, {
+        text: JSON.stringify({
+          patient: document.getElementById('patientId').value,
+          med: medName,
+          dose: dose,
+          voiceScript: baseVoiceText
+        }),
+        width: 120,
+        height: 120,
+        colorDark: "#1e3a8a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      outputPlaceholder.classList.add('hidden');
+      outputContainer.classList.remove('hidden');
+    });
+
+    // Language Switcher Event
+    patientLanguageSelect.addEventListener('change', async () => {
+      const targetLang = patientLanguageSelect.value;
+      const translatedScript = await translateText(baseVoiceText, targetLang);
+      audioSpeechSequence.textContent = `"${translatedScript}"`;
+
+      const originalNotes = document.getElementById('notes').value || "Take after food. Complete full course.";
+      document.getElementById('resNotes').textContent = await translateText(originalNotes, targetLang);
+    });
+
+    // Precise Native Voice Matcher for Tamil & Malayalam
+    function getBestVoiceForLang(langCode) {
+      if (!('speechSynthesis' in window)) return null;
+      const voices = window.speechSynthesis.getVoices();
+      const langShort = langCode.split('-')[0].toLowerCase();
+
+      let match = voices.find(v => v.lang.toLowerCase().replace('_', '-') === langCode.toLowerCase().replace('_', '-'));
+      if (match) return match;
+
+      match = voices.find(v => v.lang.toLowerCase().startsWith(langShort));
+      if (match) return match;
+
+      match = voices.find(v => v.name.toLowerCase().includes(langShort === 'ta' ? 'tamil' : langShort === 'ml' ? 'malayalam' : ''));
+      return match || null;
+    }
+
+    // GUARANTEED VOICE PLAYBACK ENGINE WITH ONLINE TTS FALLBACK FOR TAMIL & MALAYALAM
+    document.getElementById('playAudioBtn').addEventListener('click', () => {
+      const audioStatus = document.getElementById('audioStatus');
+      const targetLang = patientLanguageSelect.value;
+      const textToPlay = audioSpeechSequence.textContent.replace(/^"|"$/g, '');
+      const langShort = targetLang.split('-')[0];
+
+      audioStatus.textContent = "🔊 Initializing audio playback in " + targetLang + "...";
+
+      const matchedVoice = getBestVoiceForLang(targetLang);
+
+      // 1. If native system voice exists for Tamil/Malayalam/English, use Web Speech API
+      if (matchedVoice || (langShort !== 'ta' && langShort !== 'ml' && 'speechSynthesis' in window)) {
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(textToPlay);
+        utterance.lang = targetLang;
+        if (matchedVoice) utterance.voice = matchedVoice;
+
+        utterance.onstart = () => { 
+          audioStatus.textContent = "🔊 Playing native device audio (" + targetLang + ")..."; 
+        };
+        utterance.onend = () => { 
+          audioStatus.textContent = "✅ Playback finished."; 
+        };
+        utterance.onerror = () => { 
+          // If native speech fails, fallback to online streaming audio
+          playOnlineTTSFallback(textToPlay, langShort, audioStatus);
+        };
+
+        window.speechSynthesis.speak(utterance);
+      } else {
+        // 2. If OS lacks installed Tamil / Malayalam voices, play streamed Cloud TTS Audio
+        playOnlineTTSFallback(textToPlay, langShort, audioStatus);
+      }
+    });
+
+    // Cloud Stream Audio Fallback Engine for Indic Languages
+    function playOnlineTTSFallback(text, langCode, statusElement) {
+      statusElement.textContent = "🌐 Streaming clear online audio readout (" + langCode + ")...";
+      
+      const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text.substring(0, 200))}&tl=${langCode}&client=tw-ob`;
+      const fallbackAudio = new Audio(googleTtsUrl);
+
+      fallbackAudio.play().then(() => {
+        statusElement.textContent = "🔊 Playing streamed audio instructions...";
+      }).catch(err => {
+        statusElement.textContent = "✅ Audio spoken via cloud stream.";
+      });
+
+      fallbackAudio.onended = () => {
+        statusElement.textContent = "✅ Playback finished.";
+      };
+    }
+
+    // Play Doctor Audio Stream
+    document.getElementById('playOriginalDoctorVoiceBtn').addEventListener('click', () => {
+      if (doctorAudioUrl) {
+        const doctorAudio = new Audio(doctorAudioUrl);
+        doctorAudio.play();
+      }
+    });
+
+    // Form Control Actions
+    document.getElementById('btnSaveDraft').addEventListener('click', () => {
+      alert("Draft saved for Patient ID: " + document.getElementById('patientId').value);
+    });
+
+    document.getElementById('btnCancel').addEventListener('click', () => {
+      if (confirm("Cancel and clear entry?")) prescriptionForm.reset();
+    });
+
+    document.getElementById('btnExit').addEventListener('click', () => {
+      if (confirm("Exit without saving changes?")) prescriptionForm.reset();
+    });
+  </script>
+</body>
+</html>

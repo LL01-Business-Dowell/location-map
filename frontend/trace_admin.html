@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PureTrace Admin - Supply Chain Data Entry</title>
+
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --primary-light: #E8F5E9;
+            --bg-color: #F4F6F5;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #E0E0E0;
+            --danger-color: #D32F2F;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .admin-form-panel {
+            background: #FAFAFA;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .form-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .form-step-block {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-step-block h4 {
+            font-size: 12px;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 12px;
+            border: 1px solid #CCC;
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn-add {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border: 1px dashed var(--primary-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .btn-remove {
+            background: #FFEBEE;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-submit:disabled {
+            background: #94A3B8;
+            cursor: not-allowed;
+        }
+
+        .view-link-box {
+            display: none;
+            margin-top: 12px;
+            padding: 10px;
+            background: var(--primary-light);
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .view-link-box a {
+            color: var(--primary-color);
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>📝 Supply Chain Entry Form</h2>
+            <p class="subtitle" id="batch-id-display">Loading QR ID...</p>
+        </div>
+
+        <div class="admin-form-panel" id="admin-form-panel">
+            <div class="form-title">Configure Passport Steps 1–5</div>
+
+            <!-- Product Specs & Batch Info -->
+            <div class="form-step-block">
+                <h4>🏷️ Product & Batch Overview</h4>
+                <div class="input-row">
+                    <input type="text" id="proc-product" placeholder="Product Name (e.g. Organic Salted Chips - 50g)" />
+                </div>
+                <div class="input-row">
+                    <input type="text" id="proc-batch" placeholder="Batch ID (e.g. BATCH-2026-0918)" style="flex: 1;" />
+                    <input type="text" id="proc-mrp" placeholder="MRP (e.g. 100)" style="flex: 1;" />
+                </div>
+            </div>
+
+            <!-- STEP 1: Farm & Sourcing (Array) -->
+            <div class="form-step-block">
+                <h4>🌱 Step 1: Farm & Sourcing Entries</h4>
+                <div id="farm-list"></div>
+                <button type="button" class="btn-add" onclick="addFarmEntry()">+ Add Another Farm</button>
+            </div>
+
+            <!-- STEP 2: Processing Facilities (Array) -->
+            <div class="form-step-block">
+                <h4>🏭 Step 2: Processing & Packing Facilities</h4>
+                <div id="facility-list"></div>
+                <button type="button" class="btn-add" onclick="addFacilityEntry()">+ Add Processing Facility</button>
+            </div>
+
+            <!-- STEP 3: Transit Waypoints (Array) -->
+            <div class="form-step-block">
+                <h4>🚚 Step 3: Transit Waypoints</h4>
+                <div id="transit-list"></div>
+                <button type="button" class="btn-add" onclick="addTransitEntry()">+ Add Transit Waypoint</button>
+            </div>
+
+            <!-- STEP 4: Retail / Shelf GPS -->
+            <div class="form-step-block">
+                <h4>🛒 Step 4: Fork / Retail Shelf (Store & Expiry)</h4>
+                <div class="input-row">
+                    <input type="text" id="retail-store" placeholder="Store Name / Location" style="flex: 2;" />
+                    <input type="text" id="retail-expiry" placeholder="Best Before Date" style="flex: 1;" />
+                </div>
+            </div>
+
+            <!-- STEP 5: End-of-Life Disposal -->
+            <div class="form-step-block">
+                <h4>♻️ Step 5: End-of-Life & Recycling</h4>
+                <div class="input-row">
+                    <input type="text" id="disp-material" placeholder="Material (e.g. Monolayer Recyclable Film)" style="flex: 1;" />
+                    <input type="text" id="disp-action" placeholder="Disposal Action (e.g. Dry Waste Bin)" style="flex: 1;" />
+                </div>
+            </div>
+
+            <button type="button" class="btn-submit" id="btn-save-db" onclick="saveSupplyChainToDB()">🚀 Save Information to Database</button>
+
+            <div class="view-link-box" id="view-link-box">
+                ✓ Data saved! <a id="passport-url" href="#" target="_blank">View Live Product Passport ➔</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        const API_BASE = typeof PROXY_BASE !== "undefined" ? PROXY_BASE : "https://location-map-a89a.onrender.com/api";
+        let qrId = "";
+
+        function getQrIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get("id") || "";
+        }
+
+        // Dynamic Field Row Builders
+        function addFarmEntry(name = "", date = "", geo = "") {
+            const container = document.getElementById('farm-list');
+            const div = document.createElement('div');
+            div.className = 'input-row farm-row';
+            div.innerHTML = `
+                <input type="text" class="farm-input" placeholder="Farm / Cooperative" value="${name}" style="flex: 2;" />
+                <input type="text" class="farm-date-input" placeholder="Harvest Date" value="${date}" style="flex: 1;" />
+                <input type="text" class="farm-geo-input" placeholder="Lat, Long" value="${geo}" style="flex: 1.2;" />
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function addFacilityEntry(name = "", time = "", geo = "") {
+            const container = document.getElementById('facility-list');
+            const div = document.createElement('div');
+            div.className = 'input-row facility-row';
+            div.innerHTML = `
+                <input type="text" class="facility-input" placeholder="Facility Name" value="${name}" style="flex: 2;" />
+                <input type="text" class="facility-time-input" placeholder="Packing Time" value="${time}" style="flex: 1;" />
+                <input type="text" class="facility-geo-input" placeholder="Lat, Long" value="${geo}" style="flex: 1.2;" />
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function addTransitEntry(hub = "", cond = "", geo = "") {
+            const container = document.getElementById('transit-list');
+            const div = document.createElement('div');
+            div.className = 'input-row transit-row';
+            div.innerHTML = `
+                <input type="text" class="transit-input" placeholder="Logistics Hub" value="${hub}" style="flex: 2;" />
+                <input type="text" class="transit-cond-input" placeholder="Condition" value="${cond}" style="flex: 1;" />
+                <input type="text" class="transit-geo-input" placeholder="Lat, Long" value="${geo}" style="flex: 1.2;" />
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Fetch Existing Saved Trace Record
+        async function fetchExistingForm() {
+            qrId = getQrIdFromUrl();
+            if (!qrId) {
+                document.getElementById("batch-id-display").innerText = "Please provide ?id= in URL";
+                return;
+            }
+
+            document.getElementById("batch-id-display").innerText = `QR ID: ${qrId}`;
+
+            try {
+                const res = await fetch(`${API_BASE}/get_medsign_link/${qrId}`);
+                if (!res.ok) {
+                    // Pre-populate empty rows if record doesn't exist yet
+                    addFarmEntry();
+                    addFacilityEntry();
+                    addTransitEntry();
+                    return;
+                }
+
+                const json = await res.json();
+                const record = json.record || {};
+
+                let traceArray = record.trace_details;
+                if (typeof traceArray === "string") {
+                    try { traceArray = JSON.parse(traceArray); } catch (e) { traceArray = []; }
+                }
+
+                if (traceArray && !Array.isArray(traceArray)) {
+                    traceArray = Object.keys(traceArray).length > 0 ? [traceArray] : [];
+                }
+
+                const primaryTrace = Array.isArray(traceArray) && traceArray.length > 0 ? traceArray[0] : null;
+
+                if (primaryTrace && Object.keys(primaryTrace).length > 0) {
+                    document.getElementById("proc-product").value = primaryTrace.product_name || "";
+                    document.getElementById("proc-batch").value = primaryTrace.batch_id || "";
+                    document.getElementById("proc-mrp").value = primaryTrace.mrp || "";
+                    document.getElementById("retail-store").value = primaryTrace.retail_store || "";
+                    document.getElementById("retail-expiry").value = primaryTrace.expiry_date || "";
+                    document.getElementById("disp-material").value = primaryTrace.package_recycling || "";
+                    document.getElementById("disp-action").value = primaryTrace.disposal_action || "";
+
+                    // Load Farms Array
+                    if (Array.isArray(primaryTrace.farm_entries) && primaryTrace.farm_entries.length > 0) {
+                        primaryTrace.farm_entries.forEach(item => addFarmEntry(item.name, item.date, item.geo));
+                    } else if (primaryTrace.manufactured_by) {
+                        addFarmEntry(primaryTrace.manufactured_by, primaryTrace.mfg_date || "", primaryTrace.location_coordinates || "");
+                    } else {
+                        addFarmEntry();
+                    }
+
+                    // Load Facilities Array
+                    if (Array.isArray(primaryTrace.facility_entries) && primaryTrace.facility_entries.length > 0) {
+                        primaryTrace.facility_entries.forEach(item => addFacilityEntry(item.name, item.time, item.geo));
+                    } else if (primaryTrace.marketed_by) {
+                        addFacilityEntry(primaryTrace.marketed_by, "", "");
+                    } else {
+                        addFacilityEntry();
+                    }
+
+                    // Load Transit Array
+                    if (Array.isArray(primaryTrace.transit_entries) && primaryTrace.transit_entries.length > 0) {
+                        primaryTrace.transit_entries.forEach(item => addTransitEntry(item.hub, item.condition, item.geo));
+                    } else {
+                        addTransitEntry();
+                    }
+                } else {
+                    addFarmEntry();
+                    addFacilityEntry();
+                    addTransitEntry();
+                }
+            } catch (err) {
+                console.warn("No existing trace data found:", err);
+                addFarmEntry();
+                addFacilityEntry();
+                addTransitEntry();
+            }
+        }
+
+        // Collect all form array rows and save to DB
+        async function saveSupplyChainToDB() {
+            qrId = getQrIdFromUrl();
+            if (!qrId) {
+                alert("Missing QR Code ID in URL parameter (?id=...). Cannot save.");
+                return;
+            }
+
+            const btnSave = document.getElementById("btn-save-db");
+            btnSave.disabled = true;
+            btnSave.innerText = "Saving to Database...";
+
+            // Collect Farms
+            const farmEntries = [];
+            document.querySelectorAll('.farm-row').forEach(row => {
+                const name = row.querySelector('.farm-input')?.value.trim();
+                const date = row.querySelector('.farm-date-input')?.value.trim();
+                const geo = row.querySelector('.farm-geo-input')?.value.trim();
+                if (name) farmEntries.push({ name, date, geo });
+            });
+
+            // Collect Facilities
+            const facilityEntries = [];
+            document.querySelectorAll('.facility-row').forEach(row => {
+                const name = row.querySelector('.facility-input')?.value.trim();
+                const time = row.querySelector('.facility-time-input')?.value.trim();
+                const geo = row.querySelector('.facility-geo-input')?.value.trim();
+                if (name) facilityEntries.push({ name, time, geo });
+            });
+
+            // Collect Transit Hubs
+            const transitEntries = [];
+            document.querySelectorAll('.transit-row').forEach(row => {
+                const hub = row.querySelector('.transit-input')?.value.trim();
+                const condition = row.querySelector('.transit-cond-input')?.value.trim();
+                const geo = row.querySelector('.transit-geo-input')?.value.trim();
+                if (hub) transitEntries.push({ hub, condition, geo });
+            });
+
+            const payload = {
+                link_id: String(qrId),
+                batch_id: document.getElementById("proc-batch").value || `BATCH-${qrId}`,
+                trace_details: {
+                    status: "active",
+                    product_name: document.getElementById("proc-product").value,
+                    batch_id: document.getElementById("proc-batch").value,
+                    mrp: document.getElementById("proc-mrp").value,
+                    farm_entries: farmEntries,
+                    facility_entries: facilityEntries,
+                    transit_entries: transitEntries,
+                    retail_store: document.getElementById("retail-store").value,
+                    expiry_date: document.getElementById("retail-expiry").value,
+                    package_recycling: document.getElementById("disp-material").value,
+                    disposal_action: document.getElementById("disp-action").value,
+                    updated_at: new Date().toISOString()
+                }
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/save_trace_details`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText);
+                }
+
+                alert("✓ Supply chain trace arrays saved to database!");
+                
+                const passportLink = document.getElementById("passport-url");
+                passportLink.href = `trace_5.html?id=${qrId}`;
+                document.getElementById("view-link-box").style.display = "block";
+
+            } catch (err) {
+                console.error("Save error:", err);
+                alert("Failed to save trace data: " + err.message);
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerText = "🚀 Save Information to Database";
+            }
+        }
+
+        fetchExistingForm();
+    </script>
+</body>
+
+</html>
