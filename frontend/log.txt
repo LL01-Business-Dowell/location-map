@@ -391,19 +391,52 @@
   ],
   "created_at": "2026-10-17T05:07:29.524Z",
   "status": "active",
-  "trace_details": {
-    "status": "active",
-    "product_name": "DOWELL PURETRACE - 1",
-    "batch_id": "ABCD1234",
-    "mrp": "100",
-    "mrp_currency": "INR",
-    "manufactured_by": "Wayanad Organic Spice Farming Collective, Kerala",
-    "marketed_by": "D'Well Processing & Quality Testing Facility, Kochi",
-    "mfg_date": "2026-10-15",
-    "expiry_date": "2027-10-15",
-    "country_of_origin": "India",
-    "location_coordinates": "9.94801960862902, 76.29910051883051",
-    "package_recycling": "100% Recyclable Biodegradable Barrier Film",
-    "updated_at": "2026-10-20T09:00:00.000Z"
-  }
+  "trace_details": [
+    {
+      "status": "active",
+      "product_name": "DOWELL PURETRACE",
+      "batch_id": "ABC123",
+      "mrp": "100",
+      "mrp_currency": "INR",
+      "manufactured_by": "Wayanad Organic Spice Farming Collective, Kerala",
+      "marketed_by": "D'Well Processing & Quality Testing Facility, Kochi",
+      "mfg_date": "2026-10-15",
+      "expiry_date": "2027-10-15",
+      "country_of_origin": "India",
+      "location_coordinates": "9.94801960862902, 76.29910051883051",
+      "package_recycling": "100% Recyclable Biodegradable Barrier Film",
+      "updated_at": "2026-10-20T09:00:00.000Z"
+    },
+    {
+      "status": "active",
+      "product_name": "DOWELL PURETRACE - 1",
+      "batch_id": "ABCD1234",
+      "mrp": "100",
+      "farm_entries": [
+        {
+          "name": "Wayanad Organic Spice Farming Collective, Kerala",
+          "date": "2026-10-15",
+          "geo": "9.94801960862902, 76.29910051883051"
+        },
+        {
+          "name": "Vagamon Organic Spice Farming Collective, Kerala",
+          "date": "2026-10-20",
+          "geo": "9.94801960862902, 76.29910051883051"
+        }
+      ],
+      "facility_entries": [
+        {
+          "name": "D'Well Processing & Quality Testing Facility, Kochi",
+          "time": "",
+          "geo": ""
+        }
+      ],
+      "transit_entries": [],
+      "retail_store": "",
+      "expiry_date": "2027-10-15",
+      "package_recycling": "100% Recyclable Biodegradable Barrier Film",
+      "disposal_action": "",
+      "updated_at": "2026-10-20T10:47:39.772Z"
+    }
+  ]
 }

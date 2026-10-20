@@ -40,6 +40,45 @@
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             padding: 20px;
+            position: relative;
+        }
+
+        /* Full Screen Loader */
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loader-text {
+            margin-top: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .header {
@@ -146,6 +185,28 @@
             cursor: not-allowed;
         }
 
+        .status-message {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-message.success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #A5D6A7;
+        }
+
+        .status-message.error {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF9A9A;
+        }
+
         .view-link-box {
             display: none;
             margin-top: 12px;
@@ -168,13 +229,19 @@
 <body>
 
     <div class="container">
+        <!-- Loader Overlay -->
+        <div class="loader-overlay" id="loader">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading Trace Form...</div>
+        </div>
+
         <div class="header">
             <h2>📝 Supply Chain Entry Form</h2>
             <p class="subtitle" id="batch-id-display">Loading QR ID...</p>
         </div>
 
         <div class="admin-form-panel" id="admin-form-panel">
-            <div class="form-title">Configure Passport Steps 1–5</div>
+            <div class="form-title">Configure Passport Steps</div>
 
             <!-- Product Specs & Batch Info -->
             <div class="form-step-block">
@@ -209,7 +276,9 @@
                 <button type="button" class="btn-add" onclick="addTransitEntry()">+ Add Transit Waypoint</button>
             </div>
 
-            <!-- STEP 4: Retail / Shelf GPS -->
+            <!-- ========================================================================= -->
+            <!-- STEP 4: Retail / Shelf GPS (TEMPORARILY DISABLED AS SCANNED GPS IS AUTO) -->
+            <!-- 
             <div class="form-step-block">
                 <h4>🛒 Step 4: Fork / Retail Shelf (Store & Expiry)</h4>
                 <div class="input-row">
@@ -217,10 +286,12 @@
                     <input type="text" id="retail-expiry" placeholder="Best Before Date" style="flex: 1;" />
                 </div>
             </div>
+            -->
+            <!-- ========================================================================= -->
 
             <!-- STEP 5: End-of-Life Disposal -->
             <div class="form-step-block">
-                <h4>♻️ Step 5: End-of-Life & Recycling</h4>
+                <h4>♻️ Step 4: End-of-Life & Recycling</h4>
                 <div class="input-row">
                     <input type="text" id="disp-material" placeholder="Material (e.g. Monolayer Recyclable Film)" style="flex: 1;" />
                     <input type="text" id="disp-action" placeholder="Disposal Action (e.g. Dry Waste Bin)" style="flex: 1;" />
@@ -228,6 +299,9 @@
             </div>
 
             <button type="button" class="btn-submit" id="btn-save-db" onclick="saveSupplyChainToDB()">🚀 Save Information to Database</button>
+
+            <!-- Inline Status Banner -->
+            <div id="status-message" class="status-message"></div>
 
             <div class="view-link-box" id="view-link-box">
                 ✓ Data saved! <a id="passport-url" href="#" target="_blank">View Live Product Passport ➔</a>
@@ -240,9 +314,51 @@
         const API_BASE = typeof PROXY_BASE !== "undefined" ? PROXY_BASE : "https://location-map-a89a.onrender.com/api";
         let qrId = "";
 
+        function showLoader() {
+            const loader = document.getElementById("loader");
+            if (loader) loader.style.display = "flex";
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById("loader");
+            if (loader) loader.style.display = "none";
+        }
+
         function getQrIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get("id") || "";
+        }
+
+        function showStatus(text, isError = false) {
+            const box = document.getElementById("status-message");
+            box.innerText = text;
+            box.className = `status-message ${isError ? 'error' : 'success'}`;
+            box.style.display = "block";
+        }
+
+        function hideStatus() {
+            document.getElementById("status-message").style.display = "none";
+        }
+
+        function clearEmptyForm() {
+            document.getElementById("proc-product").value = "";
+            document.getElementById("proc-batch").value = "";
+            document.getElementById("proc-mrp").value = "";
+            
+            /* Step 4 Disabled Safely */
+            if (document.getElementById("retail-store")) document.getElementById("retail-store").value = "";
+            if (document.getElementById("retail-expiry")) document.getElementById("retail-expiry").value = "";
+            
+            document.getElementById("disp-material").value = "";
+            document.getElementById("disp-action").value = "";
+
+            document.getElementById('farm-list').innerHTML = '';
+            document.getElementById('facility-list').innerHTML = '';
+            document.getElementById('transit-list').innerHTML = '';
+
+            addFarmEntry();
+            addFacilityEntry();
+            addTransitEntry();
         }
 
         // Dynamic Field Row Builders
@@ -287,28 +403,31 @@
 
         // Fetch Existing Saved Trace Record
         async function fetchExistingForm() {
+            showLoader();
             qrId = getQrIdFromUrl();
             if (!qrId) {
                 document.getElementById("batch-id-display").innerText = "Please provide ?id= in URL";
+                clearEmptyForm();
+                hideLoader();
                 return;
             }
 
-            document.getElementById("batch-id-display").innerText = `QR ID: ${qrId}`;
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedBatchId = urlParams.get("batch_id");
+
+            document.getElementById("batch-id-display").innerText = `QR ID: ${qrId}${selectedBatchId ? ` | Batch: ${selectedBatchId}` : ''}`;
 
             try {
                 const res = await fetch(`${API_BASE}/get_medsign_link/${qrId}`);
                 if (!res.ok) {
-                    // Pre-populate empty rows if record doesn't exist yet
-                    addFarmEntry();
-                    addFacilityEntry();
-                    addTransitEntry();
+                    clearEmptyForm();
                     return;
                 }
 
                 const json = await res.json();
                 const record = json.record || {};
 
-                let traceArray = record.trace_details;
+                let traceArray = record.trace_details || record.product_details || [];
                 if (typeof traceArray === "string") {
                     try { traceArray = JSON.parse(traceArray); } catch (e) { traceArray = []; }
                 }
@@ -317,59 +436,88 @@
                     traceArray = Object.keys(traceArray).length > 0 ? [traceArray] : [];
                 }
 
-                const primaryTrace = Array.isArray(traceArray) && traceArray.length > 0 ? traceArray[0] : null;
+                let primaryTrace = null;
+
+                if (Array.isArray(traceArray) && traceArray.length > 0) {
+                    if (selectedBatchId) {
+                        const targetId = String(selectedBatchId).trim().toLowerCase();
+                        primaryTrace = traceArray.find(b => b.batch_id && String(b.batch_id).trim().toLowerCase() === targetId);
+                    }
+                    if (!primaryTrace) {
+                        traceArray.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+                        primaryTrace = traceArray[0];
+                    }
+                }
 
                 if (primaryTrace && Object.keys(primaryTrace).length > 0) {
                     document.getElementById("proc-product").value = primaryTrace.product_name || "";
                     document.getElementById("proc-batch").value = primaryTrace.batch_id || "";
                     document.getElementById("proc-mrp").value = primaryTrace.mrp || "";
-                    document.getElementById("retail-store").value = primaryTrace.retail_store || "";
-                    document.getElementById("retail-expiry").value = primaryTrace.expiry_date || "";
+
+                    /* Step 4 Disabled Safely */
+                    if (document.getElementById("retail-store")) document.getElementById("retail-store").value = primaryTrace.retail_store || "";
+                    if (document.getElementById("retail-expiry")) document.getElementById("retail-expiry").value = primaryTrace.expiry_date || "";
+
                     document.getElementById("disp-material").value = primaryTrace.package_recycling || "";
                     document.getElementById("disp-action").value = primaryTrace.disposal_action || "";
 
-                    // Load Farms Array
-                    if (Array.isArray(primaryTrace.farm_entries) && primaryTrace.farm_entries.length > 0) {
-                        primaryTrace.farm_entries.forEach(item => addFarmEntry(item.name, item.date, item.geo));
+                    document.getElementById('farm-list').innerHTML = '';
+                    document.getElementById('facility-list').innerHTML = '';
+                    document.getElementById('transit-list').innerHTML = '';
+
+                    let farmEntries = primaryTrace.farm_entries;
+                    if (typeof farmEntries === "string") {
+                        try { farmEntries = JSON.parse(farmEntries); } catch (e) { farmEntries = []; }
+                    }
+
+                    if (Array.isArray(farmEntries) && farmEntries.length > 0) {
+                        farmEntries.forEach(item => addFarmEntry(item.name || '', item.date || '', item.geo || ''));
                     } else if (primaryTrace.manufactured_by) {
                         addFarmEntry(primaryTrace.manufactured_by, primaryTrace.mfg_date || "", primaryTrace.location_coordinates || "");
                     } else {
                         addFarmEntry();
                     }
 
-                    // Load Facilities Array
-                    if (Array.isArray(primaryTrace.facility_entries) && primaryTrace.facility_entries.length > 0) {
-                        primaryTrace.facility_entries.forEach(item => addFacilityEntry(item.name, item.time, item.geo));
+                    let facilityEntries = primaryTrace.facility_entries;
+                    if (typeof facilityEntries === "string") {
+                        try { facilityEntries = JSON.parse(facilityEntries); } catch (e) { facilityEntries = []; }
+                    }
+
+                    if (Array.isArray(facilityEntries) && facilityEntries.length > 0) {
+                        facilityEntries.forEach(item => addFacilityEntry(item.name || '', item.time || '', item.geo || ''));
                     } else if (primaryTrace.marketed_by) {
                         addFacilityEntry(primaryTrace.marketed_by, "", "");
                     } else {
                         addFacilityEntry();
                     }
 
-                    // Load Transit Array
-                    if (Array.isArray(primaryTrace.transit_entries) && primaryTrace.transit_entries.length > 0) {
-                        primaryTrace.transit_entries.forEach(item => addTransitEntry(item.hub, item.condition, item.geo));
+                    let transitEntries = primaryTrace.transit_entries;
+                    if (typeof transitEntries === "string") {
+                        try { transitEntries = JSON.parse(transitEntries); } catch (e) { transitEntries = []; }
+                    }
+
+                    if (Array.isArray(transitEntries) && transitEntries.length > 0) {
+                        transitEntries.forEach(item => addTransitEntry(item.hub || '', item.condition || '', item.geo || ''));
                     } else {
                         addTransitEntry();
                     }
                 } else {
-                    addFarmEntry();
-                    addFacilityEntry();
-                    addTransitEntry();
+                    clearEmptyForm();
                 }
             } catch (err) {
-                console.warn("No existing trace data found:", err);
-                addFarmEntry();
-                addFacilityEntry();
-                addTransitEntry();
+                console.error("Error populating form:", err);
+                clearEmptyForm();
+            } finally {
+                hideLoader();
             }
         }
 
-        // Collect all form array rows and save to DB
+        // Save Trace Arrays to Database
         async function saveSupplyChainToDB() {
+            hideStatus();
             qrId = getQrIdFromUrl();
             if (!qrId) {
-                alert("Missing QR Code ID in URL parameter (?id=...). Cannot save.");
+                showStatus("Missing QR Code ID in URL parameter (?id=...). Cannot save.", true);
                 return;
             }
 
@@ -377,7 +525,6 @@
             btnSave.disabled = true;
             btnSave.innerText = "Saving to Database...";
 
-            // Collect Farms
             const farmEntries = [];
             document.querySelectorAll('.farm-row').forEach(row => {
                 const name = row.querySelector('.farm-input')?.value.trim();
@@ -386,7 +533,6 @@
                 if (name) farmEntries.push({ name, date, geo });
             });
 
-            // Collect Facilities
             const facilityEntries = [];
             document.querySelectorAll('.facility-row').forEach(row => {
                 const name = row.querySelector('.facility-input')?.value.trim();
@@ -395,7 +541,6 @@
                 if (name) facilityEntries.push({ name, time, geo });
             });
 
-            // Collect Transit Hubs
             const transitEntries = [];
             document.querySelectorAll('.transit-row').forEach(row => {
                 const hub = row.querySelector('.transit-input')?.value.trim();
@@ -404,19 +549,22 @@
                 if (hub) transitEntries.push({ hub, condition, geo });
             });
 
+            const batchVal = document.getElementById("proc-batch").value || `BATCH-${qrId}`;
+
             const payload = {
                 link_id: String(qrId),
-                batch_id: document.getElementById("proc-batch").value || `BATCH-${qrId}`,
+                batch_id: batchVal,
                 trace_details: {
                     status: "active",
                     product_name: document.getElementById("proc-product").value,
-                    batch_id: document.getElementById("proc-batch").value,
+                    batch_id: batchVal,
                     mrp: document.getElementById("proc-mrp").value,
                     farm_entries: farmEntries,
                     facility_entries: facilityEntries,
                     transit_entries: transitEntries,
-                    retail_store: document.getElementById("retail-store").value,
-                    expiry_date: document.getElementById("retail-expiry").value,
+                    /* Step 4 Disabled - Defaulting to fallback strings */
+                    retail_store: document.getElementById("retail-store") ? document.getElementById("retail-store").value : "",
+                    expiry_date: document.getElementById("retail-expiry") ? document.getElementById("retail-expiry").value : "",
                     package_recycling: document.getElementById("disp-material").value,
                     disposal_action: document.getElementById("disp-action").value,
                     updated_at: new Date().toISOString()
@@ -435,15 +583,15 @@
                     throw new Error(errText);
                 }
 
-                alert("✓ Supply chain trace arrays saved to database!");
+                showStatus("✓ Supply chain trace arrays saved successfully!");
                 
                 const passportLink = document.getElementById("passport-url");
-                passportLink.href = `trace_5.html?id=${qrId}`;
+                passportLink.href = `trace.html?id=${qrId}&batch_id=${encodeURIComponent(batchVal)}`;
                 document.getElementById("view-link-box").style.display = "block";
 
             } catch (err) {
                 console.error("Save error:", err);
-                alert("Failed to save trace data: " + err.message);
+                showStatus("Failed to save trace data: " + err.message, true);
             } finally {
                 btnSave.disabled = false;
                 btnSave.innerText = "🚀 Save Information to Database";
