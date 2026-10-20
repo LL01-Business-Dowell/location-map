@@ -345,6 +345,7 @@
         }
 
         async function fetchLatestScanLocation(targetQrId) {
+            console.log(`🔍 [LOG 1 - Scan Fetch] Starting scan query for QR ID: ${targetQrId}`);
             try {
                 const filters = JSON.stringify({
                     qr_id: String(targetQrId),
@@ -354,16 +355,22 @@
                 const queryUrl = `${API_BASE}/crud?database_id=${MASTER_DATABASE_ID}&collection_name=${COLLECTION_SCAN_NAME}&filters=${encodeURIComponent(filters)}&page=1&page_size=50`;
 
                 const res = await fetch(queryUrl, { method: "GET" });
-                if (!res.ok) return null;
+                if (!res.ok) {
+                    console.warn(`⚠️ [LOG 1.1 - Scan Fetch] Failed with HTTP Status ${res.status}`);
+                    return null;
+                }
 
                 const json = await res.json();
                 let scans = json.data || json.records || [];
+                console.log(`📊 [LOG 1.2 - Scan Raw Data] Found ${scans.length} raw scans in medsign_qr_scan`);
 
                 scans = scans.filter(s => String(s.qr_id) === String(targetQrId) && s.type === "puretrace");
+                console.log(`🎯 [LOG 1.3 - Scan Filtered] Found ${scans.length} scans matching qr_id=${targetQrId}`);
 
                 if (scans.length > 0) {
                     scans.sort((a, b) => new Date(b.scanned_at || 0) - new Date(a.scanned_at || 0));
                     const latest = scans[0];
+                    console.log("📍 [LOG 1.4 - Latest Scan Found]:", latest);
 
                     let lat = latest.latitude || "";
                     let lng = latest.longitude || "";
@@ -381,7 +388,7 @@
                     };
                 }
             } catch (err) {
-                console.error("[Frontend] Polling scan error:", err);
+                console.error("❌ [LOG 1.5 - Scan Fetch Error]:", err);
             }
             return null;
         }
@@ -389,6 +396,8 @@
         async function fetchPassportData() {
             showLoader();
             qrId = getQrIdFromUrl();
+            console.log(`🚀 [LOG 2 - Page Init] QR ID extracted from URL: "${qrId}"`);
+
             if (!qrId) {
                 document.getElementById("product-name").innerText = "No QR ID Specified";
                 document.getElementById("batch-id-display").innerText = "Please provide ?id= in URL";
@@ -397,29 +406,44 @@
             }
 
             document.getElementById("batch-id-display").innerText = `QR ID: ${qrId}`;
-
             const urlParams = new URLSearchParams(window.location.search);
             const selectedBatchId = urlParams.get("batch_id");
+            console.log(`📌 [LOG 2.1 - Batch Selected]: batch_id parameter = "${selectedBatchId}"`);
 
             try {
+                console.log(`🌐 [LOG 2.2 - Fetching API]: ${API_BASE}/get_medsign_link/${qrId}`);
                 const [passportRes, latestScan] = await Promise.all([
                     fetch(`${API_BASE}/get_medsign_link/${qrId}`),
                     fetchLatestScanLocation(qrId)
                 ]);
 
-                if (!passportRes.ok) throw new Error("Passport record not found");
+                if (!passportRes.ok) throw new Error(`HTTP Error ${passportRes.status} fetching passport`);
 
                 const json = await passportRes.json();
+                console.log("📦 [LOG 3 - Raw Passport Response]:", json);
+
                 const record = json.record || {};
+                console.log("📄 [LOG 3.1 - Passport Record Object]:", record);
 
                 let traceArray = record.trace_details;
+                console.log("🧩 [LOG 3.2 - Raw trace_details field]:", typeof traceArray, traceArray);
+
                 if (typeof traceArray === "string") {
-                    try { traceArray = JSON.parse(traceArray); } catch (e) { traceArray = []; }
+                    try {
+                        traceArray = JSON.parse(traceArray);
+                        console.log("✅ [LOG 3.3 - Parsed trace_details from string]:", traceArray);
+                    } catch (e) {
+                        console.error("❌ [LOG 3.3 - JSON Parse Error on trace_details]:", e);
+                        traceArray = [];
+                    }
                 }
 
                 if (traceArray && !Array.isArray(traceArray)) {
+                    console.warn("⚠️ [LOG 3.4 - trace_details is Single Object. Converting to array.]");
                     traceArray = Object.keys(traceArray).length > 0 ? [traceArray] : [];
                 }
+
+                console.log(`🔢 [LOG 3.5 - Total Batches in trace_details Array]: ${traceArray ? traceArray.length : 0}`);
 
                 if (Array.isArray(traceArray) && traceArray.length > 0) {
                     if (selectedBatchId) {
@@ -432,10 +456,13 @@
                     primaryTraceData = {};
                 }
 
+                console.log("🌟 [LOG 4 - Resolved Primary Batch Data]:", primaryTraceData);
+
                 if (primaryTraceData && Object.keys(primaryTraceData).length > 0) {
                     document.getElementById("product-name").innerText = primaryTraceData.product_name || "PureTrace Tracked Product";
 
                     if (latestScan && latestScan.coords) {
+                        console.log("🔄 [LOG 4.1 - Merging Live Scan Location into Step 4]:", latestScan);
                         primaryTraceData.latest_scan_coords = latestScan.coords;
                         primaryTraceData.latest_scan_time = latestScan.timestamp;
                         lastKnownScanTime = latestScan.rawTimestamp;
@@ -443,6 +470,7 @@
 
                     renderMilestones(primaryTraceData);
                 } else {
+                    console.warn("⚠️ [LOG 4.2 - No Valid Batch Data Found. Rendering Empty Milestones.]");
                     document.getElementById("product-name").innerText = "Trace Data Unavailable";
                     renderMilestones({});
                 }
@@ -450,7 +478,7 @@
                 startRealtimeScanPolling(qrId);
 
             } catch (err) {
-                console.error("[Frontend] Error loading trace record:", err);
+                console.error("❌ [LOG 5 - Critical Fetch Error]:", err);
                 document.getElementById("product-name").innerText = "Trace Data Unavailable";
                 renderMilestones({});
             } finally {
@@ -463,6 +491,7 @@
                 const latestScan = await fetchLatestScanLocation(targetQrId);
                 if (latestScan && latestScan.coords) {
                     if (latestScan.rawTimestamp !== lastKnownScanTime) {
+                        console.log("⚡ [Realtime Scan Update] New scan detected:", latestScan);
                         lastKnownScanTime = latestScan.rawTimestamp;
 
                         if (primaryTraceData) {
@@ -475,8 +504,10 @@
             }, 3000);
         }
 
-        // Render Milestones (Processes Arrays for Steps 1, 2, and 3)
+        // Render Milestones
         function renderMilestones(batchData) {
+            console.log("🎨 [LOG 6 - Executing renderMilestones] Input batchData:", batchData);
+
             let trackerHtml = "";
             let milestonesHtml = "";
 
@@ -486,6 +517,9 @@
             // --- STEP 1: Process Farms Array ---
             let step1Details = "";
             let step1Coords = [];
+            
+            console.log("🌾 [LOG 6.1 - Raw Farm Entries]:", batchData.farm_entries, "| Manufactured By:", batchData.manufactured_by);
+
             const farmEntries = Array.isArray(batchData.farm_entries) && batchData.farm_entries.length > 0
                 ? batchData.farm_entries
                 : (batchData.manufactured_by ? [{ name: batchData.manufactured_by, date: batchData.mfg_date, geo: batchData.location_coordinates }] : []);
@@ -502,6 +536,9 @@
             // --- STEP 2: Process Facilities Array ---
             let step2Details = "";
             let step2Coords = [];
+
+            console.log("🏭 [LOG 6.2 - Raw Facility Entries]:", batchData.facility_entries, "| Marketed By:", batchData.marketed_by);
+
             const facilityEntries = Array.isArray(batchData.facility_entries) && batchData.facility_entries.length > 0
                 ? batchData.facility_entries
                 : (batchData.marketed_by ? [{ name: batchData.marketed_by, time: "", geo: "" }] : []);
@@ -522,6 +559,9 @@
             // --- STEP 3: Process Transit Hubs Array ---
             let step3Details = "";
             let step3Coords = [];
+
+            console.log("🚚 [LOG 6.3 - Raw Transit Entries]:", batchData.transit_entries);
+
             const transitEntries = Array.isArray(batchData.transit_entries) && batchData.transit_entries.length > 0
                 ? batchData.transit_entries
                 : [];
@@ -608,6 +648,7 @@
 
             document.getElementById("route-tracker").innerHTML = trackerHtml;
             document.getElementById("milestones-container").innerHTML = milestonesHtml;
+            console.log("✅ [LOG 7 - Milestones Render Complete]");
         }
 
         function parseCoords(coordStr, titleLabel = "Scanned Location") {
