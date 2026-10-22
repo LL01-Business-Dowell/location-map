@@ -52,6 +52,33 @@
             position: relative;
         }
 
+        /* Floating Close Button */
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #F1F5F9;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .close-btn:hover {
+            background: #E2E8F0;
+            color: var(--text-main);
+        }
+
         /* Full Screen Loader */
         .loader-overlay {
             position: absolute;
@@ -96,6 +123,7 @@
             align-items: flex-start;
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 12px;
+            padding-right: 36px; /* Room for close button */
             margin-bottom: 16px;
             gap: 8px;
         }
@@ -345,6 +373,9 @@
 <body>
 
     <div class="container">
+        <!-- Close Button to return to Splash Screen -->
+        <button type="button" class="close-btn" onclick="goToSplashScreen()" title="Return to Splash Screen">✕</button>
+
         <div class="loader-overlay" id="loader">
             <div class="spinner"></div>
             <div class="loader-text">Loading Product Passport...</div>
@@ -407,6 +438,19 @@
         function getQrIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get("id") || "";
+        }
+
+     
+        function goToSplashScreen() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const linkId = urlParams.get("id");
+            
+            let targetUrl = "puretrace.html";
+            if (linkId) {
+                targetUrl += `?id=${encodeURIComponent(linkId)}`;
+            }
+            
+            window.location.href = targetUrl;
         }
 
         // Match behavior from puretrace.html
