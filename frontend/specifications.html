@@ -553,7 +553,7 @@
             margin-top: 2rem;
         }
 
-        /* Image Lightbox Modal */
+        /* Image & PDF Lightbox Modal */
         .lightbox-modal {
             display: none;
             position: fixed;
@@ -573,11 +573,19 @@
             display: flex;
         }
 
-        .lightbox-modal img {
+        .lightbox-modal img,
+        .lightbox-modal iframe {
             max-width: 90vw;
             max-height: 85vh;
             object-fit: contain;
             border-radius: var(--radius-md);
+            border: none;
+            background: #ffffff;
+        }
+
+        .lightbox-modal iframe {
+            width: 85vw;
+            height: 85vh;
         }
 
         /* Footer */
@@ -753,9 +761,10 @@
 
     </div>
 
-    <!-- Image Lightbox Modal -->
+    <!-- Image & PDF Lightbox Modal -->
     <div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox()">
-        <img id="lightboxImg" src="" alt="Enlarged View" />
+        <img id="lightboxImg" src="" alt="Enlarged View" style="display: none;" />
+        <iframe id="lightboxPdf" src="" style="display: none;" onclick="event.stopPropagation()"></iframe>
     </div>
 
     <script src="config.js"></script>
@@ -809,14 +818,44 @@
             if (loader) loader.classList.add("hidden");
         }
 
-        function openLightbox(src) {
+        function isPdfDocument(fileObj, src) {
+            if (!src && !fileObj) return false;
+            const s = String(src || '').toLowerCase();
+            if (s.startsWith('data:application/pdf') || s.split('?')[0].endsWith('.pdf')) {
+                return true;
+            }
+            if (fileObj && typeof fileObj === 'object') {
+                const mime = String(fileObj.mime_type || fileObj.mimetype || fileObj.type || '').toLowerCase();
+                const fname = String(fileObj.filename || fileObj.file_name || fileObj.name || '').toLowerCase();
+                if (mime.includes('pdf') || fname.endsWith('.pdf')) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function openLightbox(src, isPdf = false) {
             if (!src) return;
-            document.getElementById("lightboxImg").src = src;
+            const imgEl = document.getElementById("lightboxImg");
+            const pdfEl = document.getElementById("lightboxPdf");
+
+            if (isPdf) {
+                imgEl.style.display = "none";
+                imgEl.src = "";
+                pdfEl.src = src;
+                pdfEl.style.display = "block";
+            } else {
+                pdfEl.style.display = "none";
+                pdfEl.src = "";
+                imgEl.src = src;
+                imgEl.style.display = "block";
+            }
             document.getElementById("lightboxModal").classList.add("active");
         }
 
         function closeLightbox() {
             document.getElementById("lightboxModal").classList.remove("active");
+            document.getElementById("lightboxPdf").src = "";
         }
 
         function resolveFileSource(fileObj) {
@@ -1048,28 +1087,39 @@
             if (certList.length > 0) {
                 let certsHtml = "";
                 certList.forEach(c => {
-                    const certSrc = resolveFileSource(c.file || c.file_id || c);
+                    const fileRef = c.file || c.file_id || c;
+                    const certSrc = resolveFileSource(fileRef);
+                    const isPdf = isPdfDocument(fileRef, certSrc) || isPdfDocument(c, certSrc);
+                    const safeSrc = certSrc.replace(/'/g, "\\'");
 
                     let mediaPreview = "";
                     if (certSrc) {
-                        mediaPreview = `
-                        <div class="cert-media-preview" onclick="openLightbox('${certSrc}')">
-                            <img src="${certSrc}" alt="Certificate Full View" />
-                        </div>
-                    `;
+                        if (isPdf) {
+                            mediaPreview = `
+                            <div class="cert-media-preview" onclick="openLightbox('${safeSrc}', true)">
+                                <iframe src="${certSrc}#toolbar=0&navpanes=0" style="width: 100%; height: 260px; border: none; pointer-events: none;"></iframe>
+                            </div>
+                        `;
+                        } else {
+                            mediaPreview = `
+                            <div class="cert-media-preview" onclick="openLightbox('${safeSrc}', false)">
+                                <img src="${certSrc}" alt="Certificate Full View" />
+                            </div>
+                        `;
+                        }
                     }
 
                     certsHtml += `
                     <div class="cert-card">
                         <div class="cert-header">
-                            <div class="cert-icon">📄</div>
+                            <div class="cert-icon">${isPdf ? '📑' : '📄'}</div>
                             <div>
                                 <div class="cert-title">${c.name || 'Certificate'}</div>
                                 ${c.description ? `<div class="cert-desc">${c.description}</div>` : ''}
                             </div>
                         </div>
                         ${mediaPreview}
-                        ${certSrc ? `<button class="btn-preview" onclick="openLightbox('${certSrc}')">Preview</button>` : ''}
+                        ${certSrc ? `<button class="btn-preview" onclick="openLightbox('${safeSrc}', ${isPdf})">${isPdf ? 'Preview PDF' : 'Preview'}</button>` : ''}
                     </div>
                 `;
                 });

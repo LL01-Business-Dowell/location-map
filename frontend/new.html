@@ -1,600 +1,1414 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PureTrace - Digital Product Passport (DPP) Dashboard</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS and JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        .modal { transition: opacity 0.25s ease; }
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PharmaTrace — Smart Packaging, Supply Traceability &amp; Voice Prescription Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #114b44;
+      --primary-dark: #0a342f;
+      --primary-deeper: #06231f;
+      --primary-light: #eef7f5;
+      --primary-border: #bfe0da;
+
+      --emerald: #1f7a68;
+      --emerald-dark: #155c4e;
+      --emerald-light: #e8f5f1;
+      --emerald-border: #b3dcd1;
+
+      --amber-light: #fef7ec;
+      --amber-border: #f3d2a2;
+      --amber-dark: #7c4212;
+
+      --terracotta: #c85a32;
+      --terracotta-light: #fdf0eb;
+
+      --red: #c53030;
+      --red-light: #fff5f5;
+      --red-border: #feb2b2;
+
+      --linen-50: #fdfbf7;
+      --linen-100: #f7f3eb;
+      --linen-200: #ebe4d8;
+      --slate-300: #d5cdc0;
+      --slate-400: #8e867b;
+      --slate-500: #665f56;
+      --slate-600: #4d4740;
+      --slate-700: #36322d;
+      --slate-800: #23201d;
+      --slate-900: #161412;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--linen-50);
+      color: var(--slate-800);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, .serif { font-family: 'Merriweather', Georgia, serif; }
+    .hidden { display: none !important; }
+
+    /* Top Navigation Bar */
+    .navbar {
+      background: rgba(253, 251, 247, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--linen-200);
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      box-shadow: 0 2px 10px rgba(35, 32, 29, 0.04);
+    }
+    .nav-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--emerald));
+      color: var(--white);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      box-shadow: 0 4px 10px rgba(17, 75, 68, 0.22);
+      flex-shrink: 0;
+    }
+    .brand-text h1 { font-size: 18px; font-weight: 900; color: var(--slate-900); line-height: 1.15; }
+    .brand-text span { font-size: 11px; color: var(--slate-500); font-weight: 600; display: block; }
+
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .nav-tab-btn {
+      padding: 8px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--linen-200);
+      background: var(--white);
+      color: var(--slate-700);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .nav-tab-btn:hover { background: var(--primary-light); border-color: var(--primary-border); color: var(--primary); }
+    .nav-tab-btn.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+      box-shadow: 0 3px 10px rgba(17, 75, 68, 0.24);
+    }
+    .nav-tab-btn.reports-btn.active {
+      background: var(--primary-deeper);
+      border-color: var(--primary-deeper);
+      color: var(--white);
+    }
+    .nav-tab-btn.spec-btn.active {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: var(--white);
+    }
+    .nav-tab-btn.trace-btn.active {
+      background: var(--emerald-dark);
+      border-color: var(--emerald-dark);
+      color: var(--white);
+    }
+    .nav-tab-btn.rx-btn.active {
+      background: var(--terracotta);
+      border-color: var(--terracotta);
+      color: var(--white);
+      box-shadow: 0 3px 10px rgba(200, 90, 50, 0.25);
+    }
+
+    /* Main Container */
+    .main-wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* PATIENT VIEW & MOBILE DISPLAY */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (min-width: 980px) {
+      .sim-layout {
+        grid-template-columns: 380px 1fr;
+      }
+    }
+
+    /* Left Context / QR Selector Card */
+    .side-card {
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(35, 32, 29, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .side-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      width: fit-content;
+    }
+    .batch-selector-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .batch-item-btn {
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid var(--linen-200);
+      background: var(--linen-50);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .batch-item-btn:hover { border-color: var(--primary-border); background: var(--white); }
+    .batch-item-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      box-shadow: 0 3px 10px rgba(17, 75, 68, 0.1);
+    }
+    .batch-item-btn strong { font-size: 13.5px; color: var(--slate-900); display: block; }
+    .batch-item-btn span { font-size: 11.5px; color: var(--slate-500); }
+
+    .qr-preview-box {
+      background: var(--linen-50);
+      border: 1px solid var(--linen-200);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .qr-preview-box canvas {
+      background: var(--white);
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--linen-200);
+    }
+
+    /* COMPACT SMARTPHONE FRAME */
+    .phone-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .phone-frame {
+      width: 410px;
+      max-width: 100%;
+      background: var(--slate-900);
+      border-radius: 42px;
+      padding: 13px;
+      box-shadow: 0 24px 54px rgba(22, 20, 18, 0.28);
+      border: 3px solid #36322d;
+    }
+    .phone-notch {
+      width: 130px;
+      height: 18px;
+      background: var(--slate-900);
+      border-radius: 0 0 14px 14px;
+      margin: 0 auto 8px;
+    }
+    .phone-screen {
+      background: var(--linen-50);
+      border-radius: 28px;
+      overflow: hidden;
+      min-height: 700px;
+      max-height: 780px;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-topbar {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: var(--white);
+      padding: 13px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .phone-topbar h4 { font-size: 13.5px; font-weight: 800; letter-spacing: 0.2px; }
+    .phone-home-btn {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .phone-home-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+    .phone-scroll-body {
+      padding: 15px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* HOME SCREEN INSIDE PHONE */
+    .home-hero-banner {
+      background: linear-gradient(135deg, #0b2f2b 0%, #114b44 65%, #1f7a68 100%);
+      color: var(--white);
+      border-radius: 18px;
+      padding: 15px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(17, 75, 68, 0.22);
+    }
+    .home-verified-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #fde8c8;
+      margin-bottom: 8px;
+    }
+    .home-banner-flex {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .home-product-thumb {
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: var(--white);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      flex-shrink: 0;
+    }
+    .home-hero-banner h2 {
+      font-size: 17.5px;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 3px;
+    }
+    .home-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 10.5px;
+    }
+    .home-meta-pill {
+      background: rgba(0, 0, 0, 0.24);
+      padding: 4px 8px;
+      border-radius: 7px;
+      font-weight: 600;
+      color: #e4f1ee;
+    }
+
+    /* 4 HOME SCREEN OPTION CARDS */
+    .home-grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 2px;
+    }
+    .home-option-card {
+      background: var(--white);
+      border: 1.5px solid var(--linen-200);
+      border-radius: 16px;
+      padding: 14px 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(35, 32, 29, 0.04);
+      position: relative;
+    }
+    .home-option-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      box-shadow: 0 8px 18px rgba(17, 75, 68, 0.12);
+    }
+    .home-opt-num {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--slate-400);
+      background: var(--linen-100);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+    .home-opt-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+    }
+    .opt-spec .home-opt-icon { background: var(--primary-light); color: var(--primary); }
+    .opt-trace .home-opt-icon { background: var(--emerald-light); color: var(--emerald-dark); }
+    .opt-feed .home-opt-icon { background: var(--amber-light); color: var(--amber-dark); }
+    .opt-rx .home-opt-icon { background: var(--terracotta-light); color: var(--terracotta); }
+
+    .home-option-card h4 {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--slate-900);
+      margin-bottom: 2px;
+    }
+    .home-option-card p {
+      font-size: 11px;
+      color: var(--slate-500);
+      line-height: 1.35;
+    }
+
+    /* Quick Language Bar inside Phone */
+    .sim-lang-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      background: var(--white);
+      padding: 6px;
+      border-radius: 11px;
+      border: 1px solid var(--linen-200);
+    }
+    .lang-pill-btn {
+      padding: 6px 4px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: var(--linen-50);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--slate-700);
+      cursor: pointer;
+    }
+    .lang-pill-btn.active {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    /* Sub-screen Cards inside Phone */
+    .subscreen-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--linen-200);
+    }
+    .back-pill-btn {
+      background: var(--white);
+      border: 1px solid var(--slate-300);
+      color: var(--slate-800);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .back-pill-btn:hover { background: var(--linen-100); }
+
+    .info-card {
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 12px;
+    }
+    .mini-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--slate-400);
+      display: block;
+      margin-bottom: 3px;
+    }
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+    }
+    .spec-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid var(--linen-100);
+      vertical-align: top;
+    }
+    .spec-table td:first-child {
+      color: var(--slate-500);
+      font-weight: 600;
+      width: 42%;
+    }
+    .spec-table td:last-child {
+      color: var(--slate-900);
+      font-weight: 700;
+      text-align: right;
+    }
+
+    /* Certificate Badge Row inside Spec Screen */
+    .cert-pill-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .cert-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--emerald-light);
+      color: var(--emerald-dark);
+      border: 1px solid var(--emerald-border);
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 800;
+    }
+
+    .video-embed-box {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      border-radius: 9px;
+      overflow: hidden;
+      background: #0f172a;
+      margin-top: 6px;
+      border: 1px solid var(--linen-200);
+    }
+    .video-embed-box iframe, .video-embed-box video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* Tracing Timeline inside Phone */
+    .trace-timeline {
+      position: relative;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .trace-timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--emerald-border);
+    }
+    .trace-node {
+      position: relative;
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 11px;
+      padding: 9px 11px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .trace-node:hover, .trace-node.active-pin {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .trace-node::before {
+      content: '';
+      position: absolute;
+      left: -16px;
+      top: 12px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--emerald);
+      border: 2px solid var(--white);
+      box-shadow: 0 0 0 2px var(--emerald-border);
+    }
+    .trace-stage-tag {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--emerald-dark);
+      text-transform: uppercase;
+    }
+
+    /* Interactive Map Box */
+    .gps-map-box {
+      background: linear-gradient(180deg, #e0f2fe 0%, #dcfce7 100%);
+      border: 1px solid var(--primary-border);
+      border-radius: 12px;
+      padding: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .map-iframe-wrap {
+      width: 100%;
+      height: 175px;
+      border-radius: 9px;
+      overflow: hidden;
+      border: 1px solid rgba(17, 75, 68, 0.22);
+      background: #e2e8f0;
+      position: relative;
+    }
+    .map-iframe-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* Buttons & Controls */
+    .btn-primary {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: none;
+      background: var(--primary);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-emerald {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 11px;
+      border: none;
+      background: var(--emerald);
+      color: var(--white);
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: 0 4px 12px rgba(31, 122, 104, 0.28);
+    }
+    .btn-emerald:hover { background: var(--emerald-dark); }
+    .btn-terracotta {
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: none;
+      background: var(--terracotta);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-terracotta:hover { background: #b24c27; }
+    .btn-outline {
+      padding: 9px 13px;
+      border-radius: 9px;
+      border: 1px solid var(--slate-300);
+      background: var(--white);
+      color: var(--slate-700);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-outline:hover { background: var(--linen-100); }
+
+    /* Rating Stars */
+    .rating-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+    .rate-btn {
+      padding: 7px 4px;
+      border-radius: 8px;
+      border: 1px solid var(--slate-300);
+      background: var(--linen-50);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+    .rate-btn.selected {
+      background: var(--amber-light);
+      border-color: var(--terracotta);
+      color: var(--amber-dark);
+    }
+
+    /* =========================================================================
+       THREE SEPARATE ENTRY FORM CONTAINERS
+       ========================================================================= */
+    .mfg-container {
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(35, 32, 29, 0.06);
+      overflow: hidden;
+    }
+    .mfg-header {
+      background: linear-gradient(135deg, #23201d 0%, #114b44 100%);
+      color: var(--white);
+      padding: 22px 26px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+    .mfg-header.trace-theme {
+      background: linear-gradient(135deg, #0b2f2b 0%, #155c4e 100%);
+    }
+    .mfg-header.pharmacy-theme {
+      background: linear-gradient(135deg, #3b1d14 0%, #9c4221 100%);
+    }
+    .mfg-header h2 { font-size: 21px; font-weight: 900; }
+    .mfg-header p { font-size: 13px; color: #e4f1ee; margin-top: 4px; }
+
+    .mfg-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      padding: 24px 26px;
+    }
+    @media (min-width: 1024px) {
+      .mfg-grid {
+        grid-template-columns: 1.25fr 0.75fr;
+      }
+    }
+    .mfg-section {
+      background: var(--linen-50);
+      border: 1px solid var(--linen-200);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mfg-section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--linen-200);
+      padding-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .form-2col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 600px) {
+      .form-2col { grid-template-columns: 1fr 1fr; }
+    }
+    .form-3col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 600px) {
+      .form-3col { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    label.f-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--slate-600);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+    }
+    input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], input[type="tel"], input[type="email"], input[type="url"], select, textarea {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--slate-300);
+      border-radius: 9px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--slate-800);
+      background: var(--white);
+    }
+    input[type="file"] {
+      width: 100%;
+      font-size: 12px;
+      color: var(--slate-600);
+      border: 1px solid var(--slate-300);
+      border-radius: 9px;
+      padding: 7px;
+      background: var(--white);
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(17, 75, 68, 0.12);
+    }
+
+    .trace-entry-card {
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 12px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .trace-entry-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--emerald-dark);
+    }
+
+    .color-chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--slate-300);
+      font-size: 11.5px;
+      background: var(--white);
+      cursor: pointer;
+    }
+    .color-chip.selected {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+      font-weight: 700;
+    }
+
+    .spec-photo-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 6px;
+    }
+    .spec-photo-preview-box img {
+      width: 68px;
+      height: 68px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--linen-200);
+    }
+
+    /* =========================================================================
+       REPORTS DASHBOARD VIEW
+       ========================================================================= */
+    .reports-container {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .reports-hero {
+      background: linear-gradient(135deg, #06231f 0%, #114b44 65%, #1f7a68 100%);
+      color: var(--white);
+      border-radius: 20px;
+      padding: 24px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 28px rgba(17, 75, 68, 0.18);
+    }
+    .reports-hero h2 { font-size: 22px; font-weight: 900; }
+    .reports-hero p { font-size: 13px; color: #d5ece7; margin-top: 4px; max-width: 680px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .kpi-card {
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 6px 18px rgba(35, 32, 29, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .kpi-card strong {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--primary-dark);
+      font-family: 'Merriweather', Georgia, serif;
+    }
+    .kpi-card span.kpi-sub {
+      font-size: 11.5px;
+      color: var(--emerald-dark);
+      font-weight: 700;
+    }
+
+    .reports-main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+    @media (min-width: 1024px) {
+      .reports-main-grid {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+    }
+    .report-panel {
+      background: var(--white);
+      border: 1px solid var(--linen-200);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(35, 32, 29, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .report-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--linen-200);
+      padding-bottom: 10px;
+    }
+    .report-panel-head h3 { font-size: 16px; color: var(--slate-900); }
+    .geo-heatmap-canvas {
+      background: linear-gradient(180deg, #e0f2fe 0%, #dcfce7 100%);
+      border: 1px solid var(--primary-border);
+      border-radius: 14px;
+      padding: 14px;
+      position: relative;
+    }
+    .report-map-frame {
+      width: 100%;
+      height: 225px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(17, 75, 68, 0.22);
+      background: #e2e8f0;
+    }
+    .report-map-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    .cluster-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .cluster-chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--primary-border);
+      background: var(--white);
+      color: var(--primary-dark);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cluster-chip.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+    .fb-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+    }
+    .fb-bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--linen-200);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .fb-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--emerald));
+      border-radius: 999px;
+    }
+    .voice-rec-card {
+      background: var(--white);
+      border: 1px dashed var(--primary-border);
+      border-radius: 12px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .scan-log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .scan-log-table th {
+      text-align: left;
+      padding: 8px 6px;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      color: var(--slate-500);
+      border-bottom: 1.5px solid var(--linen-200);
+    }
+    .scan-log-table td {
+      padding: 9px 6px;
+      border-bottom: 1px solid var(--linen-100);
+      color: var(--slate-800);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 800;
+      background: var(--emerald-light);
+      color: var(--emerald-dark);
+    }
+  </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body>
 
-    <!-- Header -->
-    <header class="bg-emerald-800 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-seedling text-xl"></i></div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-wide">PureTrace DPP</h1>
-                    <p class="text-xs text-emerald-200">DoWell UX Living Lab &bull; Enterprise Traceability Control Panel</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span class="bg-emerald-700 text-emerald-100 text-xs px-3 py-1 rounded-full font-medium" id="header-batch-label">Batch #BATCH-2026-0918</span>
-                <button type="button" onclick="alert('Exporting Audit Trail Report...')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded shadow transition"><i class="fa-solid fa-download mr-1"></i> Export Report</button>
-            </div>
+  <!-- Top Unified Navigation: Starts with Patient View, Reports is the last button -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="#" class="brand" id="brandHomeLink">
+        <div class="brand-icon">PT</div>
+        <div class="brand-text">
+          <h1>PharmaTrace</h1>
+          <span>Smart Packaging, Supply Traceability &amp; Voice Prescription Portal</span>
         </div>
-    </header>
+      </a>
 
-    <!-- Main Container -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 py-6 w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="nav-tabs">
+        <button type="button" class="nav-tab-btn active" id="topTabCustomerView">
+          📱 Patient View
+        </button>
+        <button type="button" class="nav-tab-btn spec-btn" id="topTabSpecForm">
+          📋 Specification Form
+        </button>
+        <button type="button" class="nav-tab-btn trace-btn" id="topTabTraceForm">
+          🛰️ Tracing Form
+        </button>
+        <button type="button" class="nav-tab-btn rx-btn" id="topTabPharmacyForm">
+          💊 Pharmacy Form
+        </button>
+        <button type="button" class="nav-tab-btn reports-btn" id="topTabReports">
+          📊 Reports
+        </button>
+      </div>
+    </div>
+  </nav>
 
-        <!-- Left Column: Dynamic Supply Chain Control Panel (Steps 1-5 Inputs) -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-route text-emerald-600 mr-2"></i>Supply Chain Lifecycle Configuration</h2>
-                    <span class="text-xs text-slate-500">Multi-Entry GPS & DateTime Logging</span>
+  <main class="main-wrap">
+
+    <!-- =======================================================================
+         VIEW 1 (DEFAULT START): PATIENT VIEW WITH 4-OPTION HOME SCREEN
+         ======================================================================= -->
+    <section id="viewCustomer" class="sim-layout">
+
+      <!-- Left Panel: Active Product/Medicine Batch Switcher & Scannable QR -->
+      <aside class="side-card">
+        <span class="side-badge">Package &amp; Prescription Selector</span>
+        <div>
+          <h3 style="font-size:18px; color:var(--slate-900); margin-bottom:4px;">Select Scanned Package</h3>
+          <p style="font-size:12.5px; color:var(--slate-500);">Choose a preloaded medicine or product batch, or inspect the custom record updated across the Specification, Tracing, and Pharmacy forms.</p>
+        </div>
+
+        <div class="batch-selector-list" id="batchSelectorList">
+          <button type="button" class="batch-item-btn active" data-record="0">
+            <div>
+              <strong>💊 Amoxicillin 500mg Capsules</strong>
+              <span>Batch: AMX-2026-091 • City Health / D'Well Pharma</span>
+            </div>
+            <span style="font-weight:800; color:var(--primary);">Scan →</span>
+          </button>
+
+          <button type="button" class="batch-item-btn" data-record="1">
+            <div>
+              <strong>🌿 Nature's Harvest Premium Nut Pack</strong>
+              <span>Batch: NHQR-100-2026 • D'Well Informatics</span>
+            </div>
+            <span style="font-weight:800; color:var(--primary);">Scan →</span>
+          </button>
+
+          <button type="button" class="batch-item-btn" data-record="2">
+            <div>
+              <strong>❤️ Metformin 500mg Tablets</strong>
+              <span>Batch: MET-2026-404 • Kochi Care Clinic</span>
+            </div>
+            <span style="font-weight:800; color:var(--primary);">Scan →</span>
+          </button>
+
+          <button type="button" class="batch-item-btn" id="customMfgBatchBtn" data-record="custom">
+            <div>
+              <strong id="customMfgBatchTitle">✨ CardioGuard 10mg Tablets (Custom)</strong>
+              <span id="customMfgBatchSub">Batch: CG-2026-772 • Editable via Forms</span>
+            </div>
+            <span style="font-weight:800; color:var(--terracotta);">Active →</span>
+          </button>
+        </div>
+
+        <div class="qr-preview-box">
+          <span class="mini-label">Package Smart QR Code</span>
+          <canvas id="sideQrCanvas" width="144" height="144"></canvas>
+          <p id="sideQrCaption" style="font-size:11px; color:var(--slate-600); font-family:monospace;">BATCH: AMX-2026-091</p>
+          <div style="display:flex; gap:6px; width:100%; justify-content:center; flex-wrap:wrap;">
+            <button type="button" class="btn-outline" id="downloadSideQrBtn">⬇️ Download QR</button>
+            <button type="button" class="btn-outline" id="gotoSpecFromSideBtn">📋 Spec Form</button>
+            <button type="button" class="btn-outline" id="gotoTraceFromSideBtn">🛰️ Trace Form</button>
+            <button type="button" class="btn-outline" id="gotoRxFromSideBtn">💊 Pharmacy Form</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Panel: Interactive Smartphone View -->
+      <div class="phone-stage">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+
+            <!-- Phone Top Status Header -->
+            <div class="phone-topbar">
+              <div>
+                <h4>PharmaTrace</h4>
+                <span id="phoneTopBatch" style="font-size:10px; color:#a6d8cb; font-family:monospace;">BATCH: AMX-2026-091</span>
+              </div>
+              <button type="button" class="phone-home-btn" id="phoneHomeBtn">⊞ Home</button>
+            </div>
+
+            <!-- Phone Dynamic Content Area -->
+            <div class="phone-scroll-body">
+
+              <!-- ===============================================================
+                   HOME SCREEN (DEFAULT LANDING VIEW WITH 4 REQUIRED OPTIONS)
+                   =============================================================== -->
+              <div id="phoneHomeScreen">
+                <div class="home-hero-banner">
+                  <div class="home-verified-chip">✓ Verified Smart Package • GS1 &amp; Voice Ready</div>
+                  <div class="home-banner-flex">
+                    <img id="homeProductPhoto" class="home-product-thumb" src="" alt="Medicine Photo" />
+                    <div>
+                      <h2 id="homeProductName">Amoxicillin 500mg</h2>
+                      <p id="homeManufacturer" style="font-size:11.5px; color:#d5ece7;">Manufactured by D'Well Informatics &amp; Pharma Pvt. Ltd.</p>
+                    </div>
+                  </div>
+                  <div class="home-meta-row">
+                    <span class="home-meta-pill" id="homeBatchPill">Batch: AMX-2026-091</span>
+                    <span class="home-meta-pill" id="homeMrpPill">MRP: INR 145</span>
+                    <span class="home-meta-pill" id="homeExpPill">Exp: 2027-08-31</span>
+                  </div>
                 </div>
-                <p class="text-sm text-slate-600 mb-6">Configure multiple locations, date-times, and parameters across the 5 core lifecycle stages.</p>
 
-                <!-- STEP 1: FARM & SOURCING -->
-                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
-                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-seedling mr-1"></i> Step 1: Farm & Sourcing (Multi-Farm + DateTime + GPS Picker)</h3>
-                    <div id="farm-list" class="space-y-3 mb-3">
-                        <div class="farm-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
-                            <div class="flex gap-2">
-                                <input type="text" class="farm-input flex-2 p-2 text-xs border border-slate-300 rounded" value="Nilgiri Coop, Tamil Nadu" placeholder="Farm/Coop Name">
-                                <input type="datetime-local" class="farm-date-input flex-1.5 p-2 text-xs border border-slate-300 rounded" value="2026-10-02T08:30">
-                            </div>
-                            <div class="flex gap-2 items-center">
-                                <input type="text" class="farm-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" value="11.4121, 76.6950" placeholder="Lat, Long">
-                                <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="addFarmEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Another Farm</button>
+                <!-- Language Switcher on Home -->
+                <div style="margin-top:10px;">
+                  <span class="mini-label" style="margin-bottom:4px;">🌐 Preferred Audio &amp; Label Language</span>
+                  <div class="sim-lang-bar" id="simLangBar">
+                    <button type="button" class="lang-pill-btn active" data-lang="en-US">English</button>
+                    <button type="button" class="lang-pill-btn" data-lang="ml-IN">മലയാളം</button>
+                    <button type="button" class="lang-pill-btn" data-lang="ta-IN">தமிழ்</button>
+                    <button type="button" class="lang-pill-btn" data-lang="hi-IN">हिंदी</button>
+                  </div>
                 </div>
 
-                <!-- STEP 2: PROCESSING & PACKAGING -->
-                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
-                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-industry mr-1"></i> Step 2: Processing & Packaging (Multi-Facility)</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <label class="block text-[10px] text-slate-500 mb-1">Batch ID</label>
-                            <input type="text" id="proc-batch" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="BATCH-2026-0918">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-500 mb-1">Product Name</label>
-                            <input type="text" id="proc-product" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="Pure-Crunch Classic Salted Chips - 50g">
-                        </div>
-                    </div>
-                    <div id="facility-list" class="space-y-3 mb-3">
-                        <div class="facility-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
-                            <div class="flex gap-2">
-                                <input type="text" class="facility-input flex-2 p-2 text-xs border border-slate-300 rounded" value="Coimbatore Plant #4 (Wash & Slice)" placeholder="Facility Name">
-                                <input type="datetime-local" class="facility-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded" value="2026-10-06T14:00">
-                            </div>
-                            <div class="flex gap-2 items-center">
-                                <input type="text" class="facility-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" value="11.0168, 76.9558" placeholder="Lat, Long">
-                                <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="addFacilityEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Processing Milestone</button>
+                <!-- 4 PRIMARY HOME OPTIONS -->
+                <div style="margin-top:12px;">
+                  <span class="mini-label" style="margin-bottom:6px;">Choose an Option Below</span>
+                  <div class="home-grid-4">
+                    <!-- Option 1: Specification -->
+                    <button type="button" class="home-option-card opt-spec" data-screen="specification">
+                      <span class="home-opt-num">1</span>
+                      <div class="home-opt-icon">📋</div>
+                      <div>
+                        <h4>1. Specification</h4>
+                        <p>Product photo, video, certificates, MRP, batch &amp; facts</p>
+                      </div>
+                    </button>
+
+                    <!-- Option 2: Tracing -->
+                    <button type="button" class="home-option-card opt-trace" data-screen="tracing">
+                      <span class="home-opt-num">2</span>
+                      <div class="home-opt-icon">🛰️</div>
+                      <div>
+                        <h4>2. Tracing</h4>
+                        <p>Interactive map, GPS checkpoints &amp; origin history</p>
+                      </div>
+                    </button>
+
+                    <!-- Option 3: Feedback -->
+                    <button type="button" class="home-option-card opt-feed" data-screen="feedback">
+                      <span class="home-opt-num">3</span>
+                      <div class="home-opt-icon">🎙️</div>
+                      <div>
+                        <h4>3. Feedback</h4>
+                        <p>Record voice feedback, star rating &amp; batch review</p>
+                      </div>
+                    </button>
+
+                    <!-- Option 4: Prescription -->
+                    <button type="button" class="home-option-card opt-rx" data-screen="prescription">
+                      <span class="home-opt-num">4</span>
+                      <div class="home-opt-icon">💊</div>
+                      <div>
+                        <h4>4. Prescription</h4>
+                        <p>Voice dosage explainer, pill color cues &amp; doctor notes</p>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
-                <!-- STEP 3: TRANSIT WAYPOINTS -->
-                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
-                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-truck-fast mr-1"></i> Step 3: Transit Waypoints (Multi-Waypoint + DateTime)</h3>
-                    <div id="transit-list" class="space-y-3 mb-3">
-                        <div class="transit-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2">
-                            <div class="flex gap-2">
-                                <input type="text" class="transit-input flex-2 p-2 text-xs border border-slate-300 rounded" value="Palakkad Logistics Hub" placeholder="Waypoint Name">
-                                <input type="datetime-local" class="transit-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded" value="2026-10-08T09:15">
-                            </div>
-                            <div class="flex gap-2 items-center">
-                                <input type="text" class="transit-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" value="10.7867, 76.6548" placeholder="Lat, Long">
-                                <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="addTransitEntry()" class="bg-white text-emerald-700 border border-dashed border-emerald-600 px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-50 transition">+ Add Transit Waypoint</button>
+                <!-- Quick Voice Summary Button on Home -->
+                <div style="margin-top:12px;">
+                  <button type="button" class="btn-emerald" id="homeQuickListenBtn">
+                    <span>🔊</span> <span id="homeListenText">Listen Quick Audio Guide</span>
+                  </button>
+                  <p id="homeAudioStatus" style="text-align:center; font-size:10.5px; color:var(--emerald-dark); font-style:italic; margin-top:4px;">Tap any of the 4 cards above or listen immediately</p>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   SCREEN 1: PRODUCT SPECIFICATION (PHOTO, VIDEO, CERTIFICATES & FACTS)
+                   =============================================================== -->
+              <div id="phoneScreenSpecification" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="subscreen-header">
+                  <button type="button" class="back-pill-btn" data-back="home">← Home</button>
+                  <strong style="font-size:13px; color:var(--primary-dark);">1. Product Specification</strong>
                 </div>
 
-                <!-- STEP 4: RETAIL SHELF -->
-                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-4">
-                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-store mr-1"></i> Step 4: Fork / Retail Shelf + GPS</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                        <div>
-                            <label class="block text-[10px] text-slate-500 mb-1">Store Name</label>
-                            <input type="text" id="retail-store" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="SuperMart, MG Road, Kochi">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-500 mb-1">Best Before / Expiry DateTime</label>
-                            <input type="datetime-local" id="retail-expiry" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="2027-04-18T18:00">
-                        </div>
-                    </div>
-                    <div class="flex gap-2 items-center">
-                        <input type="text" id="retail-geo" class="flex-1 p-2 text-xs border border-slate-300 rounded bg-white" value="9.9312, 76.2673" placeholder="Lat, Long">
-                        <button type="button" onclick="openPickerForRetail()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                    </div>
+                <!-- Product Photo & Summary -->
+                <div class="info-card" style="background:var(--primary-light); border-color:var(--primary-border);">
+                  <div style="text-align:center; margin-bottom:8px;">
+                    <img id="specProductPhoto" src="" alt="Medicine Photo" style="width:100%; max-height:148px; object-fit:cover; border-radius:9px; border:1px solid var(--primary-border); background:#fff;" />
+                  </div>
+                  <strong id="specTitle" style="font-size:14px; color:var(--primary-dark);">Amoxicillin 500mg</strong>
+                  <p id="specDesc" style="font-size:11.5px; color:var(--slate-700); margin-top:4px;"></p>
                 </div>
 
-                <!-- STEP 5: END-OF-LIFE -->
-                <div class="p-4 border border-emerald-200 rounded-lg bg-emerald-50/30 mb-6">
-                    <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2"><i class="fa-solid fa-recycle mr-1"></i> Step 5: End-of-Life & Disposal</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-[10px] text-slate-500 mb-1">Material Specification</label>
-                            <input type="text" id="disp-material" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="Monolayer Recyclable Film">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] text-slate-500 mb-1">Disposal Action</label>
-                            <input type="text" id="disp-action" class="w-full p-2 text-xs border border-slate-300 rounded bg-white" value="Clean, Crush & Dry Waste Bin">
-                        </div>
-                    </div>
+                <!-- Quality & Compliance Certificates -->
+                <div class="info-card">
+                  <span class="mini-label">🏅 Verified Certificates &amp; Quality Reports</span>
+                  <div class="cert-pill-wrap" id="specCertList"></div>
                 </div>
 
-                <button type="button" onclick="pushData()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-4 rounded-lg text-sm shadow transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-rocket"></i>
-                    <span>Push Network to Consumer View</span>
+                <!-- Statutory Specification Table -->
+                <div class="info-card">
+                  <span class="mini-label">Official Packaging &amp; Statutory Details</span>
+                  <table class="spec-table" id="specTableBody"></table>
+                </div>
+
+                <!-- Product Explainer / Quality Video -->
+                <div class="info-card" id="specVideoCard">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                    <span class="mini-label" style="margin:0;">▶ Product Quality &amp; Usage Video</span>
+                    <a id="specVideoWatchLink" href="https://youtu.be/_DLkDRL8uws?si=X3rGEdrjUZRm2ej-" target="_blank" rel="noopener" style="font-size:10.5px; font-weight:700; color:var(--primary); text-decoration:none;">YouTube ↗</a>
+                  </div>
+                  <div class="video-embed-box" id="specVideoContainer">
+                    <iframe id="specVideoFrame" src="https://www.youtube.com/embed/_DLkDRL8uws?playsinline=1&modestbranding=1&rel=0" title="Product Specification Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                  <a id="specCallCareBtn" href="tel:07907555151" class="btn-outline" style="text-align:center; text-decoration:none;">☎ Call Care</a>
+                  <a id="specEmailCareBtn" href="mailto:mail@dowellindia.com" class="btn-outline" style="text-align:center; text-decoration:none;">✉ Email Care</a>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   SCREEN 2: SUPPLY CHAIN TRACING (INTERACTIVE MAP + CHECKPOINTS)
+                   =============================================================== -->
+              <div id="phoneScreenTracing" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="subscreen-header">
+                  <button type="button" class="back-pill-btn" data-back="home">← Home</button>
+                  <strong style="font-size:13px; color:var(--emerald-dark);">2. End-to-End Tracing</strong>
+                </div>
+
+                <!-- Interactive Geolocation Map inside Tracing -->
+                <div class="gps-map-box">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="mini-label" style="color:var(--primary-dark); margin:0;">🗺️ Live Checkpoint Location Map</span>
+                    <span id="traceOriginTag" style="font-size:10px; font-weight:800; background:var(--white); padding:2px 7px; border-radius:999px; color:var(--emerald-dark);">India</span>
+                  </div>
+                  <div class="map-iframe-wrap">
+                    <iframe id="traceInteractiveMapIframe" title="Supply Chain Checkpoint Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src=""></iframe>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:10.5px; color:var(--primary-dark); font-weight:700;">
+                    <span id="traceActiveMapLabel">📍 Tap any checkpoint below to focus map</span>
+                    <a id="traceExternalMapLink" href="#" target="_blank" rel="noopener" style="color:var(--terracotta); text-decoration:none;">Open Full Map ↗</a>
+                  </div>
+                </div>
+
+                <div class="trace-timeline" id="traceTimelineContainer"></div>
+              </div>
+
+              <!-- ===============================================================
+                   SCREEN 3: CONSUMER & PATIENT VOICE FEEDBACK
+                   =============================================================== -->
+              <div id="phoneScreenFeedback" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="subscreen-header">
+                  <button type="button" class="back-pill-btn" data-back="home">← Home</button>
+                  <strong style="font-size:13px; color:var(--amber-dark);">3. Voice &amp; Batch Feedback</strong>
+                </div>
+
+                <div class="info-card" style="background:var(--amber-light); border-color:var(--amber-border);">
+                  <span class="mini-label" style="color:var(--amber-dark);">Batch Under Review</span>
+                  <strong id="fbBatchDisplay" style="font-size:13px; color:var(--slate-900);">AMX-2026-091</strong>
+                  <p style="font-size:11px; color:var(--slate-600); margin-top:2px;">Share your experience with product quality, seal integrity, or audio clarity.</p>
+                </div>
+
+                <div class="info-card" style="display:flex; flex-direction:column; gap:9px;">
+                  <div>
+                    <span class="mini-label">Rate Product Experience</span>
+                    <div class="rating-row" id="fbRatingRow">
+                      <button type="button" class="rate-btn" data-rate="1">1 ★</button>
+                      <button type="button" class="rate-btn" data-rate="2">2 ★</button>
+                      <button type="button" class="rate-btn" data-rate="3">3 ★</button>
+                      <button type="button" class="rate-btn selected" data-rate="4">4 ★</button>
+                      <button type="button" class="rate-btn" data-rate="5">5 ★</button>
+                    </div>
+                  </div>
+
+                  <div style="background:var(--linen-50); border:1px dashed var(--slate-300); border-radius:9px; padding:9px; text-align:center;">
+                    <span class="mini-label">Voice Feedback Recorder</span>
+                    <div style="display:flex; gap:6px; justify-content:center; margin-top:5px;">
+                      <button type="button" id="fbStartRecBtn" class="btn-outline" style="background:var(--primary); color:#fff; border:none;">● Record Voice</button>
+                      <button type="button" id="fbStopRecBtn" class="btn-outline" disabled>⏹ Stop</button>
+                    </div>
+                    <p id="fbRecStatus" style="font-size:10.5px; color:var(--slate-500); margin-top:5px;">Optional: Tap to record voice feedback</p>
+                    <audio id="fbAudioPreview" controls class="hidden" style="width:100%; height:28px; margin-top:6px;"></audio>
+                  </div>
+
+                  <div>
+                    <label class="f-label" for="fbNotesInput">Written Notes</label>
+                    <textarea id="fbNotesInput" rows="2" placeholder="Package seal intact, clear voice instructions..."></textarea>
+                  </div>
+
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                    <input type="tel" id="fbPhoneInput" placeholder="Phone (optional)" />
+                    <input type="email" id="fbEmailInput" placeholder="Email (optional)" />
+                  </div>
+
+                  <button type="button" id="fbSubmitBtn" class="btn-primary">Submit Feedback ✓</button>
+                  <p id="fbSubmitMsg" style="font-size:11px; color:var(--emerald-dark); font-weight:700; text-align:center;"></p>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   SCREEN 4: PRESCRIPTION VOICE & VISUAL EXPLAINER
+                   =============================================================== -->
+              <div id="phoneScreenPrescription" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="subscreen-header">
+                  <button type="button" class="back-pill-btn" data-back="home">← Home</button>
+                  <strong style="font-size:13px; color:var(--terracotta);">4. Prescription Guide</strong>
+                </div>
+
+                <button type="button" id="rxListenBtn" class="btn-emerald">
+                  <span>🔊</span> <span id="rxListenBtnLabel">Listen Prescription Voice</span>
                 </button>
+                <p id="rxAudioStatus" style="text-align:center; font-size:10.5px; color:var(--emerald-dark); font-style:italic;">Tap green button for multilingual readout</p>
+
+                <div class="info-card">
+                  <span class="mini-label">Medicine &amp; Dosage</span>
+                  <strong id="rxMedTitle" style="font-size:14px; color:var(--primary-dark);">Amoxicillin • 500mg</strong>
+                  <p id="rxVisualPill" style="font-size:11.5px; color:var(--slate-600); margin-top:2px;">Yellow Capsule • Tablet / Capsule / Pill</p>
+                  <div style="margin-top:8px; text-align:center;">
+                    <img id="rxProductPhoto" src="" alt="Medicine Photo" style="width:100%; max-height:125px; border-radius:8px; object-fit:cover; border:1px solid var(--linen-200); background:#fff;" />
+                  </div>
+                  <div id="rxVisualIllustration" style="margin-top:8px; text-align:center;"></div>
+                </div>
+
+                <div class="info-card">
+                  <span class="mini-label">How to Take (Dosage Instructions)</span>
+                  <p id="rxNotesDisplay" style="font-weight:700; color:var(--slate-800); font-size:12.5px; margin-top:2px;"></p>
+                </div>
+
+                <div class="info-card" style="background:var(--amber-light); border-color:var(--amber-border);">
+                  <span class="mini-label" style="color:var(--amber-dark);">Spoken Voice Script</span>
+                  <p id="rxSpokenScript" style="font-size:11.5px; font-style:italic; color:#542a08;"></p>
+                </div>
+
+                <div class="info-card" style="font-size:11px; color:var(--slate-600);">
+                  <div><strong>Prescribed By:</strong> <span id="rxDoctorName">-</span> (<span id="rxClinicName">-</span>)</div>
+                  <div style="margin-top:2px;"><strong>Patient / ABDM:</strong> <span id="rxPatientInfo">-</span></div>
+                </div>
+              </div>
+
             </div>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Right Column: Consumer Mobile Passport View & Voice Feedback Widget -->
-        <div class="space-y-6">
-            <!-- Mobile Preview Mockup -->
-            <div class="bg-slate-900 p-4 rounded-2xl shadow-xl border-4 border-slate-800 text-white max-w-sm mx-auto w-full sticky top-6">
-                <div class="flex justify-between items-center mb-3 text-xs text-slate-400 border-b border-slate-800 pb-2">
-                    <span>📱 App-Free 3-Sec Scan Preview</span>
-                    <span>10:41 AM</span>
-                </div>
-                <div class="bg-white text-slate-800 p-4 rounded-xl space-y-4 shadow-sm">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <div>
-                            <h3 id="view-product" class="font-bold text-sm text-slate-900">Pure-Crunch Classic Salted Chips - 50g</h3>
-                            <p id="view-batch" class="text-[11px] text-slate-500">Batch ID: BATCH-2026-0918</p>
-                        </div>
-                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">🟢 Verified</span>
-                    </div>
-
-                    <!-- Progress Train Route Visualizer -->
-                    <div class="flex justify-between items-center my-3 px-2">
-                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">1</div>
-                        <div class="flex-1 h-1 bg-emerald-700"></div>
-                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">2</div>
-                        <div class="flex-1 h-1 bg-emerald-700"></div>
-                        <div class="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-[9px] text-white font-bold">3</div>
-                        <div class="flex-1 h-1 bg-amber-500"></div>
-                        <div class="w-5 h-5 rounded-full bg-amber-500 shadow-sm flex items-center justify-center text-[9px] text-white font-bold">4</div>
-                        <div class="flex-1 h-1 bg-slate-300"></div>
-                        <div class="w-5 h-5 rounded-full bg-slate-300 flex items-center justify-center text-[9px] text-white font-bold">5</div>
-                    </div>
-
-                    <!-- Milestone 1 -->
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-emerald-800">Step 1: Farm & Sourcing</span>
-                            <button type="button" onclick="openMapModal('Step 1: Farm Locations', farmCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
-                        </div>
-                        <div id="view-step1" class="text-slate-600 leading-tight">&bull; Nilgiri Coop, Tamil Nadu</div>
-                    </div>
-
-                    <!-- Milestone 2 -->
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-emerald-800">Step 2: Processing & Packing</span>
-                            <button type="button" onclick="openMapModal('Step 2: Processing Facilities', facilityCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
-                        </div>
-                        <div id="view-step2" class="text-slate-600 leading-tight">&bull; Coimbatore Plant #4</div>
-                    </div>
-
-                    <!-- Milestone 3 -->
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-emerald-800">Step 3: Transit & Logistics</span>
-                            <button type="button" onclick="openMapModal('Step 3: Transit Waypoints', transitCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
-                        </div>
-                        <div id="view-step3" class="text-slate-600 leading-tight">&bull; Palakkad Logistics Hub</div>
-                    </div>
-
-                    <!-- Milestone 4 -->
-                    <div class="bg-emerald-50/60 border border-emerald-300 rounded-lg p-2.5 text-xs">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-emerald-800">Step 4: Fork / Retail Shelf</span>
-                            <button type="button" onclick="openMapModal('Step 4: Retail Location', retailCoords)" class="bg-emerald-100 text-emerald-800 border border-emerald-600 px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer"><i class="fa-solid fa-location-dot"></i> Geo-Map</button>
-                        </div>
-                        <div id="view-step4" class="text-slate-600 leading-tight">&bull; SuperMart, MG Road, Kochi</div>
-                    </div>
-
-                    <!-- Milestone 5 -->
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs">
-                        <span class="font-bold text-emerald-800 block mb-1">Step 5: End-of-Life & Disposal</span>
-                        <div id="view-step5" class="text-slate-600 leading-tight">&bull; Material: Monolayer Recyclable Film<br>&bull; Action: Clean, Crush & Dry Waste Bin</div>
-                    </div>
-
-                    <!-- Voice Feedback Section -->
-                    <div class="border-t border-slate-100 pt-3 space-y-2">
-                        <h4 class="text-xs font-bold text-slate-700"><i class="fa-solid fa-microphone text-emerald-600 mr-1"></i> Direct Voice Feedback</h4>
-                        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center space-y-2">
-                            <div class="flex items-center justify-center space-x-2 text-slate-600 text-xs">
-                                <button type="button" onclick="toggleRecord()" id="recordBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white w-7 h-7 rounded-full flex items-center justify-center transition shadow"><i class="fa-solid fa-microphone text-xs" id="recIcon"></i></button>
-                                <span id="recordStatus" class="font-medium text-[11px]">Tap to record voice note</span>
-                            </div>
-                            <div class="w-full bg-slate-200 h-1 rounded-full overflow-hidden hidden" id="audioWave">
-                                <div class="bg-emerald-600 h-full w-3/4 animate-pulse"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="space-y-2 pt-1">
-                        <button type="button" onclick="alert('Loading Product Specifications & Farmer Directory...')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-3 rounded text-[11px] transition">🌐 View Specifications & Directory</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Map Modal for Viewing / Previewing -->
-    <div id="map-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 modal">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
-            <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center">
-                <h3 id="modal-title" class="font-bold text-sm">Geo-Location Map</h3>
-                <button type="button" onclick="closeMapModal()" class="text-emerald-200 hover:text-white text-lg font-bold">&times;</button>
-            </div>
-            <div class="p-4 flex-grow">
-                <div id="modal-map" class="w-full h-80 rounded-lg border border-slate-200"></div>
-            </div>
-            <div class="bg-slate-50 px-4 py-3 flex justify-end">
-                <button type="button" onclick="closeMapModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs px-4 py-2 rounded font-medium">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Interactive Map Picker Modal -->
-    <div id="picker-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 modal">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
-            <div class="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center">
-                <h3 class="font-bold text-sm"><i class="fa-solid fa-map-pin mr-1"></i> Click on Map to Select Coordinates</h3>
-                <button type="button" onclick="closePickerModal()" class="text-emerald-200 hover:text-white text-lg font-bold">&times;</button>
-            </div>
-            <div class="p-4 flex-grow">
-                <p class="text-xs text-slate-500 mb-2">Click anywhere on the map below to drop a pin and set the Lat, Long:</p>
-                <div id="picker-map" class="w-full h-80 rounded-lg border border-slate-200"></div>
-            </div>
-            <div class="bg-slate-50 px-4 py-3 flex justify-between items-center">
-                <span id="selected-coords-preview" class="text-xs font-bold text-emerald-800">No location selected</span>
-                <div class="space-x-2">
-                    <button type="button" onclick="closePickerModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs px-3 py-2 rounded font-medium">Cancel</button>
-                    <button type="button" onclick="confirmPickedCoords()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded font-medium">Confirm Location</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
-        &copy; 2026 DoWell UX Living Lab &bull; PureTrace Digital Product Passports. All rights reserved.
-    </footer>
-
-    <!-- Script Logic -->
-    <script>
-        let farmCoords = [], facilityCoords = [], transitCoords = [], retailCoords = [];
-        let modalMap = null, pickerMap = null, pickerMarker = null;
-        let activeGeoInput = null;
-        let tempPickedLat = 11.4121, tempPickedLng = 76.6950;
-        const DEMO_MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVtby11c2VyIiwiYSI6ImNrbTh2MXVucDAwMXoydnBrd3h1MXhzOW0ifQ.demo'; // Pre-configured demo token for map rendering
-
-        function getMapTileLayer() {
-            // Using CartoDB Voyager tiles with built-in demo handling for instant, keyless loading
-            return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19,
-                subdomains: 'abcd',
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                accessToken: DEMO_MAPBOX_TOKEN
-            });
-        }
-
-        function addFarmEntry() {
-            const container = document.getElementById('farm-list');
-            const div = document.createElement('div');
-            div.className = "farm-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2";
-            div.innerHTML = `
-                <div class="flex gap-2">
-                    <input type="text" class="farm-input flex-2 p-2 text-xs border border-slate-300 rounded" placeholder="Farm/Coop Name">
-                    <input type="datetime-local" class="farm-date-input flex-1.5 p-2 text-xs border border-slate-300 rounded">
-                </div>
-                <div class="flex gap-2 items-center">
-                    <input type="text" class="farm-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" placeholder="Lat, Long">
-                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                </div>
-            `;
-            container.appendChild(div);
-        }
-
-        function addFacilityEntry() {
-            const container = document.getElementById('facility-list');
-            const div = document.createElement('div');
-            div.className = "facility-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2";
-            div.innerHTML = `
-                <div class="flex gap-2">
-                    <input type="text" class="facility-input flex-2 p-2 text-xs border border-slate-300 rounded" placeholder="Facility Name">
-                    <input type="datetime-local" class="facility-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded">
-                </div>
-                <div class="flex gap-2 items-center">
-                    <input type="text" class="facility-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" placeholder="Lat, Long">
-                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                </div>
-            `;
-            container.appendChild(div);
-        }
-
-        function addTransitEntry() {
-            const container = document.getElementById('transit-list');
-            const div = document.createElement('div');
-            div.className = "transit-row p-3 bg-white border border-slate-200 rounded-lg shadow-sm space-y-2";
-            div.innerHTML = `
-                <div class="flex gap-2">
-                    <input type="text" class="transit-input flex-2 p-2 text-xs border border-slate-300 rounded" placeholder="Waypoint Name">
-                    <input type="datetime-local" class="transit-time-input flex-1.5 p-2 text-xs border border-slate-300 rounded">
-                </div>
-                <div class="flex gap-2 items-center">
-                    <input type="text" class="transit-geo-input flex-1 p-2 text-xs border border-slate-300 rounded bg-slate-50" placeholder="Lat, Long">
-                    <button type="button" onclick="openPickerFor(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-medium whitespace-nowrap"><i class="fa-solid fa-map-location-dot mr-1"></i> Pick from Map</button>
-                </div>
-            `;
-            container.appendChild(div);
-        }
-
-        function openPickerFor(btn) {
-            const parentRow = btn.closest('.farm-row, .facility-row, .transit-row');
-            if (parentRow) {
-                activeGeoInput = parentRow.querySelector('.farm-geo-input, .facility-geo-input, .transit-geo-input');
-            }
-            
-            let currentVal = activeGeoInput ? activeGeoInput.value : "11.4121, 76.6950";
-            let parts = currentVal.split(',').map(s => parseFloat(s.trim()));
-            let initLat = (parts.length === 2 && !isNaN(parts[0])) ? parts[0] : 11.4121;
-            let initLng = (parts.length === 2 && !isNaN(parts[1])) ? parts[1] : 76.6950;
-
-            document.getElementById('picker-modal').classList.remove('hidden');
-
-            setTimeout(() => {
-                if (!pickerMap) {
-                    pickerMap = L.map('picker-map').setView([initLat, initLng], 10);
-                    getMapTileLayer().addTo(pickerMap);
-
-                    pickerMap.on('click', function(e) {
-                        tempPickedLat = e.latlng.lat.toFixed(4);
-                        tempPickedLng = e.latlng.lng.toFixed(4);
-                        if (pickerMarker) {
-                            pickerMarker.setLatLng(e.latlng);
-                        } else {
-                            pickerMarker = L.marker(e.latlng).addTo(pickerMap);
-                        }
-                        document.getElementById('selected-coords-preview').innerText = `Selected: ${tempPickedLat}, ${tempPickedLng}`;
-                    });
-                } else {
-                    pickerMap.invalidateSize();
-                    pickerMap.setView([initLat, initLng], 10);
-                }
-
-                if (pickerMarker) {
-                    pickerMap.removeLayer(pickerMarker);
-                }
-                pickerMarker = L.marker([initLat, initLng]).addTo(pickerMap);
-                tempPickedLat = initLat;
-                tempPickedLng = initLng;
-                document.getElementById('selected-coords-preview').innerText = `Selected: ${initLat}, ${initLng}`;
-            }, 200);
-        }
-
-        function openPickerForRetail() {
-            activeGeoInput = document.getElementById('retail-geo');
-            let currentVal = activeGeoInput.value;
-            let parts = currentVal.split(',').map(s => parseFloat(s.trim()));
-            let initLat = (parts.length === 2 && !isNaN(parts[0])) ? parts[0] : 9.9312;
-            let initLng = (parts.length === 2 && !isNaN(parts[1])) ? parts[1] : 76.2673;
-
-            document.getElementById('picker-modal').classList.remove('hidden');
-
-            setTimeout(() => {
-                if (!pickerMap) {
-                    pickerMap = L.map('picker-map').setView([initLat, initLng], 10);
-                    getMapTileLayer().addTo(pickerMap);
-
-                    pickerMap.on('click', function(e) {
-                        tempPickedLat = e.latlng.lat.toFixed(4);
-                        tempPickedLng = e.latlng.lng.toFixed(4);
-                        if (pickerMarker) {
-                            pickerMarker.setLatLng(e.latlng);
-                        } else {
-                            pickerMarker = L.marker(e.latlng).addTo(pickerMap);
-                        }
-                        document.getElementById('selected-coords-preview').innerText = `Selected: ${tempPickedLat}, ${tempPickedLng}`;
-                    });
-                } else {
-                    pickerMap.invalidateSize();
-                    pickerMap.setView([initLat, initLng], 10);
-                }
-
-                if (pickerMarker) {
-                    pickerMap.removeLayer(pickerMarker);
-                }
-                pickerMarker = L.marker([initLat, initLng]).addTo(pickerMap);
-                tempPickedLat = initLat;
-                tempPickedLng = initLng;
-                document.getElementById('selected-coords-preview').innerText = `Selected: ${initLat}, ${initLng}`;
-            }, 200);
-        }
-
-        function closePickerModal() {
-            document.getElementById('picker-modal').classList.add('hidden');
-        }
-
-        function confirmPickedCoords() {
-            if (activeGeoInput) {
-                activeGeoInput.value = `${tempPickedLat}, ${tempPickedLng}`;
-            }
-            closePickerModal();
-        }
-
-        function pushData() {
-            // 1. Farms
-            const farmRows = document.querySelectorAll('.farm-row');
-            let farmHtml = "";
-            farmCoords = [];
-            farmRows.forEach(row => {
-                let name = row.querySelector('.farm-input').value;
-                let dt = row.querySelector('.farm-date-input').value;
-                let geo = row.querySelector('.farm-geo-input').value || "0,0";
-                if(name) {
-                    farmHtml += `&bull; ${name} (DateTime: ${dt || 'N/A'}) [GPS: ${geo}]<br>`;
-                    let coords = geo.split(',').map(num => parseFloat(num.trim()));
-                    if(coords.length === 2 && !isNaN(coords[0])) {
-                        farmCoords.push({ latlng: coords, title: name });
-                    }
-                }
-            });
-
-            // 2. Facilities
-            const facilityRows = document.querySelectorAll('.facility-row');
-            let facilityHtml = "";
-            facilityCoords = [];
-            facilityRows.forEach(row => {
-                let name = row.querySelector('.facility-input').value;
-                let dt = row.querySelector('.facility-time-input').value;
-                let geo = row.querySelector('.facility-geo-input').value || "0,0";
-                if(name) {
-                    facilityHtml += `&bull; ${name} (DateTime: ${dt || 'N/A'}) [GPS: ${geo}]<br>`;
-                    let coords = geo.split(',').map(num => parseFloat(num.trim()));
-                    if(coords.length === 2 && !isNaN(coords[0])) {
-                        facilityCoords.push({ latlng: coords, title: name });
-                    }
-                }
-            });
-
-            // 3. Transit
-            const transitRows = document.querySelectorAll('.transit-row');
-            let transitHtml = "";
-            transitCoords = [];
-            transitRows.forEach(row => {
-                let name = row.querySelector('.transit-input').value;
-                let dt = row.querySelector('.transit-time-input').value;
-                let geo = row.querySelector('.transit-geo-input').value || "0,0";
-                if(name) {
-                    transitHtml += `&bull; ${name} (DateTime: ${dt || 'N/A'}) [GPS: ${geo}]<br>`;
-                    let coords = geo.split(',').map(num => parseFloat(num.trim()));
-                    if(coords.length === 2 && !isNaN(coords[0])) {
-                        transitCoords.push({ latlng: coords, title: name });
-                    }
-                }
-            });
-
-            // 4. Retail
-            let retailStore = document.getElementById('retail-store').value;
-            let retailExpiry = document.getElementById('retail-expiry').value;
-            let retailGeo = document.getElementById('retail-geo').value;
-            retailCoords = [];
-            let rCoords = retailGeo.split(',').map(num => parseFloat(num.trim()));
-            if(rCoords.length === 2 && !isNaN(rCoords[0])) {
-                retailCoords.push({ latlng: rCoords, title: retailStore });
-            }
-
-            let batchIdVal = document.getElementById('proc-batch').value;
-            let productNameVal = document.getElementById('proc-product').value;
-
-            // Update Headers
-            document.getElementById('view-product').innerText = productNameVal;
-            document.getElementById('view-batch').innerText = "Batch ID: " + batchIdVal;
-            document.getElementById('header-batch-label').innerText = "Batch #" + batchIdVal;
-
-            // Render HTML Cards
-            document.getElementById('view-step1').innerHTML = farmHtml || "No farms listed";
-            document.getElementById('view-step2').innerHTML = facilityHtml || "No facilities listed";
-            document.getElementById('view-step3').innerHTML = transitHtml || "No transit waypoints listed";
-            document.getElementById('view-step4').innerHTML = `&bull; Store: ${retailStore} [GPS: ${retailGeo}]<br>&bull; Best Before: ${retailExpiry || 'N/A'}`;
-            document.getElementById('view-step5').innerHTML = `&bull; Material: ${document.getElementById('disp-material').value}<br>&bull; Action: ${document.getElementById('disp-action').value}`;
-
-            alert("Supply chain network pushed to consumer view successfully!");
-        }
-
-        function openMapModal(title, coordinates) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('map-modal').classList.remove('hidden');
-
-            setTimeout(() => {
-                if (!modalMap) {
-                    modalMap = L.map('modal-map').setView([10.5, 76.5], 7);
-                    getMapTileLayer().addTo(modalMap);
-                } else {
-                    modalMap.invalidateSize();
-                }
-
-                // Clear existing markers
-                modalMap.eachLayer((layer) => {
-                    if (layer instanceof L.Marker) {
-                        modalMap.removeLayer(layer);
-                    }
-                });
-
-                let bounds = [];
-                coordinates.forEach(item => {
-                    L.marker(item.latlng).addTo(modalMap).bindPopup(`<b>${item.title}</b>`);
-                    bounds.push(item.latlng);
-                });
-
-                if (bounds.length > 0) {
-                    modalMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-                }
-            }, 200);
-        }
-
-        function closeMapModal() {
-            document.getElementById('map-modal').classList.add('hidden');
-        }
-
-        let isRecording = false;
-        function toggleRecord() {
-            isRecording = !isRecording;
-            const btn = document.getElementById('recordBtn');
-            const icon = document.getElementById('recIcon');
-            const status = document.getElementById('recordStatus');
-            const wave = document.getElementById('audioWave');
-
-            if (isRecording) {
-                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
-                btn.classList.add('bg-red-600', 'hover:bg-red-700');
-                icon.className = "fa-solid fa-stop text-xs";
-                status.innerText = "Recording voice feedback...";
-                wave.classList.remove('hidden');
-            } else {
-                btn.classList.remove('bg-red-600', 'hover:bg-red-700');
-                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
-                icon.className = "fa-solid fa-microphone text-xs";
-                status.innerText = "Voice note saved successfully! ✓";
-                wave.classList.add('hidden');
-                setTimeout(() => {
-                    status.innerText = "Tap to record voice note";
-                }, 3000);
-            }
-        }
-
-        // Initial push on load
-        setTimeout(pushData, 500);
-    </script>
-</body>
-</html>
+    <!-- =======================================================================
+         VIEW B1: SEPARATE MANUFACTURER SPECIFICATION FORM
+         ======================================================================= -->
+    <section id="viewSpecForm" class="mfg-container hidden">
+      <div class="mfg-header">
+        <div>
+          <h2>📋 Manufacturer Specification Entry Form</h2>
+          <p>Enter official product specifications, batch details, medicine photo, quality video, certificates, and optional ERP invent... (98 KB left)
